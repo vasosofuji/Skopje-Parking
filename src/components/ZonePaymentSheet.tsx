@@ -13,7 +13,7 @@ import LicensePlateEditor from "./LicensePlateEditor";
 import { isOfficialProtocol, isVerifiedSmsPayment } from "../domain/sms-payment";
 import { parkingPrice } from "../domain/parking";
 import { OPERATOR_HELP, officialChargingHours, officialZoneRules, skopjeTime } from "../domain/skopje-rules";
-import { plainHours } from "../domain/payment-hours";
+import { localHours } from "../domain/payment-hours";
 import { knownFreeTime, payableZones } from "../domain/zone-payment";
 
 export function smsMessage(template: string, zone: string, plate: string, hours: number | null) {
@@ -121,7 +121,7 @@ export default function ZonePaymentSheet({ place, validate, onClose, onInvalidat
       <Text style={{ color: colors.ink }}>{t("Following hour", "Следен час")}: {price.nextHour} MKD</Text>
     </> : <Text style={{ color: colors.ink }}>{t("Price not shown", "Нема наведена цена")}</Text>}
     {protocol?.maxStayMinutes ? <Text style={{ color: colors.ink }}>{t("Maximum stay", "Максимален престој")}: {protocol.maxStayMinutes} {t("min", "мин")}</Text> : null}
-    <Text style={{ color: colors.ink }}>{t("Paying hours", "Часови за плаќање")}: {(chargingHours && plainHours(chargingHours)) || t("Not on sign / unknown", "Нема на таблата / непознато")}{officialHoursNote ? ` · ${officialHoursNote}` : ""}</Text>
+    <Text style={{ color: colors.ink }}>{t("Paying hours", "Часови за плаќање")}: {(chargingHours && localHours(chargingHours, language)) || t("Not on sign / unknown", "Нема на таблата / непознато")}{officialHoursNote ? ` · ${officialHoursNote}` : ""}</Text>
     {knownFreeTime(checkedPlace, now) ? <Note>{t("Parking here is free at this time. You do not need to pay now.", "Паркирањето овде е бесплатно во ова време. Не треба да платите сега.")}</Note> : null}
     {protocol?.mode === "fixed-hours" ? <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>{protocol.allowedHours?.map(value => <Button key={value} title={`${value} ${value === 1 ? t("Hour", "Час").toLocaleLowerCase() : t("hours", "часа")}`} variant={hours === value ? "primary" : "secondary"} onPress={() => setChoice({ signature, hours: value })} />)}</View> : null}
     <Text selectable style={{ color: colors.ink }}>{t("SMS number", "SMS број")}: {protocol?.destination}</Text>

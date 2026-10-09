@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parsePayingHours, formatPayingHours } from "../src/domain/payment-hours";
+import { parsePayingHours, formatPayingHours, localHours } from "../src/domain/payment-hours";
 test("structured paying hours round-trip different weekday and weekend periods", () => {
   const raw = "Mon-Fri 07:00-23:00; Sat 07:00-15:00";
   const periods = parsePayingHours(raw)!;
@@ -20,4 +20,9 @@ test("day controls handle sparse and wraparound days and preserve empty schedule
   assert.deepEqual(parsePayingHours(null), []);
   assert.throws(() => formatPayingHours([{ days: [0], from: "24:00", to: "07:00" }]));
   assert.throws(() => formatPayingHours([{ days: [8], from: "07:00", to: "23:00" }]));
+});
+test("hours show day names in the app language and lose old long dashes", () => {
+  assert.equal(localHours("Mon–Fri 07:00–21:00; Sat 07:00-15:00", "mk"), "Пон-Пет 07:00-21:00; Саб 07:00-15:00");
+  assert.equal(localHours("Sun 08:00-14:00", "tr"), "Paz 08:00-14:00");
+  assert.equal(localHours("Mon-Fri 07:00-21:00", "en"), "Mon-Fri 07:00-21:00");
 });

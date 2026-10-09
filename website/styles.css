@@ -221,10 +221,14 @@ form.delete button[disabled] { opacity: 0.6; cursor: wait; }
   .grid6 article { padding: 32px 26px; }
   .download .mark { display: none; }
   .footer .wrap { grid-template-columns: 1fr; }
+  .top nav { gap: 14px; }
+}
+@media (max-width: 560px) {
+  /* The hero's own apply button is on the first screen. */
+  .top nav .btn { display: none; }
 }
 @media (max-width: 420px) {
   .brand { font-size: 19px; }
-  .top nav .btn { padding: 0 14px; }
   .btn { padding: 0 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -257,3 +261,19 @@ dialog.apply .close { position: absolute; top: 20px; right: 20px; width: 40px; h
 dialog.apply .close svg { width: 18px; height: 18px; }
 .top nav button.btn { cursor: pointer; }
 button.btn { cursor: pointer; font-family: var(--body); }
+
+/* Macedonian pages: Anton and DM Sans have no Cyrillic. */
+@font-face { font-family: "Oswald"; font-style: normal; font-weight: 500 600; font-display: swap; src: url(/fonts/oswald-cyrillic.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Oswald"; font-style: normal; font-weight: 500 600; font-display: swap; src: url(/fonts/oswald-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Manrope"; font-style: normal; font-weight: 400 700; font-display: swap; src: url(/fonts/manrope-cyrillic.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Manrope"; font-style: normal; font-weight: 400 700; font-display: swap; src: url(/fonts/manrope-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+html:lang(mk) { --display: "Oswald", "Arial Narrow", sans-serif; --body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif; }
+html:lang(mk) .display { font-weight: 600; letter-spacing: -0.01em; line-height: 1.02; }
+html:lang(mk) .hero h1 { font-size: clamp(54px, min(7.4vw, 11.5svh), 118px); }
+html:lang(mk) .step h3 { font-weight: 600; }
+
+/* Language switch */
+.lang { display: inline-flex; padding: 3px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; font-weight: 700; }
+.lang a { padding: 6px 11px; border-radius: 999px; text-decoration: none; color: var(--soft); }
+.lang a[aria-current="true"] { background: var(--ink); color: var(--paper); }
+@media (max-width: 1080px) { .top nav .lang a { display: inline-block; } }

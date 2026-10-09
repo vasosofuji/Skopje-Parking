@@ -52,3 +52,14 @@ export function formatPayingHours(periods: PayingPeriod[]): string | null {
 
 /** Hours saved before the app switched to plain hyphens can still contain long dashes. */
 export const plainHours = (value: string) => value.replace(/\s*[–—]\s*/g, "-");
+
+const DAY_NAMES = {
+  mk: ["Пон", "Вто", "Сре", "Чет", "Пет", "Саб", "Нед"],
+  sq: ["Hën", "Mar", "Mër", "Enj", "Pre", "Sht", "Die"],
+  tr: ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"],
+} as const;
+/** Hours are stored with English day names ("Mon-Fri 07:00-21:00"); show them in the app's language. */
+export function localHours(value: string, language: string) {
+  const plain = plainHours(value), names = DAY_NAMES[language as keyof typeof DAY_NAMES];
+  return names ? plain.replace(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/g, day => names[WEEKDAYS.indexOf(day as (typeof WEEKDAYS)[number])]) : plain;
+}

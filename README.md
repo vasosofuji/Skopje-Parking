@@ -1,6 +1,8 @@
 # Parkino
 
-Open the hosted browser app at [parking.vasojevich.com](https://parking.vasojevich.com/). The `/health` path is the backend status check.
+[parking.vasojevich.com](https://parking.vasojevich.com/) is the app's website: the static pages in `website/` (home, `/privacy`, `/terms` and a working `/delete-account` form), deployed by Vercel. The API health check is https://vkqxtqcuoobiijbnpxod.supabase.co/functions/v1/api/health.
+
+When the APK is uploaded, put its URL in the `href` of the two download buttons in `website/index.html` (`#apk-hero` and `#apk-download`) and remove `aria-disabled` from the second one.
 
 Android/iOS parking application built with Expo 57 and React Native, with a browser preview and a shared API backed by SQLite locally or Supabase PostgreSQL when configured. All code lives in this folder; the website project was not edited.
 

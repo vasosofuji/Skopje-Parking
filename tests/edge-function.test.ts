@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { PUBLIC_API_URL } from "../src/services/apiEndpoint";
 import { PGlite } from "@electric-sql/pglite";
 import { postgresSql, type StoreDatabase } from "../server/postgres/database";
 import { SharedRequestBudget, sharedRateLimitStore } from "../server/postgres/rate-limits";
@@ -13,18 +14,20 @@ import type { Catalog } from "../src/domain/types";
 import Fastify from "fastify";
 import rateLimit from "@fastify/rate-limit";
 
-test("notification service worker bypasses the SPA rewrite and is served as updatable JavaScript", () => {
+test("the website is the static promo site, with working legal and account deletion pages", () => {
   const config = JSON.parse(readFileSync("vercel.json", "utf8"));
-  const fallback = config.rewrites.find((rule: { destination: string }) => rule.destination === "/index.html");
-  const match = new RegExp(`^${fallback.source}$`);
-  assert.equal(match.test("/parking-sw.js"), false);
-  assert.equal(match.test("/settings"), true);
-  assert.equal(match.test("/_expo/static/js/web/example.js"), false);
-  const workerHeaders = Object.fromEntries(config.headers.find((rule: { source: string }) => rule.source === "/parking-sw.js").headers.map((header: { key: string; value: string }) => [header.key, header.value]));
-  assert.match(workerHeaders["Content-Type"], /application\/javascript/);
-  assert.match(workerHeaders["Cache-Control"], /max-age=0/);
-  assert.equal(workerHeaders["Service-Worker-Allowed"], "/");
-  assert.match(readFileSync("public/parking-sw.js", "utf8"), /addEventListener\("push"/);
+  assert.equal(config.outputDirectory, "website");
+  assert.equal(config.cleanUrls, true);
+  assert.equal(config.rewrites, undefined, "no app fallback: unknown paths are real 404s");
+  for (const page of ["index", "privacy", "terms", "delete-account"]) {
+    const html = readFileSync(`website/${page}.html`, "utf8");
+    assert.ok(!/[\u2013\u2014]/.test(html), `${page} has no en or em dashes`);
+    for (const [, asset] of html.matchAll(/(?:src|href)="((?:img|fonts)\/[^"]+|[a-z-]+\.(?:svg|png|css|js))"/g))
+      assert.ok(existsSync(`website/${asset.split(" ")[0]}`), `${page} links ${asset}`);
+  }
+  const csp = config.headers[0].headers.find((header: { key: string }) => header.key === "Content-Security-Policy").value;
+  assert.ok(csp.includes(new URL(PUBLIC_API_URL).origin), "the deletion form may call the API");
+  assert.ok(readFileSync("website/delete.js", "utf8").includes(`"${PUBLIC_API_URL}"`), "the deletion form uses the production API");
 });
 
 test("rate budgets survive another function instance and reset after expiry", async () => {

@@ -75,11 +75,11 @@ test("official or current community zero rates suppress an otherwise verified SM
 });
 
 test("confirmed charging schedule respects Skopje weekends, overnight intervals and unreadable hours", () => {
-  const sign = { isParkingSign: true, confidence: 1, zoneCode: "D8", operator: null, currency: "MKD", firstHour: 25, nextHour: 25, maxStayMinutes: null, chargingHours: "Mon–Sat 07:00–23:00", restrictions: null, paymentInstructions: null, rawText: "", readingId: "photo", model: "model", observedAt: "", confirmedAt: "2026-10-01T00:00:00Z", freeWeekends: "sunday" as const };
+  const sign = { isParkingSign: true, confidence: 1, zoneCode: "D8", operator: null, currency: "MKD", firstHour: 25, nextHour: 25, maxStayMinutes: null, chargingHours: "Mon-Sat 07:00-23:00", restrictions: null, paymentInstructions: null, rawText: "", readingId: "photo", model: "model", observedAt: "", confirmedAt: "2026-10-01T00:00:00Z", freeWeekends: "sunday" as const };
   assert.equal(knownFreeTime({ ...paymentZone, signInfo: sign }, Date.parse("2026-10-04T10:00:00Z")), true);
   assert.equal(knownFreeTime({ ...paymentZone, signInfo: sign }, paymentNow), false);
   assert.equal(knownFreeTime({ ...paymentZone, signInfo: sign }, Date.parse("2026-10-05T22:00:00Z")), true);
-  assert.equal(knownFreeTime({ ...paymentZone, signInfo: { ...sign, chargingHours: "Mon 22:00–02:00" } }, Date.parse("2026-10-05T23:00:00Z")), false);
+  assert.equal(knownFreeTime({ ...paymentZone, signInfo: { ...sign, chargingHours: "Mon 22:00-02:00" } }, Date.parse("2026-10-05T23:00:00Z")), false);
   assert.equal(knownFreeTime({ ...paymentZone, signInfo: { ...sign, chargingHours: "unknown" } }, paymentNow), false);
   assert.equal(knownFreeTime({ ...paymentZone, openingHours: "closed", signInfo: { ...sign, chargingHours: null } }, paymentNow), false);
 });

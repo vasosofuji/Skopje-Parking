@@ -32,7 +32,7 @@ export function knownFreeTime(place: ParkingPlace, now: number) {
   // Without readable sign hours, only the operator's published timetable can say it is free.
   return officiallyCharging(place, now) === false;
 }
-/** No published Skopje timetable charges on Sundays, holidays or 23:00–07:00 (Vodno aside). */
+/** No published Skopje timetable charges on Sundays, holidays or 23:00-07:00 (Vodno aside). */
 function quietHours(now: number) {
   const { day, minute } = skopjeTime(now);
   return day === 6 || isSkopjeHoliday(now) || minute < 7 * 60 || minute >= 23 * 60;

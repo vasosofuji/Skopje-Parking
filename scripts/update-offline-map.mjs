@@ -11,7 +11,7 @@ const MAX_ZOOM = 14;
 const FONTS = ["Noto Sans Regular", "Noto Sans Bold", "Noto Sans Italic"];
 // Basic Latin, Latin-1, Latin Extended (š ž ć ë ç), Cyrillic, general punctuation (– ’ “).
 const RANGES = ["0-255", "256-511", "1024-1279", "8192-8447"];
-const AGENT = { "User-Agent": "Parkino offline map builder (one-off Skopje extract)" };
+const AGENT = { "User-Agent": "Skopje Parking offline map builder (one-off Skopje extract)" };
 
 const tile = (lon, lat, z) => {
   const n = 2 ** z, rad = (lat * Math.PI) / 180;

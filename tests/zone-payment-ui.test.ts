@@ -1,4 +1,5 @@
 import test from "node:test";
+import * as paymentHours from "../src/domain/payment-hours";
 import * as languageModule from "../src/domain/language";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -38,6 +39,7 @@ function harness(stop = false, manual = false) {
     if (name === "../domain/zone-payment") return zonePayment;
     if (name === "../services/parkingReminder") return { scheduleParkingLimitReminder: async (...args: unknown[]) => { reminders.push(args); return true; }, cancelParkingLimitReminder: async () => { reminders.push(["cancel"]); } };
     if (name === "../domain/parking") return { parkingPrice };
+    if (name === "../domain/payment-hours") return paymentHours;
     if (name === "../services/api") return { api: { smsPayment: () => new Promise((resolve, reject) => requests.push({ resolve, reject })) } };
     if (name === "../services/smsComposer") return { openSmsComposer: async (recipient: string, body: string, guard: () => boolean) => { calls.push({ recipient, body, guard }); return guard() ? result : "cancelled"; } };
     throw new Error(name);

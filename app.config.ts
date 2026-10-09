@@ -1,9 +1,9 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const testPackage = process.env.PARKINO_TEST_PACKAGE === "1" || process.env.PARKINO_DEVICE_TEST === "1";
+  const testPackage = process.env.SKOPJE_PARKING_TEST_PACKAGE === "1" || process.env.SKOPJE_PARKING_DEVICE_TEST === "1";
   // Background location needs Google Play's declaration, a video and review, so store builds
-  // ship without it until PARKINO_BACKGROUND_LOCATION=1 is set for an approved release.
-  const backgroundLocation = process.env.PARKINO_BACKGROUND_LOCATION === "1";
+  // ship without it until SKOPJE_PARKING_BACKGROUND_LOCATION=1 is set for an approved release.
+  const backgroundLocation = process.env.SKOPJE_PARKING_BACKGROUND_LOCATION === "1";
   const plugins = (config.plugins ?? []).map(plugin => Array.isArray(plugin) && plugin[0] === "expo-location"
     ? ["expo-location", { ...plugin[1], isIosBackgroundLocationEnabled: backgroundLocation, isAndroidBackgroundLocationEnabled: backgroundLocation, isAndroidForegroundServiceEnabled: backgroundLocation }] as [string, Record<string, unknown>]
     : plugin);
@@ -16,7 +16,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   }
   return ({
   ...config,
-  name: testPackage ? "Parking Test" : "Parking",
+  name: testPackage ? "Skopje Parking Test" : "Skopje Parking",
   slug: "parkskopje",
   android: {
     ...config.android,
@@ -36,7 +36,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   extra: {
     ...config.extra,
     androidNativeMapsEnabled: Boolean(process.env.GOOGLE_MAPS_ANDROID_KEY),
-    usbTest: process.env.PARKINO_DEVICE_TEST === "1",
+    usbTest: process.env.SKOPJE_PARKING_DEVICE_TEST === "1",
     backgroundLocation,
   },
   plugins: [
@@ -55,7 +55,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ],
     [
       "expo-build-properties",
-      { android: { buildArchs: ["arm64-v8a", "armeabi-v7a"], usesCleartextTraffic: process.env.PARKINO_DEVICE_TEST === "1" } },
+      { android: { buildArchs: ["arm64-v8a", "armeabi-v7a"], usesCleartextTraffic: process.env.SKOPJE_PARKING_DEVICE_TEST === "1" } },
     ],
     ...(process.env.GOOGLE_MAPS_ANDROID_KEY
       ? [

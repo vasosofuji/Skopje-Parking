@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Parkino · Parking app for Skopje</title>
-<meta name="description" content="Parkino shows the car parks, garages and paid street zones in Skopje, what they cost, and whether other drivers just found space there. Pay Gradski Parking and POC zones by SMS. Free for Android.">
+<title>Skopje Parking · Find, check and pay for parking in Skopje</title>
+<meta name="description" content="Skopje Parking shows the car parks, garages and paid street zones around you, what they cost, and whether another driver just found space there. Pay Gradski Parking and POC zones by SMS. Free for Android.">
 <meta name="theme-color" content="#f3eee4">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta property="og:title" content="Parkino · Parking app for Skopje">
+<meta property="og:title" content="Skopje Parking">
 <meta property="og:description" content="Car parks, prices, free-space reports and SMS payment for Skopje, in one Android app.">
-<meta property="og:image" content="https://parking.vasojevich.com/img/preview@2x.webp">
+<meta property="og:image" content="https://parking.vasojevich.com/img/og-logo.png">
 <meta property="og:type" content="website">
 <link rel="preload" href="fonts/anton-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles.css">
@@ -20,143 +20,160 @@
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="/" aria-label="Parkino home"><img src="logo.svg" alt="" width="30" height="31">Parkino</a>
+    <a class="brand" href="/" aria-label="Skopje Parking home"><img src="logo.svg" alt="" width="30" height="31">Skopje Parking</a>
     <nav aria-label="Main">
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
       <a href="#privacy">Privacy</a>
       <a href="#faq">Questions</a>
+      <a class="btn btn-primary btn-small" href="#download">Get the app</a>
     </nav>
-    <p class="top-note">Free for Android<br><span class="red">Soon on Google Play</span></p>
   </div>
 </header>
 
 <main id="main">
 <section class="hero" aria-labelledby="hero-title">
   <div class="wrap">
-    <h1 class="display" id="hero-title"><span>Where to</span><span>park in</span><span class="red">Skopje</span></h1>
-    <div class="hero-art">
-      <div class="block" aria-hidden="true"></div>
-      <span class="plus" aria-hidden="true">+</span>
-      <span class="badge" aria-hidden="true"><img src="logo.svg" alt="" width="40" height="42"></span>
-      <div class="phone">
-        <img src="img/map.webp" srcset="img/map.webp 540w, img/map@2x.webp 1080w" sizes="(max-width: 760px) 70vw, 330px" width="540" height="1200" alt="The Parkino map of central Skopje with parking pins, POC sectors and green pins where drivers reported free spaces" fetchpriority="high">
-      </div>
-    </div>
-    <div class="hero-side">
-      <p>Parkino shows the car parks, garages and paid street zones around you, what they cost, and whether another driver just found space there.</p>
-      <p class="muted">You can also pay Gradski Parking and POC zones by SMS from the same screen.</p>
-    </div>
-  </div>
-  <div class="wrap hero-bottom">
-    <a class="scroll" href="#how">See how it works</a>
     <div>
+      <p class="eyebrow">Parking app for Skopje</p>
+      <h1 class="display" id="hero-title"><span>Where to</span><span>park in</span><span class="red">Skopje</span></h1>
+      <p class="lead">See the car parks, garages and paid street zones around you, what they cost, and whether another driver just found space there. Then pay your zone by SMS from the same screen.</p>
       <div class="buttons">
         <!-- APK: put the file URL in href and remove aria-disabled once it is uploaded. -->
         <a class="btn btn-primary" href="#download" id="apk-hero">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
           Download the APK
         </a>
-        <span class="btn btn-ghost" aria-disabled="true">Soon on Google Play</span>
+        <span class="btn btn-ghost btn-soon" aria-disabled="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          Soon on Google Play
+        </span>
       </div>
-      <p class="small">Free, with no ads. Android only for now.</p>
+      <p class="note">Free, with no ads. Android only for now.</p>
+    </div>
+    <div class="hero-art">
+      <div class="device">
+        <img src="img/map.webp" srcset="img/map.webp 540w, img/map@2x.webp 1080w" sizes="300px" width="540" height="1152" alt="The Skopje Parking map of central Skopje with parking pins, POC sectors and green pins where drivers reported free spaces" fetchpriority="high">
+      </div>
+      <img class="float-card" src="img/arrival-card.webp" width="540" height="226" alt="The question Any free spaces here? with Yes and No buttons" loading="lazy">
     </div>
   </div>
 </section>
 
-<section class="about" aria-labelledby="about-title">
+<section class="intro section" aria-labelledby="intro-title">
   <div class="wrap">
-    <div class="about-text">
-      <p class="label">Why we made it</p>
-      <h2 class="display" id="about-title">Most of us have circled Centar <em>looking for a spot.</em></h2>
-      <p>The information is out there, but it's split between operator websites, signs on poles and whatever a friend told you last week. Parkino puts it on one map.</p>
+    <div>
+      <p class="eyebrow">Why it exists</p>
+      <h2 class="display" id="intro-title">Most of us have circled Centar <em>looking for a spot.</em></h2>
+    </div>
+    <div class="copy">
+      <p>The information is out there, but it's split between operator websites, signs on poles and whatever a friend told you last week. Skopje Parking puts it on one map.</p>
       <p>Prices come from the operators' published tariffs and from drivers who park there. Free-space reports disappear after 15 minutes, so the map doesn't keep showing a car park that filled up an hour ago.</p>
     </div>
-    <div class="stats">
-      <div class="stat"><b>866</b><span>car parks, garages and street parking spots on the map</span></div>
-      <div class="stat"><b>48</b><span>paid zones run by Gradski Parking and POC</span></div>
-      <div class="stat"><b>15 min</b><span>how long a free-spaces report stays up</span></div>
-      <div class="stat"><b>4</b><span>languages: Macedonian, Albanian, Turkish and English</span></div>
-      <div class="spin" aria-hidden="true">
-        <svg viewBox="0 0 120 120"><defs><path id="ring" d="M60 60m-46 0a46 46 0 1 1 92 0a46 46 0 1 1 -92 0"/></defs><text><textPath href="#ring">Parking in Skopje · Parkino · Android ·</textPath></text></svg>
-      </div>
-    </div>
+  </div>
+  <div class="wrap numbers">
+    <div><b>866</b><span>car parks, garages and street parking spots on the map</span></div>
+    <div><b>48</b><span>paid zones run by Gradski Parking and POC</span></div>
+    <div><b>15 min</b><span>how long a free-spaces report stays up</span></div>
+    <div><b>4</b><span>languages: Macedonian, Albanian, Turkish and English</span></div>
   </div>
 </section>
 
-<section class="how" id="how" aria-labelledby="how-title">
+<section class="section" id="how" aria-labelledby="how-title">
   <div class="wrap">
-    <div class="how-intro">
-      <hr class="rule">
+    <div class="head">
       <h2 class="display" id="how-title">How it works</h2>
-      <p>Most trips into the centre look like this. Parkino covers the part between leaving home and walking away from the car.</p>
+      <p>From the moment you know where you're going to the moment you walk away from the car.</p>
     </div>
-    <article class="step">
-      <p class="num">01</p>
-      <h3>Pick where you're going</h3>
-      <p>Search a street or a landmark, or drop a pin. You get the parking nearby, sorted by distance or by first-hour price.</p>
-      <div class="phone"><img src="img/cheapest.webp" srcset="img/cheapest.webp 540w, img/cheapest@2x.webp 1080w" sizes="(max-width: 760px) 70vw, 280px" width="540" height="1200" alt="Parking near Macedonia Square sorted by price: Parking Garage Beko at 30 MKD with 6 free spaces reported" loading="lazy"></div>
-    </article>
-    <article class="step">
-      <p class="num">02</p>
-      <h3>Check it before you drive</h3>
-      <p>Tap a pin for the tariff, the paying hours, the time limit and the latest report from someone who was there.</p>
-      <div class="phone"><img src="img/preview.webp" srcset="img/preview.webp 540w, img/preview@2x.webp 1080w" sizes="(max-width: 760px) 70vw, 280px" width="540" height="1200" alt="Zone A3 card with 40 MKD per first hour, weekday and Saturday paying hours, free on Sundays and 3 free spaces reported" loading="lazy"></div>
-    </article>
-    <article class="step">
-      <p class="num">03</p>
-      <h3>Pay by SMS</h3>
-      <p>Choose your zone and Parkino writes the message for Gradski Parking or POC. You tick that the sign matches, then send it yourself.</p>
-      <div class="phone"><img src="img/pay-sms.webp" srcset="img/pay-sms.webp 540w, img/pay-sms@2x.webp 1080w" sizes="(max-width: 760px) 70vw, 280px" width="540" height="1200" alt="SMS payment for zone A3: number 144144, message A3 followed by the licence plate, and the stop message S" loading="lazy"></div>
-    </article>
+    <div class="steps">
+      <article class="step">
+        <p class="num">01</p>
+        <h3>Pick a destination</h3>
+        <p>Search a street or a landmark, or drop a pin. Nearby parking comes up sorted by distance or by first-hour price.</p>
+        <div class="device"><img src="img/cheapest.webp" srcset="img/cheapest.webp 540w, img/cheapest@2x.webp 1080w" sizes="300px" width="540" height="1152" alt="Parking near Macedonia Square sorted by price, with Parking Garage Beko at 30 MKD and free spaces reported" loading="lazy"></div>
+      </article>
+      <article class="step">
+        <p class="num">02</p>
+        <h3>Check before you drive</h3>
+        <p>Tap a pin for the tariff, the paying hours, the time limit and the latest report from someone who was there.</p>
+        <div class="device"><img src="img/preview.webp" srcset="img/preview.webp 540w, img/preview@2x.webp 1080w" sizes="300px" width="540" height="1152" alt="Zone A3 card with 40 MKD per first hour, paying hours, free on Sundays and 3 free spaces reported" loading="lazy"></div>
+      </article>
+      <article class="step">
+        <p class="num">03</p>
+        <h3>Pay by SMS</h3>
+        <p>Choose your zone and the app writes the message for Gradski Parking or POC. You confirm the sign matches and send it yourself.</p>
+        <div class="device"><img src="img/pay-sms.webp" srcset="img/pay-sms.webp 540w, img/pay-sms@2x.webp 1080w" sizes="300px" width="540" height="1152" alt="SMS payment for zone A3 with the number 144144, the message with the licence plate, and the stop message" loading="lazy"></div>
+      </article>
+    </div>
   </div>
 </section>
 
-<section class="features" id="features" aria-labelledby="features-title">
+<section class="feature-row section" aria-labelledby="reports-title">
   <div class="wrap">
-    <div class="features-intro">
-      <hr class="rule">
-      <h2 class="display" id="features-title">What's in the app</h2>
+    <div class="copy">
+      <p class="eyebrow">Live reports</p>
+      <h2 class="display" id="reports-title">One tap tells the next driver</h2>
+      <p>When your phone has been still at a car park for about ten seconds, the app asks whether there were free spaces. Your answer turns the pin green or red for the next 15 minutes.</p>
+      <ul class="checks">
+        <li>The question only appears once you've stopped</li>
+        <li>Each car park shows its tariff, hours and time limit</li>
+        <li>Prices reported by drivers are dated, so you know how fresh they are</li>
+      </ul>
+    </div>
+    <div class="stage">
+      <div class="device"><img src="img/details.webp" srcset="img/details.webp 540w, img/details@2x.webp 1080w" sizes="300px" width="540" height="1152" alt="Details for zone A3 with tariff, maximum stay of 120 minutes, SMS instructions and the latest report" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<section class="feature-row flip section" aria-labelledby="signs-title">
+  <div class="wrap">
+    <div class="copy">
+      <p class="eyebrow">Sign reading</p>
+      <h2 class="display" id="signs-title">The sign, typed out for you</h2>
+      <p>Point the camera at a parking sign. Text recognition runs on the phone and turns it into a digital card with the zone, the price, the hours and the free days. It reads Macedonian, Albanian and English signs.</p>
+      <p>You compare the card with the photo and fix anything it got wrong. Only the details you confirm are published, and the photo is deleted once you're done.</p>
+    </div>
+    <div class="stage">
+      <div class="device"><img src="img/sign-review.webp" srcset="img/sign-review.webp 540w, img/sign-review@2x.webp 1080w" sizes="300px" width="540" height="1152" alt="A parking sign read by the phone and shown as a digital card with the price, hours and free days" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<section class="features section" id="features" aria-labelledby="features-title">
+  <div class="wrap">
+    <div class="head">
+      <h2 class="display" id="features-title">Also in the app</h2>
       <p>All of it works in Skopje today.</p>
     </div>
-    <div class="feature-grid">
-      <article class="feature">
-        <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="20" fill="#1f1814"/><path d="M22 2a20 20 0 0 1 20 20H22z" fill="#962e2b"/></svg>
-        <h3>Free spaces, from drivers</h3>
-        <p>Stop at a car park for a few seconds and the app asks one question: any free spaces here? Your answer shows on the map for the next 15 minutes.</p>
+    <div class="grid6">
+      <article>
+        <svg viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="4" width="40" height="28" rx="6" fill="#1d1613"/><path d="M10 31h12l-12 10z" fill="#1d1613"/><rect x="10" y="12" width="16" height="4" rx="2" fill="#962e2b"/><rect x="10" y="20" width="24" height="4" rx="2" fill="#faf6ee"/></svg>
+        <h3>Payment rules that match the sign</h3>
+        <p>Zone codes, SMS numbers and paying hours come from the operators' own rules. Sundays and public holidays show as free where they are.</p>
       </article>
-      <article class="feature">
-        <svg viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="4" width="40" height="28" rx="3" fill="#1f1814"/><path d="M10 32h12l-12 9z" fill="#1f1814"/><rect x="10" y="12" width="16" height="4" fill="#962e2b"/><rect x="10" y="20" width="24" height="4" fill="#faf3e5"/></svg>
-        <h3>SMS that matches the sign</h3>
-        <p>Zone codes, numbers and paying hours come from the operators' own rules. Sundays and public holidays show as free where they are, and you get a reminder 15 minutes before a zone's time limit.</p>
+      <article>
+        <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="24" r="17" fill="none" stroke="#1d1613" stroke-width="4"/><path d="M22 14v10l6 4" fill="none" stroke="#962e2b" stroke-width="4" stroke-linecap="round"/><rect x="16" y="2" width="12" height="5" rx="2" fill="#1d1613"/></svg>
+        <h3>A reminder before time runs out</h3>
+        <p>In zones with a time limit, the app reminds you 15 minutes before it ends, with the stop message ready to send.</p>
       </article>
-      <article class="feature">
-        <svg viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="8" width="40" height="30" rx="4" fill="#1f1814"/><rect x="14" y="3" width="16" height="7" rx="2" fill="#1f1814"/><circle cx="22" cy="23" r="9" fill="#962e2b"/><circle cx="22" cy="23" r="4" fill="#faf3e5"/></svg>
-        <h3>Read a sign with the camera</h3>
-        <p>Photograph a parking sign and the phone reads the prices and hours itself, in Macedonian, Albanian or English. You check every field before anything is shared, and the photo is deleted.</p>
-      </article>
-      <article class="feature">
-        <svg viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="2" width="18" height="18" fill="#1f1814"/><rect x="24" y="2" width="18" height="18" fill="#962e2b"/><rect x="2" y="24" width="18" height="18" fill="#962e2b"/><rect x="24" y="24" width="18" height="18" fill="#1f1814"/></svg>
+      <article>
+        <svg viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="2" width="18" height="18" rx="4" fill="#1d1613"/><rect x="24" y="2" width="18" height="18" rx="4" fill="#962e2b"/><rect x="2" y="24" width="18" height="18" rx="4" fill="#962e2b"/><rect x="24" y="24" width="18" height="18" rx="4" fill="#1d1613"/></svg>
         <h3>A map that works offline</h3>
-        <p>The streets of Skopje come inside the app, so the map still opens in an underground garage with no signal. The parking you've already loaded stays on the phone too.</p>
+        <p>The streets of Skopje come inside the app, so the map still opens in an underground garage with no signal.</p>
       </article>
-      <article class="feature">
-        <svg viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="2" width="40" height="40" rx="4" fill="none" stroke="#1f1814" stroke-width="4"/><rect x="19" y="10" width="6" height="24" fill="#962e2b"/><rect x="10" y="19" width="24" height="6" fill="#962e2b"/></svg>
+      <article>
+        <svg viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="2" width="40" height="40" rx="10" fill="none" stroke="#1d1613" stroke-width="4"/><rect x="19" y="11" width="6" height="22" rx="3" fill="#962e2b"/><rect x="11" y="19" width="22" height="6" rx="3" fill="#962e2b"/></svg>
         <h3>Add what's missing</h3>
-        <p>If a car park isn't on the map, add it with a sign photo or by hand. You can draw its outline and say how many spaces it has.</p>
+        <p>If a car park isn't on the map, add it with a sign photo or by hand, draw its outline and say how many spaces it has.</p>
       </article>
-      <article class="feature">
-        <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="14" cy="14" r="11" fill="#962e2b"/><circle cx="30" cy="14" r="11" fill="#1f1814"/><circle cx="14" cy="30" r="11" fill="#1f1814"/><circle cx="30" cy="30" r="11" fill="#1f1814"/></svg>
+      <article>
+        <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="14" cy="14" r="11" fill="#962e2b"/><circle cx="30" cy="14" r="11" fill="#1d1613"/><circle cx="14" cy="30" r="11" fill="#1d1613"/><circle cx="30" cy="30" r="11" fill="#1d1613"/></svg>
         <h3>Points for helping</h3>
         <p>Reports and new places earn points. They unlock app colours and an accent on the pins you added, and you never spend them.</p>
       </article>
-      <article class="feature">
-        <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" fill="none" stroke="#1f1814" stroke-width="4"/><path d="M22 3a19 19 0 0 1 0 38z" fill="#1f1814"/><circle cx="22" cy="22" r="6" fill="#962e2b"/></svg>
-        <h3>Your language, light or dark</h3>
-        <p>Use it in Macedonian, Albanian, Turkish or English. There's a dark theme for the evening, or it can follow your phone.</p>
-      </article>
-      <article class="feature">
-        <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M4 20 40 4 24 40l-4-16z" fill="#1f1814"/><path d="M20 24 40 4 24 40z" fill="#962e2b"/></svg>
+      <article>
+        <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M4 20 40 4 24 40l-4-16z" fill="#1d1613"/><path d="M20 24 40 4 24 40z" fill="#962e2b"/></svg>
         <h3>Directions when you're ready</h3>
         <p>Go hands the route to Google Maps or whichever navigation app you picked in settings.</p>
       </article>
@@ -164,78 +181,44 @@
   </div>
 </section>
 
-<section class="closeup" aria-labelledby="spaces-title">
+<section class="night section" aria-labelledby="night-title">
   <div class="wrap">
-    <div class="copy">
-      <p class="label">Live reports</p>
-      <h2 class="display" id="spaces-title">One tap tells the next driver</h2>
-      <p>When your phone has been still at a car park for about ten seconds, Parkino asks if there were free spaces. Yes turns the pin green, No turns it red, and both fade after 15 minutes.</p>
-      <p>Nobody types anything while driving. The question only appears once you've stopped.</p>
+    <div>
+      <p class="eyebrow">Evenings</p>
+      <h2 class="display" id="night-title">Made for late arrivals too</h2>
+      <p>The dark theme keeps the map easy to read after sunset, or the app can simply follow your phone's setting. Pick the language you're most comfortable with.</p>
+      <ul class="langs" aria-label="Languages"><li>Македонски</li><li>Shqip</li><li>Türkçe</li><li>English</li></ul>
     </div>
-    <div class="pair">
-      <figure class="fig"><div class="phone"><img src="img/arrival.webp" srcset="img/arrival.webp 540w, img/arrival@2x.webp 1080w" sizes="(max-width: 760px) 44vw, 290px" width="540" height="1200" alt="The question Any free spaces here? for the 26 Juli garage, with Yes and No buttons" loading="lazy"></div><figcaption class="caption">The question after you stop</figcaption></figure>
-      <figure class="fig"><div class="phone"><img src="img/details.webp" srcset="img/details.webp 540w, img/details@2x.webp 1080w" sizes="(max-width: 760px) 44vw, 290px" width="540" height="1200" alt="Full details for zone A3 with tariff, maximum stay of 120 minutes, SMS instructions and the latest report" loading="lazy"></div><figcaption class="caption">What everyone else sees</figcaption></figure>
-    </div>
+    <div class="device"><img src="img/dark.webp" srcset="img/dark.webp 540w, img/dark@2x.webp 1080w" sizes="300px" width="540" height="1152" alt="The Skopje Parking map in the dark theme" loading="lazy"></div>
   </div>
 </section>
 
-<section class="closeup flip" aria-labelledby="signs-title">
-  <div class="wrap">
-    <div class="copy">
-      <p class="label">Signs</p>
-      <h2 class="display" id="signs-title">The sign, typed out for you</h2>
-      <p>Point the camera at a parking sign. Text recognition runs on the phone, with no AI key and no internet needed for the reading itself, and turns the sign into a digital card with the price, the hours and the free days.</p>
-      <p>You compare it with the photo and fix anything it got wrong. Only the details you confirm are published, and the photo is deleted once you're done.</p>
-    </div>
-    <div class="pair">
-      <figure class="fig"><div class="phone"><img src="img/add.webp" srcset="img/add.webp 540w, img/add@2x.webp 1080w" sizes="(max-width: 760px) 44vw, 290px" width="540" height="1200" alt="Add parking: photograph a sign or enter the details by hand" loading="lazy"></div><figcaption class="caption">Photo or manual entry</figcaption></figure>
-      <figure class="fig"><div class="phone"><img src="img/sign-review.webp" srcset="img/sign-review.webp 540w, img/sign-review@2x.webp 1080w" sizes="(max-width: 760px) 44vw, 290px" width="540" height="1200" alt="An Albanian parking sign read by the phone: 50 MKD per first hour, Monday to Friday 07 to 22, Saturday 08 to 15, free on Sundays" loading="lazy"></div><figcaption class="caption">An Albanian sign, read on the phone</figcaption></figure>
-    </div>
-  </div>
-</section>
-
-<section class="gallery" aria-labelledby="gallery-title">
-  <div class="wrap gallery-head">
-    <h2 class="display" id="gallery-title">More from the app</h2>
-    <p>These are screenshots from the current Android build. Swipe or scroll sideways to see them all.</p>
-  </div>
-  <div class="strip" tabindex="0" aria-label="App screenshots">
-    <figure><div class="phone"><img src="img/destination.webp" width="540" height="1200" alt="Macedonia Square chosen as the destination on the map" loading="lazy"></div><figcaption>A destination pin and the parking around it</figcaption></figure>
-    <figure><div class="phone"><img src="img/pay-zones.webp" width="540" height="1200" alt="Nearby paid zones listed by distance" loading="lazy"></div><figcaption>Paid zones near you, closest first</figcaption></figure>
-    <figure><div class="phone"><img src="img/pay-poc.webp" width="540" height="1200" alt="SMS payment for a POC sector with one or two hours to choose" loading="lazy"></div><figcaption>POC sectors: pick one or two hours</figcaption></figure>
-    <figure><div class="phone"><img src="img/dark.webp" width="540" height="1200" alt="The map in the dark theme" loading="lazy"></div><figcaption>The dark theme</figcaption></figure>
-    <figure><div class="phone"><img src="img/rewards.webp" width="540" height="1200" alt="Rewards screen with points and unlockable app palettes" loading="lazy"></div><figcaption>Points and colours</figcaption></figure>
-    <figure><div class="phone"><img src="img/language.webp" width="540" height="1200" alt="Language choice: English, Macedonian, Turkish and Albanian" loading="lazy"></div><figcaption>Four languages</figcaption></figure>
-    <figure><div class="phone"><img src="img/settings.webp" width="540" height="1200" alt="Settings with appearance, language, navigation app, licence plate and sign reading" loading="lazy"></div><figcaption>Settings</figcaption></figure>
-  </div>
-</section>
-
-<section class="privacy" id="privacy" aria-labelledby="privacy-title">
+<section class="privacy section" id="privacy" aria-labelledby="privacy-title">
   <div class="wrap">
     <h2 class="display" id="privacy-title">What stays on your phone</h2>
     <div>
-      <p>Your licence plate and your GPS history stay on the phone, and sign photos are never uploaded to Parkino. If you add your own Gemini or Groq key for hard-to-read signs, the photo goes straight to that provider and the key sits in the phone's secure storage.</p>
+      <p>Your licence plate and your GPS history stay on the phone, and sign photos are never uploaded to Skopje Parking. If you add your own Gemini or Groq key for hard-to-read signs, the photo goes straight to that provider and the key sits in the phone's secure storage.</p>
       <p>The server keeps your username, the reports you send and the places you add. You can delete all of it from the app, or from this site with your username and password.</p>
       <div class="links"><a href="/privacy">Privacy policy</a><a href="/terms">Terms of service</a><a href="/delete-account">Delete your account</a></div>
     </div>
   </div>
 </section>
 
-<section class="faq" id="faq" aria-labelledby="faq-title">
+<section class="faq section" id="faq" aria-labelledby="faq-title">
   <div class="wrap">
     <h2 class="display" id="faq-title">Questions</h2>
     <div>
       <details>
-        <summary>Is Parkino an official app?</summary>
-        <p>No. Parkino is independent and isn't affiliated with the City of Skopje, JP Gradski Parking or JP Parkinzi na Opshtina Centar. Payment rules come from what those operators publish, and the sign next to your car always takes priority.</p>
+        <summary>Is Skopje Parking an official app?</summary>
+        <p>No. It's independent and isn't affiliated with the City of Skopje, JP Gradski Parking or JP Parkinzi na Opshtina Centar. Payment rules come from what those operators publish, and the sign next to your car always takes priority.</p>
       </details>
       <details>
         <summary>Does it cost anything?</summary>
-        <p>The app is free. You still pay the parking operator for parking, and your mobile operator charges the usual price for the SMS.</p>
+        <p>The app is free. You still pay the operator for parking, and your mobile operator charges the usual price for the SMS.</p>
       </details>
       <details>
-        <summary>Can Parkino pay for me?</summary>
-        <p>It opens your messaging app with the right number and message already filled in. You press send, so nothing is ever paid without you seeing it. Wait for the operator's confirmation SMS before you walk away.</p>
+        <summary>Can the app pay for me?</summary>
+        <p>It opens your messaging app with the right number and message already filled in. You press send, so nothing is paid without you seeing it. Wait for the operator's confirmation SMS before you walk away.</p>
       </details>
       <details>
         <summary>Which phones does it run on?</summary>
@@ -253,20 +236,26 @@
   </div>
 </section>
 
-<section class="download" id="download" aria-labelledby="download-title">
+<section class="download section" id="download" aria-labelledby="download-title">
   <div class="wrap">
-    <h2 class="display" id="download-title">Get <span class="red">Parkino</span></h2>
-    <div>
-      <p>The APK is the same app that's going to Google Play. Android will ask you once to allow installs from your browser. When the Play Store listing goes live, switch to it for automatic updates.</p>
-      <div class="buttons">
-        <!-- APK: put the file URL in href and remove aria-disabled once it is uploaded. -->
-        <a class="btn btn-primary" href="#download" id="apk-download" aria-disabled="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
-          Download the APK
-        </a>
-        <span class="btn btn-ghost" aria-disabled="true">Soon on Google Play</span>
+    <div class="panel">
+      <div>
+        <h2 class="display" id="download-title">Get Skopje Parking</h2>
+        <p>Android will ask you once to allow installs from your browser. When the Google Play listing goes live, switch to it for automatic updates.</p>
+        <div class="buttons">
+          <!-- APK: put the file URL in href and remove aria-disabled once it is uploaded. -->
+          <a class="btn btn-primary" href="#download" id="apk-download" aria-disabled="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
+            Download the APK
+          </a>
+          <span class="btn btn-ghost btn-soon" aria-disabled="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            Soon on Google Play
+          </span>
+        </div>
+        <p class="note" id="apk-note">The download link goes up here shortly.</p>
       </div>
-      <p class="small" id="apk-note">The download link goes up here shortly.</p>
+      <img class="mark" src="img/logo-white.svg" width="240" height="250" alt="">
     </div>
   </div>
 </section>
@@ -275,8 +264,8 @@
 <footer class="footer">
   <div class="wrap">
     <div>
-      <h2 class="display">Next time, park on <em>the first try.</em></h2>
-      <a class="btn btn-primary" href="#download">Get the app</a>
+      <a class="brand" href="/" aria-label="Skopje Parking home"><img src="img/logo-white.svg" alt="" width="30" height="31">Skopje Parking</a>
+      <p>Car parks, prices, free-space reports and SMS payment for Skopje, in one Android app.</p>
     </div>
     <div>
       <h3>App</h3>
@@ -284,14 +273,14 @@
     </div>
     <div>
       <h3>Legal</h3>
-      <ul><li><a href="/privacy">Privacy policy</a></li><li><a href="/terms">Terms of service</a></li><li><a href="/delete-account">Delete your account</a></li></ul>
+      <ul><li><a href="/privacy">Privacy policy</a></li><li><a href="/terms">Terms of service</a></li><li><a href="/delete-account">Delete your account</a></li><li><a href="mailto:contact@vasojevich.com">contact@vasojevich.com</a></li></ul>
     </div>
     <div>
       <h3>Map data</h3>
       <ul><li><a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a></li><li><a href="https://openmaptiles.org/">© OpenMapTiles</a></li><li><a href="https://openfreemap.org/">OpenFreeMap</a></li></ul>
     </div>
     <div class="legal">
-      <span>© 2026 Parkino</span>
+      <span>© 2026 Skopje Parking</span>
       <span>Not affiliated with the City of Skopje, JP Gradski Parking or JP Parkinzi na Opshtina Centar.</span>
     </div>
   </div>

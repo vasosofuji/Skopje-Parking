@@ -3,7 +3,7 @@
 ## Plan
 
 - Replace the flat list in the centered settings dialog with a full-page Settings view using the shared Sheet `fullPage` variant owned by parent.
-- Follow the reference's centered page header, profile summary and rounded grouped cards, using Parkino's existing light/dark/cosmetic palette rather than introducing new colors.
+- Follow the reference's centered page header, profile summary and rounded grouped cards, using Skopje Parking's existing light/dark/cosmetic palette rather than introducing new colors.
 - Show real identity, guest state and points. A compact Manage account action opens the existing account screen; do not invent profile fields or account actions.
 - Group the entry points into General, Account and Support. Keep detailed appearance, language, navigation and reminder controls behind their respective rows, with a header Back action instead of the old large body button.
 - Use accessible radio rows for choices. Preserve preference writes, navigation saving/error states, GPS refresh/permissions and background reminder information. Keep both English and Macedonian text.

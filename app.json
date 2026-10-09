@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Parking",
+    "name": "Skopje Parking",
     "slug": "parkskopje",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -30,7 +30,7 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Show your position to help you find parking nearby.",
-          "locationAlwaysAndWhenInUsePermission": "When you enable parking reminders, notice arrivals and ask a quick question even while Parking is in the background.",
+          "locationAlwaysAndWhenInUsePermission": "When you enable parking reminders, notice arrivals and ask a quick question even while Skopje Parking is in the background.",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true

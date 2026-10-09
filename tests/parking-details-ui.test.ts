@@ -1,4 +1,5 @@
 import test from "node:test";
+import * as paymentHours from "../src/domain/payment-hours";
 import * as languageModule from "../src/domain/language";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -27,6 +28,7 @@ function fixture() {
     if (name === "react-native") return { Platform: { OS: "android" }, Pressable: "Pressable", Text: "Text", View: "View", StyleSheet: { create: (styles: unknown) => styles } };
     if (name === "./ui") return { Sheet: "Sheet", RevealSection: "RevealSection", Button: "Button", Icon: "Icon", Note: "Note", useSheetReveal() { throw new Error("ParkingDetails cannot use the reveal hook before its Sheet provider exists"); } };
     if (name === "../domain/parking") return parking;
+    if (name === "../domain/payment-hours") return paymentHours;
     if (name === "../domain/report-feedback") return feedback;
     if (name === "../services/api") return { api: { flagSign: async () => ({ flagged: true }) } };
     if (name === "../state/ParkingContext") return { useParking: () => ({ catalog: { places: [place] }, language: "en", t: (en: string) => en, now }) };

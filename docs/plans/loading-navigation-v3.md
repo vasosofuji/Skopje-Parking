@@ -2,7 +2,7 @@
 
 ## Plan / persistent task notes
 
-- Add a lightweight Parkino loading mark using existing React Native Animated transforms, not a dependency or raster animation. Respect Reduce Motion, stop while inactive, clean up subscriptions and animation loops, and expose an accessible status label.
+- Add a lightweight Skopje Parking loading mark using existing React Native Animated transforms, not a dependency or raster animation. Respect Reduce Motion, stop while inactive, clean up subscriptions and animation loops, and expose an accessible status label.
 - Use it for account startup, onboarding initialization, loading contribution drafts, AI sign processing, and meaningful account/data loading. Coordinate MapScreen changes with its owner rather than editing map flows.
 - Add a grouped Navigation setting with Default, Google Maps and Waze. Store the choice locally and use it for every parking-navigation action.
 - Validate coordinates and open only fixed provider URLs. Prefer the selected native app, fall back to that provider's web directions when unavailable, and retain a default platform option. Handle failures with the existing navigation error UI.

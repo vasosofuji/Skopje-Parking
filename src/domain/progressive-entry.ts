@@ -87,7 +87,7 @@ export function createProgressiveEntry(api: EntryApi, initial: {
   };
 }
 
-/** Skopje zones cost 25–100 MKD an hour and garages rarely more; higher entries need a second look. */
+/** Skopje zones cost 25-100 MKD an hour and garages rarely more; higher entries need a second look. */
 export const UNUSUAL_HOURLY_PRICE = 300;
 export function priceInput(first: string, next: string): { first: number; next: number } | null {
   if (!first.trim() && !next.trim()) return null;

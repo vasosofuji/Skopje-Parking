@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
       form.reset();
       show("Done. Your account and contributor data were deleted.", "ok");
     } catch (error) {
-      show(error.status === 401 ? "That username and password don't match." : error.status === 429 ? "Too many attempts. Try again in 15 minutes." : "Couldn't reach Parkino. Check your connection and try again.", "error");
+      show(error.status === 401 ? "That username and password don't match." : error.status === 429 ? "Too many attempts. Try again in 15 minutes." : "Couldn't reach Skopje Parking. Check your connection and try again.", "error");
     } finally {
       button.disabled = false;
     }

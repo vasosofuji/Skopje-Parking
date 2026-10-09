@@ -455,9 +455,9 @@
     "tr": "Görünümünüzü seçin",
     "sq": "Zgjidhni pamjen"
   },
-  "Welcome to Parkino": {
-    "tr": "Parkino'ya hoş geldiniz",
-    "sq": "Mirë se vini në Parkino"
+  "Welcome to Skopje Parking": {
+    "tr": "Skopje Parking'e hoş geldiniz",
+    "sq": "Mirë se vini në Skopje Parking"
   },
   "Continue": {
     "tr": "Devam et",
@@ -495,9 +495,9 @@
     "tr": "Kullanılabilir",
     "sq": "I disponueshëm"
   },
-  "3–20 letters, numbers or underscores": {
-    "tr": "3–20 harf, rakam veya alt çizgi",
-    "sq": "3–20 shkronja, numra ose viza të poshtme"
+  "3-20 letters, numbers or underscores": {
+    "tr": "3-20 harf, rakam veya alt çizgi",
+    "sq": "3-20 shkronja, numra ose viza të poshtme"
   },
   "At least 10 characters": {
     "tr": "En az 10 karakter",
@@ -907,9 +907,9 @@
     "tr": "✓ Yakın zamanda boş yer bildirildi",
     "sq": "✓ Vende të lira të raportuara së fundmi"
   },
-  "Full — recently reported": {
-    "tr": "Dolu — yakın zamanda bildirildi",
-    "sq": "Plot — raportuar së fundmi"
+  "Full, recently reported": {
+    "tr": "Dolu, yakın zamanda bildirildi",
+    "sq": "Plot, raportuar së fundmi"
   },
   "No recent availability report": {
     "tr": "Güncel doluluk bildirimi yok",
@@ -1244,7 +1244,7 @@
     "sq": "Leximi po zgjat. Mund të plotësoni tabelën më poshtë."
   },
   "Use prices from 0 to 10,000 and a whole number of minutes from 1 to 10,080.": {
-    "tr": "0–10.000 arasında fiyat ve 1–10.080 arasında tam dakika sayısı kullanın.",
+    "tr": "0-10.000 arasında fiyat ve 1-10.080 arasında tam dakika sayısı kullanın.",
     "sq": "Përdorni çmime nga 0 deri në 10 000 dhe minuta të plota nga 1 deri në 10 080."
   },
   "Use a three-letter currency, for example MKD.": {
@@ -1447,9 +1447,9 @@
     "tr": "0 ile 10.000 MKD arasında fiyat girin.",
     "sq": "Shkruani një çmim nga 0 deri në 10 000 MKD."
   },
-  "Thank you — price shared": {
-    "tr": "Teşekkürler — fiyat paylaşıldı",
-    "sq": "Faleminderit — çmimi u nda"
+  "Thank you, price shared": {
+    "tr": "Teşekkürler, fiyat paylaşıldı",
+    "sq": "Faleminderit, çmimi u nda"
   },
   "Thanks for helping other drivers": {
     "tr": "Diğer sürücülere yardım ettiğiniz için teşekkürler",
@@ -1595,9 +1595,9 @@
     "tr": "0 rozeti, dolu olsa bile park ücreti olmadığını gösterir. Küçük yeşil/kırmızı rozetler, inceleme gereken işaretlerde son bildirimleri gösterir. Altın/menekşe sınırlar katkıcı ödülleridir.",
     "sq": "Shenja 0 tregon se nuk ka tarifë parkimi, edhe kur është plot. Shenjat e vogla të gjelbra/të kuqe tregojnë raportimet e fundit në shënuesit që kërkojnë rishikim. Kufijtë e artë/vjollcë janë shpërblime kontribuesish."
   },
-  "One more thing — is it free?": {
-    "tr": "Bir soru daha — ücretsiz mi?",
-    "sq": "Edhe një gjë — a është falas?"
+  "One more thing, is it free?": {
+    "tr": "Bir soru daha, ücretsiz mi?",
+    "sq": "Edhe një gjë, a është falas?"
   },
   "Any free spaces here?": {
     "tr": "Burada boş yer var mı?",
@@ -1695,9 +1695,9 @@
     "tr": "Ücretsiz hafta sonları",
     "sq": "Fundjavat falas"
   },
-  "e.g. Mon–Fri 07:00–23:00; Sat 07:00–15:00": {
-    "tr": "ör. Pzt–Cum 07:00–23:00; Cmt 07:00–15:00",
-    "sq": "p.sh. Hën–Pre 07:00–23:00; Sht 07:00–15:00"
+  "e.g. Mon-Fri 07:00-23:00; Sat 07:00-15:00": {
+    "tr": "ör. Pzt-Cum 07:00-23:00; Cmt 07:00-15:00",
+    "sq": "p.sh. Hën-Pre 07:00-23:00; Sht 07:00-15:00"
   },
   "Enter the total number of parking spaces.": {
     "tr": "Toplam park yeri sayısını girin.",
@@ -1851,7 +1851,7 @@
   "License plate": {"tr":"Plaka","sq":"Targa"},
   "Stored on this device only": {"tr":"Yalnızca bu cihazda saklanır","sq":"Ruhet vetëm në këtë pajisje"},
   "SMS plate": {"tr":"SMS plakası","sq":"Targa për SMS"},
-  "Use Latin letters and numbers (3–12).": {"tr":"Latin harfleri ve rakamları kullanın (3–12).","sq":"Përdorni shkronja latine dhe numra (3–12)."},
+  "Use Latin letters and numbers (3-12).": {"tr":"Latin harfleri ve rakamları kullanın (3-12).","sq":"Përdorni shkronja latine dhe numra (3-12)."},
   "Use 2 city letters, 4 numbers and 2 letters (SK1234FF).": {
     "tr": "2 şehir harfi, 4 rakam ve 2 harf kullanın (SK1234FF).",
     "sq": "Përdorni 2 shkronja të qytetit, 4 numra dhe 2 shkronja (SK1234FF)."
@@ -2055,9 +2055,9 @@
     "tr": "Gradski Parking (Üsküp Belediyesi)",
     "sq": "Gradski Parking (Qyteti i Shkupit)"
   },
-  "POC – Centar municipality parking": {
-    "tr": "POC – Merkez Belediyesi otoparkları",
-    "sq": "POC – Parkingjet e Komunës Qendër"
+  "POC, Centar municipality parking": {
+    "tr": "POC, Merkez Belediyesi otoparkları",
+    "sq": "POC, Parkingjet e Komunës Qendër"
   },
   "Parking time limit": {
     "tr": "Park süresi sınırı",
@@ -2127,13 +2127,13 @@
     "tr": "Ödeme bilgileri değişti. Tabelayı kontrol edip tekrar deneyin.",
     "sq": "Të dhënat e pagesës ndryshuan. Kontrolloni tabelën dhe provoni përsëri."
   },
-  "Use 2 city letters, 3–4 numbers and 2 letters (SK1234FF).": {
-    "tr": "2 şehir harfi, 3–4 rakam ve 2 harf kullanın (SK1234FF).",
-    "sq": "Përdorni 2 shkronja të qytetit, 3–4 numra dhe 2 shkronja (SK1234FF)."
+  "Use 2 city letters, 3-4 numbers and 2 letters (SK1234FF).": {
+    "tr": "2 şehir harfi, 3-4 rakam ve 2 harf kullanın (SK1234FF).",
+    "sq": "Përdorni 2 shkronja të qytetit, 3-4 numra dhe 2 shkronja (SK1234FF)."
   },
-  "Sign photos and drawn zones are public. If you add your own Google Gemini or Groq API key, a sign photo you read is sent from your phone directly to that provider, under your account and its terms. Your key stays in this phone's secure storage and is never sent to Parkino. Upload only the sign, without faces or registration plates.": {
-    "tr": "Tabela fotoğrafları ve çizilen bölgeler herkese açıktır. Kendi Google Gemini veya Groq API anahtarınızı eklerseniz, okuttuğunuz tabela fotoğrafı telefonunuzdan doğrudan o sağlayıcıya, sizin hesabınız ve onun koşulları altında gönderilir. Anahtarınız bu telefonun güvenli deposunda kalır ve Parkino'ya asla gönderilmez. Yalnızca tabelayı, yüz veya plaka olmadan yükleyin.",
-    "sq": "Fotot e tabelave dhe zonat e vizatuara janë publike. Nëse shtoni çelësin tuaj API të Google Gemini ose Groq, fotoja e tabelës që lexoni dërgohet nga telefoni drejtpërdrejt te ai ofrues, me llogarinë tuaj dhe sipas kushteve të tij. Çelësi mbetet në hapësirën e sigurt të këtij telefoni dhe nuk dërgohet kurrë te Parkino. Ngarkoni vetëm tabelën, pa fytyra ose targa."
+  "Sign photos and drawn zones are public. If you add your own Google Gemini or Groq API key, a sign photo you read is sent from your phone directly to that provider, under your account and its terms. Your key stays in this phone's secure storage and is never sent to Skopje Parking. Upload only the sign, without faces or registration plates.": {
+    "tr": "Tabela fotoğrafları ve çizilen bölgeler herkese açıktır. Kendi Google Gemini veya Groq API anahtarınızı eklerseniz, okuttuğunuz tabela fotoğrafı telefonunuzdan doğrudan o sağlayıcıya, sizin hesabınız ve onun koşulları altında gönderilir. Anahtarınız bu telefonun güvenli deposunda kalır ve Skopje Parking'ya asla gönderilmez. Yalnızca tabelayı, yüz veya plaka olmadan yükleyin.",
+    "sq": "Fotot e tabelave dhe zonat e vizatuara janë publike. Nëse shtoni çelësin tuaj API të Google Gemini ose Groq, fotoja e tabelës që lexoni dërgohet nga telefoni drejtpërdrejt te ai ofrues, me llogarinë tuaj dhe sipas kushteve të tij. Çelësi mbetet në hapësirën e sigurt të këtij telefoni dhe nuk dërgohet kurrë te Skopje Parking. Ngarkoni vetëm tabelën, pa fytyra ose targa."
   },
   "Your optional license plate is saved only on this device and cleared when you sign out. SMS parking opens your messaging app with the parking operator’s number and message, taken from Gradski Parking’s or POC’s published rules or a confirmed sign photo; you choose whether to send it. Your mobile operator may charge for the message and parking. Wait for the parking operator’s confirmation. A reminder before a zone’s time limit is scheduled only on this device, if you allow notifications.": {
     "tr": "İsteğe bağlı plakanız yalnızca bu cihazda saklanır ve çıkış yaptığınızda silinir. SMS ile park ödemesi, mesajlaşma uygulamanızı otopark işletmecisinin numarası ve mesajıyla açar; bunlar Gradski Parking'in veya POC'un yayımladığı kurallardan ya da onaylanmış bir tabela fotoğrafından alınır. Gönderip göndermemeye siz karar verirsiniz. Mobil operatörünüz mesaj ve park için ücret alabilir. Otopark işletmecisinin onayını bekleyin. Bölgenin süre sınırından önceki hatırlatma, bildirimlere izin verirseniz yalnızca bu cihazda planlanır.",
@@ -2175,9 +2175,9 @@
     "tr": "Anahtar kaldırılamadı. Tekrar deneyin.",
     "sq": "Çelësi nuk u hoq. Provoni përsëri."
   },
-  "Parkino can read parking signs with AI using your own free API key from Google Gemini or Groq. The key stays on this phone; Parkino's server never receives it.": {
-    "tr": "Parkino, Google Gemini veya Groq'tan alacağınız ücretsiz API anahtarınızla otopark tabelalarını yapay zekâ ile okuyabilir. Anahtar bu telefonda kalır; Parkino sunucusu onu asla almaz.",
-    "sq": "Parkino mund të lexojë tabelat e parkimit me AI duke përdorur çelësin tuaj falas API nga Google Gemini ose Groq. Çelësi mbetet në këtë telefon; serveri i Parkino nuk e merr kurrë."
+  "Skopje Parking can read parking signs with AI using your own free API key from Google Gemini or Groq. The key stays on this phone; Skopje Parking's server never receives it.": {
+    "tr": "Skopje Parking, Google Gemini veya Groq'tan alacağınız ücretsiz API anahtarınızla otopark tabelalarını yapay zekâ ile okuyabilir. Anahtar bu telefonda kalır; Skopje Parking sunucusu onu asla almaz.",
+    "sq": "Skopje Parking mund të lexojë tabelat e parkimit me AI duke përdorur çelësin tuaj falas API nga Google Gemini ose Groq. Çelësi mbetet në këtë telefon; serveri i Skopje Parking nuk e merr kurrë."
   },
   "When you read a sign, its photo goes from your phone straight to the provider you chose, under your account and that provider's terms. Without a key you can still type the details yourself.": {
     "tr": "Bir tabelayı okuttuğunuzda fotoğrafı telefonunuzdan doğrudan seçtiğiniz sağlayıcıya, sizin hesabınız ve o sağlayıcının koşulları altında gider. Anahtar olmadan da bilgileri kendiniz yazabilirsiniz.",
@@ -2251,9 +2251,9 @@
     "tr": "Hassas konum kapalı",
     "sq": "Vendndodhja e saktë është e çaktivizuar"
   },
-  "Parkino has only approximate location, accurate to about 2 km. Parking alerts, reports at a parking and SMS payment prompts need precise location. Tap Allow precise location, or open settings and turn on Use precise location.": {
-    "tr": "Parkino yalnızca yaklaşık konuma sahip; doğruluğu yaklaşık 2 km. Otopark bildirimleri, otoparkta bildirim gönderme ve SMS ödeme önerileri hassas konum gerektirir. Hassas konuma izin ver'e dokunun ya da ayarları açıp Hassas konumu kullan seçeneğini açın.",
-    "sq": "Parkino ka vetëm vendndodhje të përafërt, me saktësi rreth 2 km. Njoftimet e parkimit, raportimet në parking dhe sugjerimet për pagesë me SMS kërkojnë vendndodhje të saktë. Prekni Lejo vendndodhjen e saktë, ose hapni cilësimet dhe aktivizoni Përdor vendndodhjen e saktë."
+  "Skopje Parking has only approximate location, accurate to about 2 km. Parking alerts, reports at a parking and SMS payment prompts need precise location. Tap Allow precise location, or open settings and turn on Use precise location.": {
+    "tr": "Skopje Parking yalnızca yaklaşık konuma sahip; doğruluğu yaklaşık 2 km. Otopark bildirimleri, otoparkta bildirim gönderme ve SMS ödeme önerileri hassas konum gerektirir. Hassas konuma izin ver'e dokunun ya da ayarları açıp Hassas konumu kullan seçeneğini açın.",
+    "sq": "Skopje Parking ka vetëm vendndodhje të përafërt, me saktësi rreth 2 km. Njoftimet e parkimit, raportimet në parking dhe sugjerimet për pagesë me SMS kërkojnë vendndodhje të saktë. Prekni Lejo vendndodhjen e saktë, ose hapni cilësimet dhe aktivizoni Përdor vendndodhjen e saktë."
   },
   "Parking near {street}": {
     "tr": "{street} yakınında otopark",
@@ -2291,9 +2291,9 @@
     "tr": "Fotoğrafı bildir",
     "sq": "Raporto foton"
   },
-  "Delete your Parkino account": {
-    "tr": "Parkino hesabınızı silin",
-    "sq": "Fshini llogarinë tuaj Parkino"
+  "Delete your Skopje Parking account": {
+    "tr": "Skopje Parking hesabınızı silin",
+    "sq": "Fshini llogarinë tuaj Skopje Parking"
   },
   "In the app": {
     "tr": "Uygulamada",
@@ -2343,21 +2343,21 @@
     "tr": "SMS ile ödeme kuralları",
     "sq": "Rregullat e pagesës me SMS"
   },
-  "Parkino is an independent community app, not affiliated with the City of Skopje, JP Gradski Parking or JP Parkinzi na Opshtina Centar. SMS numbers and messages follow the operators’ published instructions, checked on 8 October 2026: Gradski Parking zones 144144 with “ZONE PLATE”, ended with S; POC zones 141414 with “zone PLATE hours”. Paying hours follow Gradski Parking’s published timetables; Sundays and public holidays are free except at Sredno Vodno. The sign at your car always takes priority.": {
-    "tr": "Parkino bağımsız bir topluluk uygulamasıdır; Üsküp Belediyesi, JP Gradski Parking veya JP Parkinzi na Opshtina Centar ile bağlantılı değildir. SMS numaraları ve mesajları, 8 Ekim 2026'da kontrol edilen işletmeci talimatlarını izler: Gradski Parking bölgeleri 144144 numarasına “BÖLGE PLAKA”, bitirmek için S; POC bölgeleri 141414 numarasına “bölge PLAKA saat”. Ödeme saatleri Gradski Parking'in yayımladığı programları izler; Sredno Vodno hariç pazar günleri ve resmî tatiller ücretsizdir. Aracınızın yanındaki tabela her zaman önceliklidir.",
-    "sq": "Parkino është aplikacion i pavarur i komunitetit, i palidhur me Qytetin e Shkupit, NP Gradski Parking ose NP Parkingjet e Komunës Qendër. Numrat dhe mesazhet SMS ndjekin udhëzimet e publikuara të operatorëve, të kontrolluara më 8 tetor 2026: zonat e Gradski Parking 144144 me “ZONA TARGA”, përfundim me S; zonat e POC 141414 me “zona TARGA orë”. Oraret e pagesës ndjekin oraret e publikuara të Gradski Parking; të dielat dhe festat zyrtare janë falas, përveç në Sredno Vodno. Tabela pranë makinës ka gjithmonë përparësi."
+  "Skopje Parking is an independent community app, not affiliated with the City of Skopje, JP Gradski Parking or JP Parkinzi na Opshtina Centar. SMS numbers and messages follow the operators’ published instructions, checked on 8 October 2026: Gradski Parking zones 144144 with “ZONE PLATE”, ended with S; POC zones 141414 with “zone PLATE hours”. Paying hours follow Gradski Parking’s published timetables; Sundays and public holidays are free except at Sredno Vodno. The sign at your car always takes priority.": {
+    "tr": "Skopje Parking bağımsız bir topluluk uygulamasıdır; Üsküp Belediyesi, JP Gradski Parking veya JP Parkinzi na Opshtina Centar ile bağlantılı değildir. SMS numaraları ve mesajları, 8 Ekim 2026'da kontrol edilen işletmeci talimatlarını izler: Gradski Parking bölgeleri 144144 numarasına “BÖLGE PLAKA”, bitirmek için S; POC bölgeleri 141414 numarasına “bölge PLAKA saat”. Ödeme saatleri Gradski Parking'in yayımladığı programları izler; Sredno Vodno hariç pazar günleri ve resmî tatiller ücretsizdir. Aracınızın yanındaki tabela her zaman önceliklidir.",
+    "sq": "Skopje Parking është aplikacion i pavarur i komunitetit, i palidhur me Qytetin e Shkupit, NP Gradski Parking ose NP Parkingjet e Komunës Qendër. Numrat dhe mesazhet SMS ndjekin udhëzimet e publikuara të operatorëve, të kontrolluara më 8 tetor 2026: zonat e Gradski Parking 144144 me “ZONA TARGA”, përfundim me S; zonat e POC 141414 me “zona TARGA orë”. Oraret e pagesës ndjekin oraret e publikuara të Gradski Parking; të dielat dhe festat zyrtare janë falas, përveç në Sredno Vodno. Tabela pranë makinës ka gjithmonë përparësi."
   },
-  "Payment rules published by the operator. Parkino is not affiliated with the operator, and the sign at your car always takes priority.": {
-    "tr": "Ödeme kuralları işletmeci tarafından yayımlanmıştır. Parkino işletmeciyle bağlantılı değildir ve aracınızın yanındaki tabela her zaman önceliklidir.",
-    "sq": "Rregullat e pagesës të publikuara nga operatori. Parkino nuk është i lidhur me operatorin dhe tabela pranë makinës ka gjithmonë përparësi."
+  "Payment rules published by the operator. Skopje Parking is not affiliated with the operator, and the sign at your car always takes priority.": {
+    "tr": "Ödeme kuralları işletmeci tarafından yayımlanmıştır. Skopje Parking işletmeciyle bağlantılı değildir ve aracınızın yanındaki tabela her zaman önceliklidir.",
+    "sq": "Rregullat e pagesës të publikuara nga operatori. Skopje Parking nuk është i lidhur me operatorin dhe tabela pranë makinës ka gjithmonë përparësi."
   },
-  "Sign photos and drawn zones are public. Their text is read on your phone with Google ML Kit, which sends Google diagnostic data such as device model, app version and performance. If you add your own Google Gemini or Groq API key, a sign photo you read is sent from your phone directly to that provider, under your account and its terms. Your key stays in this phone's secure storage and is never sent to Parkino. Upload only the sign, without faces or registration plates.": {
-    "tr": "Tabela fotoğrafları ve çizilen bölgeler herkese açıktır. Metinleri telefonunuzda Google ML Kit ile okunur; ML Kit Google'a cihaz modeli, uygulama sürümü ve performans gibi tanılama verileri gönderir. Kendi Google Gemini veya Groq API anahtarınızı eklerseniz, okuttuğunuz tabela fotoğrafı telefonunuzdan doğrudan o sağlayıcıya, sizin hesabınız ve onun koşulları altında gönderilir. Anahtarınız bu telefonun güvenli deposunda kalır ve Parkino'ya asla gönderilmez. Yalnızca tabelayı, yüz veya plaka olmadan yükleyin.",
-    "sq": "Fotot e tabelave dhe zonat e vizatuara janë publike. Teksti i tyre lexohet në telefonin tuaj me Google ML Kit, i cili i dërgon Google të dhëna diagnostikuese si modeli i pajisjes, versioni i aplikacionit dhe performanca. Nëse shtoni çelësin tuaj API të Google Gemini ose Groq, fotoja e tabelës që lexoni dërgohet nga telefoni drejtpërdrejt te ai ofrues, me llogarinë tuaj dhe sipas kushteve të tij. Çelësi mbetet në hapësirën e sigurt të këtij telefoni dhe nuk dërgohet kurrë te Parkino. Ngarkoni vetëm tabelën, pa fytyra ose targa."
+  "Sign photos and drawn zones are public. Their text is read on your phone with Google ML Kit, which sends Google diagnostic data such as device model, app version and performance. If you add your own Google Gemini or Groq API key, a sign photo you read is sent from your phone directly to that provider, under your account and its terms. Your key stays in this phone's secure storage and is never sent to Skopje Parking. Upload only the sign, without faces or registration plates.": {
+    "tr": "Tabela fotoğrafları ve çizilen bölgeler herkese açıktır. Metinleri telefonunuzda Google ML Kit ile okunur; ML Kit Google'a cihaz modeli, uygulama sürümü ve performans gibi tanılama verileri gönderir. Kendi Google Gemini veya Groq API anahtarınızı eklerseniz, okuttuğunuz tabela fotoğrafı telefonunuzdan doğrudan o sağlayıcıya, sizin hesabınız ve onun koşulları altında gönderilir. Anahtarınız bu telefonun güvenli deposunda kalır ve Skopje Parking'ya asla gönderilmez. Yalnızca tabelayı, yüz veya plaka olmadan yükleyin.",
+    "sq": "Fotot e tabelave dhe zonat e vizatuara janë publike. Teksti i tyre lexohet në telefonin tuaj me Google ML Kit, i cili i dërgon Google të dhëna diagnostikuese si modeli i pajisjes, versioni i aplikacionit dhe performanca. Nëse shtoni çelësin tuaj API të Google Gemini ose Groq, fotoja e tabelës që lexoni dërgohet nga telefoni drejtpërdrejt te ai ofrues, me llogarinë tuaj dhe sipas kushteve të tij. Çelësi mbetet në hapësirën e sigurt të këtij telefoni dhe nuk dërgohet kurrë te Skopje Parking. Ngarkoni vetëm tabelën, pa fytyra ose targa."
   },
-  "Parkino reads the text of sign photos on your phone without any key. For hard-to-read signs you can add your own free API key from Google Gemini or Groq. The key stays on this phone; Parkino's server never receives it.": {
-    "tr": "Parkino tabela fotoğraflarındaki metni herhangi bir anahtar olmadan telefonunuzda okur. Okunması zor tabelalar için Google Gemini veya Groq'tan kendi ücretsiz API anahtarınızı ekleyebilirsiniz. Anahtar bu telefonda kalır; Parkino sunucusu onu asla almaz.",
-    "sq": "Parkino e lexon tekstin e fotove të tabelave në telefonin tuaj pa asnjë çelës. Për tabela të vështira për t'u lexuar mund të shtoni çelësin tuaj falas API nga Google Gemini ose Groq. Çelësi mbetet në këtë telefon; serveri i Parkino nuk e merr kurrë."
+  "Skopje Parking reads the text of sign photos on your phone without any key. For hard-to-read signs you can add your own free API key from Google Gemini or Groq. The key stays on this phone; Skopje Parking's server never receives it.": {
+    "tr": "Skopje Parking tabela fotoğraflarındaki metni herhangi bir anahtar olmadan telefonunuzda okur. Okunması zor tabelalar için Google Gemini veya Groq'tan kendi ücretsiz API anahtarınızı ekleyebilirsiniz. Anahtar bu telefonda kalır; Skopje Parking sunucusu onu asla almaz.",
+    "sq": "Skopje Parking e lexon tekstin e fotove të tabelave në telefonin tuaj pa asnjë çelës. Për tabela të vështira për t'u lexuar mund të shtoni çelësin tuaj falas API nga Google Gemini ose Groq. Çelësi mbetet në këtë telefon; serveri i Skopje Parking nuk e merr kurrë."
   },
   "On this phone": {
     "tr": "Bu telefonda",
@@ -2411,9 +2411,9 @@
     "tr": "Harita verisi kaynakları",
     "sq": "Burimet e të dhënave të hartës"
   },
-  "Sign photos are read on your phone and never uploaded; each photo is deleted after you check it. Only the sign details you confirm and the zones you draw are shared, and they are public. Text is read with Google ML Kit, which sends Google diagnostic data such as device model, app version and performance. If you add your own Google Gemini or Groq API key, a sign photo you read is sent from your phone directly to that provider, under your account and its terms. Your key stays in this phone's secure storage and is never sent to Parkino.": {
-    "tr": "Tabela fotoğrafları telefonunuzda okunur ve asla yüklenmez; her fotoğraf siz kontrol ettikten sonra silinir. Yalnızca onayladığınız tabela bilgileri ve çizdiğiniz bölgeler paylaşılır ve bunlar herkese açıktır. Metin Google ML Kit ile okunur; ML Kit Google'a cihaz modeli, uygulama sürümü ve performans gibi tanılama verileri gönderir. Kendi Google Gemini veya Groq API anahtarınızı eklerseniz, okuttuğunuz tabela fotoğrafı telefonunuzdan doğrudan o sağlayıcıya, sizin hesabınız ve onun koşulları altında gönderilir. Anahtarınız bu telefonun güvenli deposunda kalır ve Parkino'ya asla gönderilmez.",
-    "sq": "Fotot e tabelave lexohen në telefonin tuaj dhe nuk ngarkohen kurrë; çdo foto fshihet pasi ta kontrolloni. Ndahen vetëm të dhënat e tabelës që konfirmoni dhe zonat që vizatoni, dhe ato janë publike. Teksti lexohet me Google ML Kit, i cili i dërgon Google të dhëna diagnostikuese si modeli i pajisjes, versioni i aplikacionit dhe performanca. Nëse shtoni çelësin tuaj API të Google Gemini ose Groq, fotoja e tabelës që lexoni dërgohet nga telefoni drejtpërdrejt te ai ofrues, me llogarinë tuaj dhe sipas kushteve të tij. Çelësi mbetet në hapësirën e sigurt të këtij telefoni dhe nuk dërgohet kurrë te Parkino."
+  "Sign photos are read on your phone and never uploaded; each photo is deleted after you check it. Only the sign details you confirm and the zones you draw are shared, and they are public. Text is read with Google ML Kit, which sends Google diagnostic data such as device model, app version and performance. If you add your own Google Gemini or Groq API key, a sign photo you read is sent from your phone directly to that provider, under your account and its terms. Your key stays in this phone's secure storage and is never sent to Skopje Parking.": {
+    "tr": "Tabela fotoğrafları telefonunuzda okunur ve asla yüklenmez; her fotoğraf siz kontrol ettikten sonra silinir. Yalnızca onayladığınız tabela bilgileri ve çizdiğiniz bölgeler paylaşılır ve bunlar herkese açıktır. Metin Google ML Kit ile okunur; ML Kit Google'a cihaz modeli, uygulama sürümü ve performans gibi tanılama verileri gönderir. Kendi Google Gemini veya Groq API anahtarınızı eklerseniz, okuttuğunuz tabela fotoğrafı telefonunuzdan doğrudan o sağlayıcıya, sizin hesabınız ve onun koşulları altında gönderilir. Anahtarınız bu telefonun güvenli deposunda kalır ve Skopje Parking'ya asla gönderilmez.",
+    "sq": "Fotot e tabelave lexohen në telefonin tuaj dhe nuk ngarkohen kurrë; çdo foto fshihet pasi ta kontrolloni. Ndahen vetëm të dhënat e tabelës që konfirmoni dhe zonat që vizatoni, dhe ato janë publike. Teksti lexohet me Google ML Kit, i cili i dërgon Google të dhëna diagnostikuese si modeli i pajisjes, versioni i aplikacionit dhe performanca. Nëse shtoni çelësin tuaj API të Google Gemini ose Groq, fotoja e tabelës që lexoni dërgohet nga telefoni drejtpërdrejt te ai ofrues, me llogarinë tuaj dhe sipas kushteve të tij. Çelësi mbetet në hapësirën e sigurt të këtij telefoni dhe nuk dërgohet kurrë te Skopje Parking."
   },
   "Your optional license plate is saved only on this device and cleared when you sign out. SMS parking opens your messaging app with the parking operator’s number and message, taken from Gradski Parking’s or POC’s published rules; you choose whether to send it. Your mobile operator may charge for the message and parking. Wait for the parking operator’s confirmation. A reminder before a zone’s time limit is scheduled only on this device, if you allow notifications.": {
     "tr": "İsteğe bağlı plakanız yalnızca bu cihazda saklanır ve çıkış yaptığınızda silinir. SMS ile park ödemesi, mesajlaşma uygulamanızı otopark işletmecisinin numarası ve mesajıyla açar; bunlar Gradski Parking'in veya POC'un yayımladığı kurallardan alınır. Gönderip göndermemeye siz karar verirsiniz. Mobil operatörünüz mesaj ve park için ücret alabilir. Otopark işletmecisinin onayını bekleyin. Bölgenin süre sınırından önceki hatırlatma, bildirimlere izin verirseniz yalnızca bu cihazda planlanır.",

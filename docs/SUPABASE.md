@@ -2,7 +2,7 @@
 
 ## Configured development project
 
-Parkino Database (`vkqxtqcuoobiijbnpxod`), in the Parkino organization, is configured in `eu-west-2`. The local server connects through the verified TLS session pooler using the dedicated `parkino_api` role. Its password is only in the ignored `.env`; the downloaded CA is in `data/runtime/supabase-ca.crt`. This role can read and write application tables but cannot create schemas, change roles, bypass RLS, or write migration metadata. Apply future schema migrations through an administrator connection, not this runtime login.
+Skopje Parking Database (`vkqxtqcuoobiijbnpxod`), in the Skopje Parking organization, is configured in `eu-west-2`. The local server connects through the verified TLS session pooler using the dedicated `parkino_api` role. Its password is only in the ignored `.env`; the downloaded CA is in `data/runtime/supabase-ca.crt`. This role can read and write application tables but cannot create schemas, change roles, bypass RLS, or write migration metadata. Apply future schema migrations through an administrator connection, not this runtime login.
 
 The database contains 914 imported parking records and the existing local profile, session and report. SQLite remains unchanged, with a backup in `data/runtime/parking-before-supabase-20261001.sqlite`. RLS is enabled on every application table; only the server role has application policies. Anonymous and authenticated Supabase Data API roles have no access to this private schema.
 

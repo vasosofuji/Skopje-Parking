@@ -1,7 +1,7 @@
 import type { Fix } from "../../src/domain/arrival";
 import type { ParkingPlace, VerifiedSmsPayment } from "../../src/domain/types";
 import { officialSmsPayment } from "../../src/domain/skopje-rules";
-// Monday 12:00 in Skopje: Gradski Parking's Aerodrom zones (D1–D9) charge 07:00–23:00.
+// Monday 12:00 in Skopje: Gradski Parking's Aerodrom zones (D1-D9) charge 07:00-23:00.
 export const paymentNow = Date.parse("2026-10-05T10:00:00Z");
 // The only SMS rules the app uses are the operators' published ones (start-stop, 144144, "D8 PLATE", stop "S").
 export const verified: VerifiedSmsPayment = officialSmsPayment({ id: "gradski:zone:D8", kind: "zone" })!;

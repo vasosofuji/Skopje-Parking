@@ -31,7 +31,7 @@ function Navigator() {
           backgroundColor: colors.paper,
         }}
       >
-        <LoadingIndicator size="large" label="Parkino" />
+        <LoadingIndicator size="large" label="Skopje Parking" />
       </View>
     );
   return (

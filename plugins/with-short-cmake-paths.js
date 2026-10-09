@@ -6,7 +6,7 @@ module.exports = function withShortCMakePaths(config) {
   return withAppBuildGradle(config, (result) => {
     if (result.modResults.language !== "groovy")
       throw new Error("Short CMake paths require the Expo Groovy Android template.");
-    const marker = "// Parkino: short generated CMake object paths";
+    const marker = "// Skopje Parking: short generated CMake object paths";
     if (!result.modResults.contents.includes(marker)) {
       const pattern = /defaultConfig\s*\{/;
       if (!pattern.test(result.modResults.contents))

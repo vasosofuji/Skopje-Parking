@@ -8,7 +8,7 @@ import { groupParking } from "../domain/clusters";
 import { parkingMarker, parkingMarkerHtml } from "../domain/marker-appearance";
 import type { ParkingMapProps } from "./mapTypes";
 import { mapHtml } from "./offlineMapHtml";
-import { dismissMapKeyboard } from "../../modules/parkino-map-keyboard";
+import { dismissMapKeyboard } from "../../modules/skopje-parking-map-keyboard";
 // The asset base lets the page read the bundled streets (file:///android_asset/offline-map/).
 const BASE_URL = "file:///android_asset/";
 const SOURCE = { html: mapHtml, baseUrl: BASE_URL };

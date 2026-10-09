@@ -8,7 +8,7 @@ const tileUrl =
   process.env.EXPO_PUBLIC_TILE_URL ??
   "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 export const mapHtml = `<!doctype html><html><head>
-<title>Parkino parking map</title>
+<title>Skopje Parking map</title>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>${maplibreStyles}</style>
 <style>${leafletStyles}html,body,#map{height:100%;width:100%;margin:0}.leaflet-container{touch-action:none}.leaflet-bottom{bottom:2px}.leaflet-control-attribution{font-size:10px!important;background:rgba(255,255,255,.85)!important}.dark .leaflet-tile-pane{filter:invert(.88) hue-rotate(180deg) brightness(1.15) contrast(.8) saturate(.35)}.dark.leaflet-container{background:#42484b}</style>

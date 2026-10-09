@@ -32,7 +32,7 @@ function labelledDays(context: string): number[] | null {
   return sat && sun ? [5, 6] : sat ? [5] : sun ? [6] : null;
 }
 
-// 07-21, 07:00 - 21:00, 7–21ч, 07.00-21.00h. A Cyrillic "ч" often reads as a trailing 4 ("07-214").
+// 07-21, 07:00 - 21:00, 7-21ч, 07.00-21.00h. A Cyrillic "ч" often reads as a trailing 4 ("07-214").
 const RANGE = /(^|[^\d])(2[0-4]|[01]?\d)(?:[:.]([0-5]\d))?\s*(H(?![A-Z])|4(?!\d))?\s*[-–—]\s*(2[0-4]|[01]?\d)(?:[:.]([0-5]\d))?(\s*H(?![A-Z])|4(?!\d))?/g;
 const PRICE_UNIT = /\s*(?:[ADGQ]EH|DEN|AEN|MKD|DENAR)/;
 const DURATION_UNIT = /^\s*(?:4AC|ЧАС|HOUR|OR[EË]|MIN|MNH)/;
@@ -53,7 +53,7 @@ function ranges(line: string): Range[] {
   return out;
 }
 
-/** Paying hours in the app's "Mon–Fri 07:00–21:00; Sat 07:00–14:00" format, plus weekend rules. */
+/** Paying hours in the app's "Mon-Fri 07:00-21:00; Sat 07:00-14:00" format, plus weekend rules. */
 export function payingHoursFromText(lines: string[]): { chargingHours: string | null; freeWeekends: SignInfo["freeWeekends"] } {
   const shaped = lines.map(shape), periods: PayingPeriod[] = [], unlabelled: { from: string; to: string }[] = [];
   shaped.forEach((line, i) => {
@@ -73,7 +73,7 @@ export function payingHoursFromText(lines: string[]): { chargingHours: string | 
   const freeSat = freeLines.some(line => DAY_WORDS.sat.test(line)), freeSun = freeLines.some(line => DAY_WORDS.sun.test(line) || DAY_WORDS.holidays.test(line));
   const paysSat = periods.some(period => period.days.includes(5)), paysSun = periods.some(period => period.days.includes(6));
   const freeWeekends = freeSat && freeSun && !paysSat ? "both" : freeSun && !paysSun ? paysSat ? "sunday" : null : paysSat && paysSun ? "neither" : null;
-  // Rows with the same times (weekdays and Saturday 07–23) become one period, in weekday order.
+  // Rows with the same times (weekdays and Saturday 07-23) become one period, in weekday order.
   const merged = new Map<string, PayingPeriod>();
   for (const period of periods) {
     const key = `${period.from}-${period.to}`, existing = merged.get(key);

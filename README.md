@@ -1,4 +1,4 @@
-# Parkino
+# Skopje Parking
 
 [parking.vasojevich.com](https://parking.vasojevich.com/) is the app's website: the static pages in `website/` (home, `/privacy`, `/terms` and a working `/delete-account` form), deployed by Vercel. The API health check is https://vkqxtqcuoobiijbnpxod.supabase.co/functions/v1/api/health.
 
@@ -111,7 +111,7 @@ The map requests fresh high-accuracy GPS. Desktop browsers may provide only a co
 
 ## Supabase and mobile onboarding
 
-Follow [SUPABASE.md](docs/SUPABASE.md) to connect a project, run `npm run db:migrate`, optionally migrate the existing SQLite demo data, and configure the hosted API. The Parkino Supabase project is connected, with verified TLS, shared application tables and preserved demo accounts. The API runs as a Supabase Edge Function; see "Supabase-only backend" below.
+Follow [SUPABASE.md](docs/SUPABASE.md) to connect a project, run `npm run db:migrate`, optionally migrate the existing SQLite demo data, and configure the hosted API. The Skopje Parking Supabase project is connected, with verified TLS, shared application tables and preserved demo accounts. The API runs as a Supabase Edge Function; see "Supabase-only backend" below.
 
 Native GPS checks foreground permission and system location services, prompts Android to enable its location provider when needed, requests an initial fix for stationary devices, and restarts after returning from Settings. Denied permissions, disabled GPS, timeouts and browser-provider failures have distinct recovery messages. Browser previews require HTTPS (or localhost) and a functioning browser/OS location provider; retries cannot supply a provider the host does not have. Native GPS and camera behavior still require physical-device testing.
 
@@ -139,10 +139,10 @@ node --env-file-if-exists=.env --import tsx scripts/device-test-api.ts
 # Another terminal:
 .\scripts\build-apk.ps1 -DeviceTest -ApiUrl http://127.0.0.1:3002
 adb reverse tcp:3002 tcp:3002
-adb install -r preview/Parkino-device-test.apk
+adb install -r preview/SkopjeParking-device-test.apk
 ```
 
-The isolated test server uses SQLite under `data/runtime/device-test.sqlite`, never the shared database. That explicit `-DeviceTest` build needs USB forwarding. For the normal **Parking Test** app (`mk.parkskopje.app.dev`) use `scripts/build-apk.ps1 -TestPackage -ApiUrl https://vkqxtqcuoobiijbnpxod.supabase.co/functions/v1/api`, producing `preview/Parkino-test-connected.apk`. It works over Wi-Fi/mobile data without USB. Preserve its signing identity when updating an existing installation.
+The isolated test server uses SQLite under `data/runtime/device-test.sqlite`, never the shared database. That explicit `-DeviceTest` build needs USB forwarding. For the normal **Parking Test** app (`mk.parkskopje.app.dev`) use `scripts/build-apk.ps1 -TestPackage -ApiUrl https://vkqxtqcuoobiijbnpxod.supabase.co/functions/v1/api`, producing `preview/SkopjeParking-test-connected.apk`. It works over Wi-Fi/mobile data without USB. Preserve its signing identity when updating an existing installation.
 
 Local builds use a single-use Gradle process and compile Kotlin in that process. The script also requests Gradle shutdown on success or failure, so builders do not stay resident after compilation. Generated projects and caches remain on disk for inspection.
 
@@ -198,7 +198,7 @@ Sign-in limits count only failed attempts: 8 per username and 100 per IP in 15 m
 
 Smaller fixes: a second tap is required for prices above 300 MKD/hour; generated "Parking near …" names are translated for Turkish and Albanian; dialog Close/Back labels follow the app language.
 
-Google Play: store builds omit background location (set `PARKINO_BACKGROUND_LOCATION=1` only after Play approves the declaration), and unused permissions are blocked. Public sign details can be reported; two reports hide them until an admin decides (`GET /v1/admin/flags`, `DELETE /v1/admin/signs/:id`). `/delete-account` is the public deletion page. Terms changed (version 2026-10-08). See `docs/PLAY-STORE.md` for the release checklist, declarations and Data safety answers.
+Google Play: store builds omit background location (set `SKOPJE_PARKING_BACKGROUND_LOCATION=1` only after Play approves the declaration), and unused permissions are blocked. Public sign details can be reported; two reports hide them until an admin decides (`GET /v1/admin/flags`, `DELETE /v1/admin/signs/:id`). `/delete-account` is the public deletion page. Terms changed (version 2026-10-08). See `docs/PLAY-STORE.md` for the release checklist, declarations and Data safety answers.
 
 ### Sign reading without any key (2026-10-09)
 

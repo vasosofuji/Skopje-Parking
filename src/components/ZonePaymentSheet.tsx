@@ -13,6 +13,7 @@ import LicensePlateEditor from "./LicensePlateEditor";
 import { isOfficialProtocol, isVerifiedSmsPayment } from "../domain/sms-payment";
 import { parkingPrice } from "../domain/parking";
 import { OPERATOR_HELP, officialChargingHours, officialZoneRules, skopjeTime } from "../domain/skopje-rules";
+import { plainHours } from "../domain/payment-hours";
 import { knownFreeTime, payableZones } from "../domain/zone-payment";
 
 export function smsMessage(template: string, zone: string, plate: string, hours: number | null) {
@@ -35,7 +36,7 @@ function ZoneOutline({ place }: { place: ParkingPlace }) {
 function useOperatorName() {
   const { t } = useParking();
   return (operator: "gradski" | "poc" | undefined) => operator === "gradski" ? t("Gradski Parking (City of Skopje)", "Градски паркинг (Град Скопје)")
-    : operator === "poc" ? t("POC – Centar municipality parking", "ПОЦ – Паркинзи на Општина Центар") : null;
+    : operator === "poc" ? t("POC, Centar municipality parking", "ПОЦ, Паркинзи на Општина Центар") : null;
 }
 /** Start/confirm one SMS payment. `manual` means the driver chose the zone instead of GPS dwell detection. */
 export default function ZonePaymentSheet({ place, validate, onClose, onInvalidated = onClose, manual = false }: { place: ParkingPlace | null; validate: (id: string, places?: ParkingPlace[]) => ParkingPlace | null; onClose: () => void; onInvalidated?: () => void; manual?: boolean }) {
@@ -120,7 +121,7 @@ export default function ZonePaymentSheet({ place, validate, onClose, onInvalidat
       <Text style={{ color: colors.ink }}>{t("Following hour", "Следен час")}: {price.nextHour} MKD</Text>
     </> : <Text style={{ color: colors.ink }}>{t("Price not shown", "Нема наведена цена")}</Text>}
     {protocol?.maxStayMinutes ? <Text style={{ color: colors.ink }}>{t("Maximum stay", "Максимален престој")}: {protocol.maxStayMinutes} {t("min", "мин")}</Text> : null}
-    <Text style={{ color: colors.ink }}>{t("Paying hours", "Часови за плаќање")}: {chargingHours || t("Not on sign / unknown", "Нема на таблата / непознато")}{officialHoursNote ? ` · ${officialHoursNote}` : ""}</Text>
+    <Text style={{ color: colors.ink }}>{t("Paying hours", "Часови за плаќање")}: {(chargingHours && plainHours(chargingHours)) || t("Not on sign / unknown", "Нема на таблата / непознато")}{officialHoursNote ? ` · ${officialHoursNote}` : ""}</Text>
     {knownFreeTime(checkedPlace, now) ? <Note>{t("Parking here is free at this time. You do not need to pay now.", "Паркирањето овде е бесплатно во ова време. Не треба да платите сега.")}</Note> : null}
     {protocol?.mode === "fixed-hours" ? <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>{protocol.allowedHours?.map(value => <Button key={value} title={`${value} ${value === 1 ? t("Hour", "Час").toLocaleLowerCase() : t("hours", "часа")}`} variant={hours === value ? "primary" : "secondary"} onPress={() => setChoice({ signature, hours: value })} />)}</View> : null}
     <Text selectable style={{ color: colors.ink }}>{t("SMS number", "SMS број")}: {protocol?.destination}</Text>
@@ -128,7 +129,7 @@ export default function ZonePaymentSheet({ place, validate, onClose, onInvalidat
     {protocol?.mode === "start-stop" && protocol.stopTemplate ? <Text selectable style={{ color: colors.ink }}>{t("When you leave, send", "Кога ќе заминете, испратете")}: {smsMessage(protocol.stopTemplate, protocol.zoneCode, plate, null)}</Text> : null}
     {official && protocol?.mode === "fixed-hours" ? <Note>{t("The operator texts you 10 minutes before your time ends. No SMS is needed when you leave.", "Операторот ве известува со SMS 10 минути пред истекот. Не треба SMS кога заминувате.")}</Note> : null}
     {official && help ? <View style={{ gap: 6 }}>
-      <Note>{t("Payment rules published by the operator. Parkino is not affiliated with the operator, and the sign at your car always takes priority.", "Правила објавени од операторот. Parkino не е поврзан со операторот, а знакот покрај возилото секогаш има предност.")}</Note>
+      <Note>{t("Payment rules published by the operator. Skopje Parking is not affiliated with the operator, and the sign at your car always takes priority.", "Правила објавени од операторот. Skopje Parking не е поврзан со операторот, а знакот покрај возилото секогаш има предност.")}</Note>
       <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
         <Button variant="secondary" icon="external-link" title={t("Operator website", "Веб-страница на операторот")} onPress={() => void Linking.openURL(help.url).catch(() => {})} />
         <Button variant="secondary" icon="phone" title={t("Call operator", "Јави се на операторот")} onPress={() => void Linking.openURL(`tel:${help.phone}`).catch(() => {})} />

@@ -14,7 +14,7 @@ import type { Catalog, Contribution, SignInfo } from "../src/domain/types";
 
 const reading: SignInfo = {
   isParkingSign: true, confidence: 0.97, zoneCode: "B2", operator: "Gradski", currency: "MKD", firstHour: 30, nextHour: 30,
-  maxStayMinutes: null, chargingHours: "Mon–Sat 07:00–23:00", freeWeekends: "sunday", paymentInstructions: "SMS 144 144", restrictions: null,
+  maxStayMinutes: null, chargingHours: "Mon-Sat 07:00-23:00", freeWeekends: "sunday", paymentInstructions: "SMS 144 144", restrictions: null,
   rawText: "ЗОНА B2\n144 144\nB2 SK1234AB\nЗа крај испратете S на 144 144",
 };
 const image = { base64: "aW1hZ2U=", mimeType: "image/jpeg" };
@@ -39,7 +39,7 @@ test("one AI reading is validated; range limits stripped from the provider schem
   await assert.rejects(readSignWith(answer({ ...reading, zoneCode: null, firstHour: null, nextHour: null, chargingHours: null, paymentInstructions: null, rawText: "" })), /Empty sign reading/);
 });
 
-test("device reader calls Gemini or Groq directly with the driver's key, never Parkino", async () => {
+test("device reader calls Gemini or Groq directly with the driver's key, never Skopje Parking", async () => {
   const calls: { url: string; init: RequestInit }[] = [];
   const respond = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
   const gemini = async (url: string | URL | Request, init?: RequestInit) => { calls.push({ url: String(url), init: init! }); return calls.length === 1 ? respond(404, {}) : respond(200, { status: "completed", output_text: JSON.stringify(reading) }); };

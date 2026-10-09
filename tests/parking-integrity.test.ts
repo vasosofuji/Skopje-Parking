@@ -26,7 +26,7 @@ const catalog: Catalog = {
 };
 const sign: SignInfo = {
   isParkingSign: true, confidence: 1, zoneCode: "C2", operator: null, currency: "MKD", firstHour: 99,
-  nextHour: 99, maxStayMinutes: null, chargingHours: "07:00–23:00", paymentInstructions: null,
+  nextHour: 99, maxStayMinutes: null, chargingHours: "07:00-23:00", paymentInstructions: null,
   restrictions: null, rawText: "C2 · 99 MKD",
 };
 

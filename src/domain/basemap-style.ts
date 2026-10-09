@@ -14,7 +14,7 @@ export const OFFLINE_BASEMAP: Pick<StyleSpecification, "sources" | "glyphs"> = {
 /** Keep street names and a quiet set of useful named businesses, without POI icons. */
 export function createBasemapStyle(offline = false): StyleSpecification {
   const style = JSON.parse(JSON.stringify(liberty)) as StyleSpecification;
-  style.name = "Parkino streets";
+  style.name = "Skopje Parking streets";
   style.layers = style.layers.filter(layer => {
     if (layer.type === "fill-extrusion" || layer.type === "raster") return false;
     if (layer.type !== "symbol") return true;
@@ -41,7 +41,7 @@ export function createBasemapStyle(offline = false): StyleSpecification {
     return layer;
   });
   const businesses: LayerSpecification = {
-    id: "parkino-named-businesses", type: "symbol", source: "openmaptiles", "source-layer": "poi", minzoom: 16,
+    id: "skopje-parking-named-businesses", type: "symbol", source: "openmaptiles", "source-layer": "poi", minzoom: 16,
     filter: ["all", ["has", "name"], ["!=", ["get", "name"], ""], ["match", ["get", "class"], ["shop", "food"], true, false]],
     layout: { "text-field": ["get", "name"], "text-font": ["Noto Sans Regular"], "text-size": 11, "text-max-width": 10, "text-padding": 8, "text-allow-overlap": false, "text-ignore-placement": false, "symbol-sort-key": ["coalesce", ["get", "rank"], 100] },
     paint: { "text-color": "#796752", "text-halo-color": "#fffdf8", "text-halo-width": 1.6 },

@@ -28,7 +28,7 @@ export async function completeOnboarding(
   const username = cleanUsername(intent.username);
   if (!validUsername(username)) throw new Error("Enter a valid username.");
   if (intent.mode === "create") {
-    if (!validPassword(intent.password)) throw new Error("Use 10–128 characters for your password.");
+    if (!validPassword(intent.password)) throw new Error("Use 10-128 characters for your password.");
     return actions.register(username, true, intent.password);
   }
   if (!intent.password || intent.password.length > 128) throw new Error("Enter your password.");

@@ -68,7 +68,7 @@ function SignReaderSection() {
   }
   const muted = { paddingHorizontal: 5, color: colors.muted, fontSize: 13, lineHeight: 20 };
   return <View style={{ gap: 16 }}>
-    <Text style={muted}>{t("Parkino reads the text of sign photos on your phone without any key. For hard-to-read signs you can add your own free API key from Google Gemini or Groq. The key stays on this phone; Parkino's server never receives it.", "Parkino го чита текстот од сликите на табли на вашиот телефон без клуч. За тешко читливи табли може да додадете свој бесплатен API клуч од Google Gemini или Groq. Клучот останува на овој телефон; серверот на Parkino никогаш не го добива.")}</Text>
+    <Text style={muted}>{t("Skopje Parking reads the text of sign photos on your phone without any key. For hard-to-read signs you can add your own free API key from Google Gemini or Groq. The key stays on this phone; Skopje Parking's server never receives it.", "Skopje Parking го чита текстот од сликите на табли на вашиот телефон без клуч. За тешко читливи табли може да додадете свој бесплатен API клуч од Google Gemini или Groq. Клучот останува на овој телефон; серверот на Skopje Parking никогаш не го добива.")}</Text>
     <Text style={muted}>{t("When you read a sign, its photo goes from your phone straight to the provider you chose, under your account and that provider's terms. Without a key you can still type the details yourself.", "Кога читате табла, сликата оди директно од телефонот до избраниот провајдер, под ваш профил и неговите услови. Без клуч сè уште може сами да ги внесете податоците.")}</Text>
     {reader ? <SettingsCard>
       <View style={{ padding: 18, gap: 12 }}>

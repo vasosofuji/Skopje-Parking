@@ -11,7 +11,7 @@ import { useAccount } from "../state/AccountContext";
 export default function DeleteAccount() {
   const { t } = useParking(), { colors } = useTheme(), { profile } = useAccount();
   return (
-    <Page title={t("Delete your Parkino account", "Избришете го Parkino профилот")}>
+    <Page title={t("Delete your Skopje Parking account", "Избришете го Skopje Parking профилот")}>
       <ScrollView contentContainerStyle={{ padding: 24, gap: 18, maxWidth: 720, width: "100%", alignSelf: "center" }}>
         <Text style={{ color: colors.ink, fontSize: 19, fontWeight: "700" }}>{t("In the app", "Во апликацијата")}</Text>
         <Note>{t("Open Settings → Privacy & data → Delete my contributor data, then confirm. Deletion happens immediately.", "Отворете Поставки → Приватност и податоци → Избриши ги моите податоци и потврдете. Бришењето е веднаш.")}</Note>

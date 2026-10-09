@@ -16,7 +16,7 @@ const point = {latitude:41.9965,longitude:21.4325};
 const contribution: Contribution = {requestId:"flow-fixture-1",name:"Fixture parking",coordinate:point,kind:"surface",zoneCode:null,firstHour:null,nextHour:null};
 const geometry = {type:"Polygon" as const,coordinates:[[[21.432,41.996],[21.433,41.996],[21.433,41.997],[21.432,41.997],[21.432,41.996]]]};
 const image = {mimeType:"image/png",base64:"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jGqkAAAAASUVORK5CYII="};
-const info: SignInfo = {isParkingSign:true,confidence:1,zoneCode:"B2",operator:"Test",currency:"MKD",firstHour:40,nextHour:40,maxStayMinutes:null,chargingHours:"07:00–23:00",paymentInstructions:null,restrictions:null,rawText:"Б2 · 40 денари / час"};
+const info: SignInfo = {isParkingSign:true,confidence:1,zoneCode:"B2",operator:"Test",currency:"MKD",firstHour:40,nextHour:40,maxStayMinutes:null,chargingHours:"07:00-23:00",paymentInstructions:null,restrictions:null,rawText:"Б2 · 40 денари / час"};
 
 for (const backend of ["sqlite","postgres"] as const) test(`${backend}: detailed parking, expiring counts, confirmed zone signs and idempotent rewards`, async (t) => {
   let now=Date.now();
@@ -50,7 +50,7 @@ for (const backend of ["sqlite","postgres"] as const) test(`${backend}: detailed
     const detailed=await write("/v1/contributions",{...contribution,requestId:"detailed-fixture",geometry,capacity:50,freeSpaces:3,firstHour:0,nextHour:0});
     assert.equal(detailed.statusCode,201,detailed.body);
     const detailId=detailed.json().id;
-    const schedule = { chargingHours: "Mon–Sat 07:00–23:00", freeWeekends: "sunday" };
+    const schedule = { chargingHours: "Mon-Sat 07:00-23:00", freeWeekends: "sunday" };
     assert.equal((await write(`/v1/places/${detailId}/payment-schedule`,schedule,"PUT")).statusCode,200);
     assert.equal((await write(`/v1/places/${detailId}/payment-schedule`,{...schedule,freeWeekends:"always"},"PUT")).statusCode,400);
     assert.equal((await app.inject({method:"PUT",url:`/v1/places/${detailId}/payment-schedule`,payload:schedule})).statusCode,401);

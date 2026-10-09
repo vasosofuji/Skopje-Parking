@@ -142,8 +142,8 @@ test("password derivation uses unique salts and rejects incorrect or malformed v
   assert.equal(await verifyPassword("wrong password", first), false);
   assert.equal(await verifyPassword(PASSWORD), false);
   assert.equal(await verifyPassword(PASSWORD, "malformed"), false);
-  await assert.rejects(hashPassword("short"), /10–128/);
-  await assert.rejects(hashPassword(" ".repeat(20)), /10–128/);
+  await assert.rejects(hashPassword("short"), /10-128/);
+  await assert.rejects(hashPassword(" ".repeat(20)), /10-128/);
 });
 
 test("login throttle counts failed case-equivalent usernames across IPs, resets on success and expires", () => {

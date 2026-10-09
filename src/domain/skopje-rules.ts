@@ -56,18 +56,18 @@ type Rules = {
 };
 // Gradski Parking publishes three timetables (Centar, Aerodrom, Vodno) without zone codes; codes
 // are matched to them by the published street names. Sundays and holidays are free except at Vodno.
-const CENTRE = (month: number) => month >= 6 && month <= 9 ? "Mon–Sat 07:00–23:00" : "Mon–Fri 07:00–21:00; Sat 07:00–14:00";
-const AERODROM = () => "Mon–Sat 07:00–23:00";
-// Sredno Vodno: Saturdays, Sundays and holidays 09–16. Weekday hours are not published.
-const VODNO = () => "Sat–Sun 09:00–16:00";
+const CENTRE = (month: number) => month >= 6 && month <= 9 ? "Mon-Sat 07:00-23:00" : "Mon-Fri 07:00-21:00; Sat 07:00-14:00";
+const AERODROM = () => "Mon-Sat 07:00-23:00";
+// Sredno Vodno: Saturdays, Sundays and holidays 09-16. Weekday hours are not published.
+const VODNO = () => "Sat-Sun 09:00-16:00";
 
 function gradskiRules(code: string): Rules | null {
   const family = code.match(/^([ABCD])(\d{1,2})$/);
   if (!family) return null;
   const [, letter, number] = family;
-  // D1–D9 are Aerodrom streets; D40–D62 are in Karposh, outside the three published timetables.
+  // D1-D9 are Aerodrom streets; D40-D62 are in Karposh, outside the three published timetables.
   const hours = code === "A0" ? VODNO : letter === "D" ? Number(number) < 10 ? AERODROM : () => null : CENTRE;
-  // A3–A8 allow 2 hours and B zones 4 hours; A0x premium streets and C/D zones have no limit.
+  // A3-A8 allow 2 hours and B zones 4 hours; A0x premium streets and C/D zones have no limit.
   return { operator: "gradski", token: code, maxStayMinutes: letter === "A" && !code.startsWith("A0") ? 120 : letter === "B" ? 240 : null, hours };
 }
 
@@ -111,7 +111,7 @@ export function officialSmsPayment(place: Pick<ParkingPlace, "id" | "kind">): Ve
     photoId: "official:gradski", ...dates, sourceUrl: OPERATOR_HELP.gradski.url,
   };
   // poc.mk documents "<zone> <PLATE> <duration>" (example "1 SK1234MM 2") but no duration range;
-  // offering only its example's 1–2 hours is the app's own conservative limit.
+  // offering only its example's 1-2 hours is the app's own conservative limit.
   return {
     ...OFFICIAL_SMS_FORMATS["141414"], destination: "141414", zoneCode: rules.token, plateFormat: "compact",
     allowedHours: [1, 2], maxStayMinutes: null, confidence: 1,

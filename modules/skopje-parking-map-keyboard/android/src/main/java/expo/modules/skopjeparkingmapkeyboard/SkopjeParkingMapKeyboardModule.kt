@@ -1,4 +1,4 @@
-package expo.modules.parkinomapkeyboard
+package expo.modules.skopjeparkingmapkeyboard
 
 import android.content.Context
 import android.os.Build
@@ -9,16 +9,16 @@ import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
-class ParkinoMapKeyboardModule : Module() {
+class SkopjeParkingMapKeyboardModule : Module() {
   override fun definition() = ModuleDefinition {
-    Name("ParkinoMapKeyboard")
+    Name("SkopjeParkingMapKeyboard")
 
     AsyncFunction("dismissForMap") {
       val activity = appContext.currentActivity ?: return@AsyncFunction false
       // Evaluate focus on the UI queue, not when JS sent the map event. A user
       // may already have focused search or a sheet field by the time it arrives.
       val map = activity.currentFocus as? WebView ?: return@AsyncFunction false
-      if (map.title != "Parkino parking map") return@AsyncFunction false
+      if (map.title != "Skopje Parking map") return@AsyncFunction false
       // An RN Modal owns another window while the Activity can still remember
       // this WebView as currentFocus. Never queue a hide on that inactive window.
       if (!map.hasWindowFocus() || !activity.window.decorView.hasWindowFocus()) return@AsyncFunction false

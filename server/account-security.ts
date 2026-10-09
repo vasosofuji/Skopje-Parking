@@ -57,7 +57,7 @@ function derive(password: string, salt: string): Promise<Buffer> {
 }
 export async function hashPassword(password: string) {
   if (!validPassword(password))
-    throw accountError("Use a password with 10–128 characters.");
+    throw accountError("Use a password with 10-128 characters.");
   const salt = randomBytes(16).toString("hex");
   const key = await derive(password, salt);
   return `scrypt:32768:8:3:${salt}:${key.toString("hex")}`;

@@ -34,7 +34,7 @@ try {
     }
 } finally { Pop-Location }
 $parkingSavedEnvironment = @{}
-foreach ($name in @('ANDROID_HOME','ANDROID_SDK_ROOT','EXPO_PUBLIC_API_URL','EXPO_PUBLIC_OFFLINE_PREVIEW','PARKINO_DEVICE_TEST','PARKINO_TEST_PACKAGE','NODE_ENV','CI')) {
+foreach ($name in @('ANDROID_HOME','ANDROID_SDK_ROOT','EXPO_PUBLIC_API_URL','EXPO_PUBLIC_OFFLINE_PREVIEW','SKOPJE_PARKING_DEVICE_TEST','SKOPJE_PARKING_TEST_PACKAGE','NODE_ENV','CI')) {
     $parkingSavedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
 }
 try {
@@ -43,8 +43,8 @@ try {
     $env:EXPO_PUBLIC_OFFLINE_PREVIEW = $(if ($OfflinePreview) { '1' } else { '0' })
     if (-not $OfflinePreview) { $env:EXPO_PUBLIC_API_URL = $ApiUrl }
     $env:CI = '1'
-    $env:PARKINO_DEVICE_TEST = $(if ($DeviceTest) { '1' } else { '0' })
-    $env:PARKINO_TEST_PACKAGE = $(if ($TestPackage) { '1' } else { '0' })
+    $env:SKOPJE_PARKING_DEVICE_TEST = $(if ($DeviceTest) { '1' } else { '0' })
+    $env:SKOPJE_PARKING_TEST_PACKAGE = $(if ($TestPackage) { '1' } else { '0' })
     Push-Location $parkingBuildRoot
     try {
         & npm.cmd ci --include=dev
@@ -67,7 +67,7 @@ try {
     }
     $parkingPreviewRoot = Join-Path $parkingProjectRoot 'preview'
     New-Item -ItemType Directory -Path $parkingPreviewRoot -Force | Out-Null
-    $parkingApkPath = Join-Path $parkingPreviewRoot $(if ($DeviceTest) { 'Parkino-device-test.apk' } elseif ($TestPackage) { 'Parkino-test-connected.apk' } elseif ($OfflinePreview) { 'ParkSkopje-preview.apk' } else { 'Parkino-connected.apk' })
+    $parkingApkPath = Join-Path $parkingPreviewRoot $(if ($DeviceTest) { 'SkopjeParking-device-test.apk' } elseif ($TestPackage) { 'SkopjeParking-test-connected.apk' } elseif ($OfflinePreview) { 'ParkSkopje-preview.apk' } else { 'SkopjeParking-connected.apk' })
     Copy-Item -LiteralPath (Join-Path $parkingBuildRoot 'android\app\build\outputs\apk\release\app-release.apk') -Destination $parkingApkPath -Force
     Get-FileHash -LiteralPath $parkingApkPath -Algorithm SHA256
 } finally {

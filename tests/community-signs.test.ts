@@ -46,7 +46,7 @@ const info: SignInfo = {
   firstHour: 40,
   nextHour: 40,
   maxStayMinutes: null,
-  chargingHours: "Mon–Sat 07:00–23:00",
+  chargingHours: "Mon-Sat 07:00-23:00",
   paymentInstructions: "SMS 144144",
   restrictions: null,
   rawText: "B2 40 ден/час",

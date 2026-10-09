@@ -1069,7 +1069,7 @@ export default function MapScreen() {
         visible={arrivalVisible}
         title={
           question === "price"
-            ? t("One more thing — is it free?", "Уште нешто — бесплатно ли е?")
+            ? t("One more thing, is it free?", "Уште нешто, бесплатно ли е?")
             : t("Any free spaces here?", "Има ли слободни места тука?")
         }
         onClose={() => { if (!sending) dismissArrival(); }}

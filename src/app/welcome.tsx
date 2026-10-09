@@ -82,12 +82,12 @@ export default function Welcome() {
     void AsyncStorage.setItem(PREFERENCES_SETUP_KEY, "1").catch(() => {});
     setStep("account");
   }
-  const title = step === "language" ? t("Select language", "Изберете јазик") : step === "theme" ? t("Choose your appearance", "Изберете изглед") : mode === "choice" ? t("Welcome to Parkino", "Добредојдовте во Parkino") : mode === "create" ? t("Create account", "Создај профил") : t("Sign in", "Најава");
+  const title = step === "language" ? t("Select language", "Изберете јазик") : step === "theme" ? t("Choose your appearance", "Изберете изглед") : mode === "choice" ? t("Welcome to Skopje Parking", "Добредојдовте во Skopje Parking") : mode === "create" ? t("Create account", "Создај профил") : t("Sign in", "Најава");
   return <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }}>
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, padding: 24, maxWidth: 440, width: "100%", alignSelf: "center" }}>
         <View style={{ flex: 1, justifyContent: "center", gap: 24, paddingVertical: 28 }}>
-          {!step ? <LoadingIndicator size="large" label="Parkino" /> : <>
+          {!step ? <LoadingIndicator size="large" label="Skopje Parking" /> : <>
             <Text style={{ color: colors.muted, fontSize: 13 }}>{step === "language" ? "1 / 4" : step === "theme" ? "2 / 4" : "3 / 4"}</Text>
             <View style={{ gap: 12, alignItems: step === "language" ? "center" : "stretch" }}>
               {step === "language" ? <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: colors.mint, alignItems: "center", justifyContent: "center", marginBottom: 6 }}><Icon name="globe" size={28} color={colors.accentText} /></View> : null}
@@ -105,7 +105,7 @@ export default function Welcome() {
             </> : <>
               <View style={{ gap: 8 }}>
                 <TextInput accessibilityLabel={t("Username", "Корисничко име")} value={username} editable={!busy} onChangeText={(value) => { setUsername(value); setAvailability(validUsername(value) ? "checking" : "idle"); setError(""); }} autoCapitalize="none" autoCorrect={false} autoComplete="username" textContentType="username" maxLength={20} placeholder={t("Username", "Корисничко име")} placeholderTextColor={colors.muted} style={{ minHeight: 52, padding: 14, fontSize: 17, borderRadius: 12, borderWidth: 1, borderColor: colors.line, color: colors.ink, backgroundColor: colors.input }} />
-                {mode === "create" ? <Text accessibilityLiveRegion="polite" style={{ color: availability === "taken" ? colors.red : colors.muted, fontSize: 12 }}>{availability === "taken" ? t("Username taken", "Зафатено име") : availability === "checking" ? t("Checking…", "Се проверува…") : availability === "available" ? t("Available", "Слободно") : t("3–20 letters, numbers or underscores", "3–20 букви, бројки или долни црти")}</Text> : null}
+                {mode === "create" ? <Text accessibilityLiveRegion="polite" style={{ color: availability === "taken" ? colors.red : colors.muted, fontSize: 12 }}>{availability === "taken" ? t("Username taken", "Зафатено име") : availability === "checking" ? t("Checking…", "Се проверува…") : availability === "available" ? t("Available", "Слободно") : t("3-20 letters, numbers or underscores", "3-20 букви, бројки или долни црти")}</Text> : null}
               </View>
               <View style={{ gap: 8 }}>
                 <PasswordField value={password} onChange={setPassword} creating={mode === "create"} disabled={busy} />

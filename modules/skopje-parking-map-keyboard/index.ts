@@ -3,7 +3,7 @@ import { Keyboard, Platform } from "react-native";
 
 type MapKeyboardModule = { dismissForMap(): Promise<boolean> };
 const native = Platform.OS === "android"
-  ? requireOptionalNativeModule<MapKeyboardModule>("ParkinoMapKeyboard")
+  ? requireOptionalNativeModule<MapKeyboardModule>("SkopjeParkingMapKeyboard")
   : null;
 
 /** Only call for direct interactions with our bundled, non-editable map. */

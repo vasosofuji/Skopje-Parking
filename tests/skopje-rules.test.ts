@@ -10,7 +10,7 @@ import type { ParkingPlace } from "../src/domain/types";
 const zone = (id: string): Pick<ParkingPlace, "id" | "kind"> => ({ id, kind: "zone" });
 const at = (iso: string) => Date.parse(iso);
 
-test("operator registry: Gradski start-stop to 144144 with A/B limits, POC 1–2 hours to 141414, nothing else", () => {
+test("operator registry: Gradski start-stop to 144144 with A/B limits, POC 1-2 hours to 141414, nothing else", () => {
   const a3 = officialSmsPayment(zone("gradski:zone:A3"))!;
   assert.deepEqual([a3.destination, a3.mode, a3.zoneCode, a3.startTemplate, a3.stopTemplate, a3.maxStayMinutes], ["144144", "start-stop", "A3", "{zone} {plate}", "S", 120]);
   assert.equal(officialSmsPayment(zone("gradski:zone:B10"))!.maxStayMinutes, 240);
@@ -43,13 +43,13 @@ test("published Skopje timetables: Centar seasons, Aerodrom, Vodno weekends, Sun
   assert.equal(officiallyCharging(vodno, at("2026-10-07T10:00:00Z")), null, "Vodno weekday hours are unpublished");
   assert.equal(officiallyCharging(zone("gradski:zone:D62"), at("2026-10-05T10:00:00Z")), null);
   assert.equal(officiallyCharging(zone("poc:zone:1:0"), at("2026-10-05T10:00:00Z")), null);
-  assert.equal(officialChargingHours(centre, at("2026-10-05T10:00:00Z")), "Mon–Fri 07:00–21:00; Sat 07:00–14:00");
-  assert.equal(officialChargingHours(centre, at("2026-06-01T10:00:00Z")), "Mon–Sat 07:00–23:00");
+  assert.equal(officialChargingHours(centre, at("2026-10-05T10:00:00Z")), "Mon-Fri 07:00-21:00; Sat 07:00-14:00");
+  assert.equal(officialChargingHours(centre, at("2026-06-01T10:00:00Z")), "Mon-Sat 07:00-23:00");
   // A confirmed sign with readable hours stays the authority over the published timetable.
   const place = { ...paymentZone, id: "gradski:zone:C17", zoneCode: "C17" };
   assert.equal(knownFreeTime(place, at("2026-10-11T10:00:00Z")), true);
   assert.equal(knownFreeTime(place, at("2026-10-05T10:00:00Z")), false);
-  const signed = { ...place, signInfo: { isParkingSign: true, confidence: 1, zoneCode: "C17", operator: null, currency: null, firstHour: 25, nextHour: 25, maxStayMinutes: null, chargingHours: "Daily 00:00–24:00", paymentInstructions: null, restrictions: null, rawText: "", readingId: "p", model: "manual", observedAt: "", confirmedAt: "2026-10-01T00:00:00Z" } };
+  const signed = { ...place, signInfo: { isParkingSign: true, confidence: 1, zoneCode: "C17", operator: null, currency: null, firstHour: 25, nextHour: 25, maxStayMinutes: null, chargingHours: "Daily 00:00-24:00", paymentInstructions: null, restrictions: null, rawText: "", readingId: "p", model: "manual", observedAt: "", confirmedAt: "2026-10-01T00:00:00Z" } };
   assert.equal(knownFreeTime(signed, at("2026-10-11T10:00:00Z")), false);
 });
 
@@ -73,7 +73,7 @@ test("catalog enrichment publishes official protocols only, and not for a relabe
   assert.equal(enrichSigns([base], [], [{ place_id: base.id, code: "B3" }], [])[0].smsPayment, undefined, "a relabelled zone needs a person");
   // A confirmed sign reading shows its details but can never set SMS rules.
   const reading = { id: "r1", place_id: base.id, created: paymentNow, model: "ocr:mlkit-text-v2",
-    info: JSON.stringify({ isParkingSign: true, confidence: 0.8, zoneCode: "B2", operator: "Gradski", currency: "MKD", firstHour: 30, nextHour: 30, maxStayMinutes: 240, chargingHours: "Mon–Fri 07:00–21:00", paymentInstructions: "SMS B2 to 141515", restrictions: null, rawText: "" }) };
+    info: JSON.stringify({ isParkingSign: true, confidence: 0.8, zoneCode: "B2", operator: "Gradski", currency: "MKD", firstHour: 30, nextHour: 30, maxStayMinutes: 240, chargingHours: "Mon-Fri 07:00-21:00", paymentInstructions: "SMS B2 to 141515", restrictions: null, rawText: "" }) };
   const signed = enrichSigns([base], [], [], [reading])[0];
   assert.equal(signed.signInfo?.readingId, "r1"); assert.equal(signed.smsPayment?.destination, "144144");
   const community: ParkingPlace = { ...paymentZone, id: "community:x", smsPayment: undefined };

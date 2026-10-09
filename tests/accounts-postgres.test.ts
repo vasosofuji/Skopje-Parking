@@ -278,7 +278,7 @@ for (const backend of ["sqlite", "postgres"] as const) {
           firstHour: 50,
           nextHour: 50,
           maxStayMinutes: null,
-          chargingHours: "08:00–20:00",
+          chargingHours: "08:00-20:00",
           paymentInstructions: null,
           restrictions: null,
           rawText: "A42 50 ден",

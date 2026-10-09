@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { AccessibilityInfo, Animated, AppState, Easing, Platform, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../state/ThemeContext";
 
-/** A native-driven Parkino mark. It stays still when motion is reduced or the app is hidden. */
+/** A native-driven Skopje Parking mark. It stays still when motion is reduced or the app is hidden. */
 export default function LoadingIndicator({ label = "Loading / Се вчитува", size = "medium", inline = false, active = true }: {
   label?: string; size?: "small" | "medium" | "large"; inline?: boolean; active?: boolean;
 }) {

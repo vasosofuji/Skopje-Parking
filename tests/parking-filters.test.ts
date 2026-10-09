@@ -38,7 +38,7 @@ test("legend filters share marker evidence and expire availability reports", () 
   const free: ParkingPlace = {...available,communityPrice:{firstHour:0,nextHour:0,observedAt:new Date(now).toISOString(),reports:1}};
   assert.equal(matchesParkingFilter(free,"free",now),true);
   assert.equal(matchesParkingFilter(free,"reviewed",now),true);
-  assert.equal(matchesParkingFilter({...free,communityPrice:{...free.communityPrice!,firstHour:25,nextHour:25},paymentSchedule:{chargingHours:"Mon–Sat 07:00–23:00",freeWeekends:"sunday"}},"free",now),false);
+  assert.equal(matchesParkingFilter({...free,communityPrice:{...free.communityPrice!,firstHour:25,nextHour:25},paymentSchedule:{chargingHours:"Mon-Sat 07:00-23:00",freeWeekends:"sunday"}},"free",now),false);
   assert.equal(matchesParkingFilter({...free,availability:{...available.availability!,status:"full"}},"free",now),true);
   assert.equal(matchesParkingFilter({...available,availability:{...available.availability!,status:"full"}},"full",now),true);
 });

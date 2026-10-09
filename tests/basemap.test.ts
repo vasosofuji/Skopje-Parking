@@ -22,7 +22,7 @@ test("clean basemap validates and retains street names plus only named food and 
   assert.equal(accepts({ class: "food" }), false);
   assert.ok(style.layers.some(layer => layer.id === "highway-name-minor"));
   assert.ok(style.layers.some(layer => layer.id === "highway-name-major"));
-  assert.ok(style.layers.findIndex(layer => layer.id === "parkino-named-businesses") < style.layers.findIndex(layer => layer.id === "highway-name-minor"), "street labels are placed first and win collisions");
+  assert.ok(style.layers.findIndex(layer => layer.id === "skopje-parking-named-businesses") < style.layers.findIndex(layer => layer.id === "highway-name-minor"), "street labels are placed first and win collisions");
   assert.ok(style.layers.filter(layer => layer.type === "symbol").every(layer => !layer.layout?.["icon-image"] && layer.layout?.["text-allow-overlap"] === false));
   assert.equal(style.layers.some(layer => layer.type === "fill-extrusion"), false);
   assert.match(BASEMAP_ATTRIBUTION, /openstreetmap.org\/copyright/); assert.match(BASEMAP_ATTRIBUTION, /openmaptiles.org/); assert.match(BASEMAP_ATTRIBUTION, /openfreemap.org/);

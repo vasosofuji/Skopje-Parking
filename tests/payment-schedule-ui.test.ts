@@ -29,23 +29,23 @@ function form(initial: PaymentSchedule) {
 test("paying hours controls select days and append separate periods without text syntax", () => {
   const editor = form({ chargingHours: null, freeWeekends: null }); let tree = editor.render();
   assert.ok(!editor.nodes(tree).some(node => node.type === "TextInput"));
-  editor.tap(tree, "Add hours"); tree = editor.render(); assert.equal(editor.value().chargingHours, "Mon–Fri 07:00–23:00");
-  editor.tap(tree, "Wed"); tree = editor.render(); assert.equal(editor.value().chargingHours, "Mon–Tue,Thu–Fri 07:00–23:00");
-  editor.tap(tree, "Add hours"); tree = editor.render(); assert.equal(editor.value().chargingHours, "Mon–Tue,Thu–Fri 07:00–23:00; Wed,Sat–Sun 07:00–23:00");
-  editor.tap(tree, "Remove hours 1"); tree = editor.render(); assert.equal(editor.value().chargingHours, "Wed,Sat–Sun 07:00–23:00");
+  editor.tap(tree, "Add hours"); tree = editor.render(); assert.equal(editor.value().chargingHours, "Mon-Fri 07:00-23:00");
+  editor.tap(tree, "Wed"); tree = editor.render(); assert.equal(editor.value().chargingHours, "Mon-Tue,Thu-Fri 07:00-23:00");
+  editor.tap(tree, "Add hours"); tree = editor.render(); assert.equal(editor.value().chargingHours, "Mon-Tue,Thu-Fri 07:00-23:00; Wed,Sat-Sun 07:00-23:00");
+  editor.tap(tree, "Remove hours 1"); tree = editor.render(); assert.equal(editor.value().chargingHours, "Wed,Sat-Sun 07:00-23:00");
   editor.tap(tree, "Remove hours 1"); assert.equal(editor.value().chargingHours, null);
 });
 test("unrecognized sign hours remain exact when weekend preferences change", () => {
-  const raw = "Пон–Пет 07ч–23ч, празници бесплатно";
+  const raw = "Пон-Пет 07ч-23ч, празници бесплатно";
   const editor = form({ chargingHours: raw, freeWeekends: null }); let tree = editor.render();
   assert.ok(editor.nodes(tree).some(node => node.type === "TextInput" && node.props.value === raw));
   editor.tap(tree, "Free on Sundays only"); tree = editor.render(); assert.equal(editor.value().chargingHours, raw); assert.equal(editor.value().freeWeekends, "sunday");
-  editor.tap(tree, "Choose days and times"); tree = editor.render(); assert.equal(editor.value().chargingHours, "Mon–Fri 07:00–23:00");
+  editor.tap(tree, "Choose days and times"); tree = editor.render(); assert.equal(editor.value().chargingHours, "Mon-Fri 07:00-23:00");
   assert.ok(!editor.nodes(tree).some(node => node.type === "TextInput"));
 });
 test("switching off every day removes paying hours without changing free weekends", () => {
-  const editor = form({ chargingHours: "Sat–Sun 08:15–12:30", freeWeekends: "neither" }); let tree = editor.render();
+  const editor = form({ chargingHours: "Sat-Sun 08:15-12:30", freeWeekends: "neither" }); let tree = editor.render();
   editor.tap(tree, "Sat"); tree = editor.render(); editor.tap(tree, "Sun"); tree = editor.render();
   assert.equal(editor.value().chargingHours, null); assert.equal(editor.value().freeWeekends, "neither");
-  editor.tap(tree, "Mon"); assert.equal(editor.value().chargingHours, "Mon 08:15–12:30");
+  editor.tap(tree, "Mon"); assert.equal(editor.value().chargingHours, "Mon 08:15-12:30");
 });

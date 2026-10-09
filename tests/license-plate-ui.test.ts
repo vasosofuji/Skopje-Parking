@@ -42,7 +42,7 @@ test("optional plate setup is empty by default, requires the city/digits/letters
   const actions = () => render().find(node => node.type === "StepActions")!;
   assert.equal(input().props.value, ""); assert.equal(actions().props.disabled, false);
   (input().props.onChangeText as (value: string) => void)("ЅК1234АВ");
-  assert.equal(actions().props.disabled, true); assert.ok(render().some(node => node.children.includes("Use 2 city letters, 3–4 numbers and 2 letters (SK1234FF).")));
+  assert.equal(actions().props.disabled, true); assert.ok(render().some(node => node.children.includes("Use 2 city letters, 3-4 numbers and 2 letters (SK1234FF).")));
   const skip = render().find(node => node.type === "Pressable")!; (skip.props.onPress as () => void)(); await flush();
   assert.equal(skipped, 1); assert.equal(saved.length, 0);
   (input().props.onChangeText as (value: string) => void)("sk 1234-ab");

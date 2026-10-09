@@ -1,4 +1,5 @@
 import test from "node:test";
+import * as paymentHours from "../src/domain/payment-hours";
 import * as languageModule from "../src/domain/language";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -54,6 +55,7 @@ function harness(zoneOnly = false, restored = false) {
     if (name === "../hooks/useZonePayment") return { useZonePayment: (input: unknown) => { payments.push(input); return { place: null, validate() {}, dismiss() {} }; } };
     if (name === "../domain/parking-filters") return filters;
     if (name === "../domain/parking") return parking;
+    if (name === "../domain/payment-hours") return paymentHours;
     if (name === "../domain/arrival") return arrival;
     if (name === "../domain/geometry") return geometry;
     if (name === "../domain/location") return location;

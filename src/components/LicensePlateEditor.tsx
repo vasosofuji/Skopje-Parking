@@ -11,7 +11,7 @@ export default function LicensePlateEditor({ onDone, onCancel = onDone, optional
   const { colors } = useTheme(), { t } = useParking();
   const [input, setInput] = useState(savedPlate ?? ""), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const normalized = normalizeLicensePlate(input);
-  const formatHint = t("Use 2 city letters, 3–4 numbers and 2 letters (SK1234FF).", "Користете 2 букви за градот, 3–4 бројки и 2 букви (SK1234FF).");
+  const formatHint = t("Use 2 city letters, 3-4 numbers and 2 letters (SK1234FF).", "Користете 2 букви за градот, 3-4 бројки и 2 букви (SK1234FF).");
   async function save() {
     if (busy) return;
     if (input !== "" && !normalized) { setError(formatHint); return; }

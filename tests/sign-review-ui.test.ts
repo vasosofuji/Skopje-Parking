@@ -10,7 +10,7 @@ import type { SignDraft } from "../src/services/signScan";
 type Element = { type: string; props: Record<string, any>; children: unknown[] };
 const nodes = (value: unknown): Element[] => Array.isArray(value) ? value.flatMap(nodes) : value && typeof value === "object" && "children" in value ? [value as Element, ...(value as Element).children.flatMap(nodes)] : [];
 const flush = () => new Promise<void>(resolve => setImmediate(resolve));
-const info: SignInfo = { isParkingSign: true, confidence: 0.8, zoneCode: "D8", operator: null, currency: "MKD", firstHour: 25, nextHour: 25, maxStayMinutes: null, chargingHours: "Mon–Sat 07:00–23:00", paymentInstructions: null, restrictions: null, rawText: "ЗОНА D8" };
+const info: SignInfo = { isParkingSign: true, confidence: 0.8, zoneCode: "D8", operator: null, currency: "MKD", firstHour: 25, nextHour: 25, maxStayMinutes: null, chargingHours: "Mon-Sat 07:00-23:00", paymentInstructions: null, restrictions: null, rawText: "ЗОНА D8" };
 
 function renderReview(draft: SignDraft) {
   const sent: [string, SignInfo, string][] = [], discarded: string[] = [], cleanups: (() => void)[] = [];

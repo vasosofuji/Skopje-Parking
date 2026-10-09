@@ -19,10 +19,10 @@ test("map keyboard dismissal reaches Android's native guard even when RN no long
   for (const platform of ["android", "ios"]) {
     const calls: string[] = [];
     const exports: { dismissMapKeyboard?: () => Promise<boolean> } = {};
-    vm.runInNewContext(compile("modules/parkino-map-keyboard/index.ts"), { exports, require(name: string) {
+    vm.runInNewContext(compile("modules/skopje-parking-map-keyboard/index.ts"), { exports, require(name: string) {
       if (name === "react-native") return { Platform: { OS: platform }, Keyboard: { dismiss: () => calls.push("RN-no-focused-input") } };
       if (name === "expo") return { requireOptionalNativeModule(name: string) {
-        assert.equal(name, "ParkinoMapKeyboard");
+        assert.equal(name, "SkopjeParkingMapKeyboard");
         return { dismissForMap: async () => { calls.push("native-map-focus-check"); throw new Error("activity destroyed"); } };
       } };
       throw new Error(name);
@@ -58,7 +58,7 @@ test("current Leaflet taps wait for native acceptance but pan intent is immediat
     if (name.endsWith("clusters")) return { groupParking: () => [] };
     if (name.endsWith("marker-appearance")) return {};
     if (name.endsWith("offlineMapHtml")) return { mapHtml: "map" };
-    if (name.endsWith("parkino-map-keyboard")) return { dismissMapKeyboard: () => { calls.push("dismiss"); return new Promise<boolean>(resolve => pending.push(resolve)); } };
+    if (name.endsWith("skopje-parking-map-keyboard")) return { dismissMapKeyboard: () => { calls.push("dismiss"); return new Promise<boolean>(resolve => pending.push(resolve)); } };
     throw new Error(name);
   } });
   const props = { places: [{ id: "p", coordinate: SKOPJE }], now: 0, destination: SKOPJE, userLocation: null, picking: true, drawing: true, draftCoordinates: [SKOPJE], showZones: false, language: "en", isInteractionCurrent: () => currentInteraction, onSelect: () => calls.push("select"), onPick: () => calls.push("pick"), onMoveVertex: () => calls.push("vertex"), onPan: () => calls.push("pan"), onBlankPress: () => calls.push("blank") } as unknown as ParkingMapProps;
@@ -95,18 +95,18 @@ test("current Leaflet taps wait for native acceptance but pan intent is immediat
 });
 
 test("Android module is scoped to the bundled map on the UI queue, before any keyboard mutation", () => {
-  const base = "modules/parkino-map-keyboard/";
+  const base = "modules/skopje-parking-map-keyboard/";
   const config = JSON.parse(readFileSync(base + "expo-module.config.json", "utf8"));
   assert.deepEqual(config.platforms, ["android"]);
-  assert.deepEqual(config.android.modules, ["expo.modules.parkinomapkeyboard.ParkinoMapKeyboardModule"]);
-  const source = readFileSync(base + "android/src/main/java/expo/modules/parkinomapkeyboard/ParkinoMapKeyboardModule.kt", "utf8");
+  assert.deepEqual(config.android.modules, ["expo.modules.skopjeparkingmapkeyboard.SkopjeParkingMapKeyboardModule"]);
+  const source = readFileSync(base + "android/src/main/java/expo/modules/skopjeparkingmapkeyboard/SkopjeParkingMapKeyboardModule.kt", "utf8");
   const viewGuard = source.indexOf("activity.currentFocus as? WebView ?: return@AsyncFunction false");
-  const mapGuard = source.indexOf('if (map.title != "Parkino parking map") return@AsyncFunction false');
+  const mapGuard = source.indexOf('if (map.title != "Skopje Parking map") return@AsyncFunction false');
   const windowGuard = source.indexOf("if (!map.hasWindowFocus() || !activity.window.decorView.hasWindowFocus()) return@AsyncFunction false");
   const hide = source.indexOf("controller.hide(WindowInsets.Type.ime())");
   assert.ok(viewGuard >= 0 && mapGuard > viewGuard && windowGuard > mapGuard && hide > windowGuard);
   assert.ok(source.includes("}.runOnQueue(Queues.MAIN)"));
   assert.ok(source.includes("keyboard.hideSoftInputFromWindow(token, 0)"));
   assert.ok(!source.includes("requestFocus("), "never refocus an editor to force dismissal");
-  assert.ok(readFileSync("src/components/offlineMapHtml.ts", "utf8").includes("<title>Parkino parking map</title>"));
+  assert.ok(readFileSync("src/components/offlineMapHtml.ts", "utf8").includes("<title>Skopje Parking map</title>"));
 });

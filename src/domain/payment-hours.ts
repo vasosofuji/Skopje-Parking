@@ -44,8 +44,11 @@ export function formatPayingHours(periods: PayingPeriod[]): string | null {
       const start = days[index];
       let end = start;
       while (days[index + 1] === end + 1) end = days[++index];
-      groups.push(start === end ? WEEKDAYS[start] : `${WEEKDAYS[start]}–${WEEKDAYS[end]}`);
+      groups.push(start === end ? WEEKDAYS[start] : `${WEEKDAYS[start]}-${WEEKDAYS[end]}`);
     }
-    return `${groups.join(",")} ${period.from}–${period.to}`;
+    return `${groups.join(",")} ${period.from}-${period.to}`;
   }).join("; ") || null;
 }
+
+/** Hours saved before the app switched to plain hyphens can still contain long dashes. */
+export const plainHours = (value: string) => value.replace(/\s*[–—]\s*/g, "-");

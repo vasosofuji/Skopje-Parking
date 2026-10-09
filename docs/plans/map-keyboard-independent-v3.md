@@ -5,7 +5,7 @@ Reviewer: entry-v3 agent. Read-only critique; implementation belongs to parking_
 ## Documentation and native wiring
 
 - Expo package remains ~57.0.26. Re-read Expo57 index, Modules API/get-started, and Android WindowInsetsController/InputMethodManager official references.
-- Local module shape is compatible with SDK57. Installed Expo autolinking resolves parkino-map-keyboard and its Kotlin module classifier. Gradle plugin declarations match installed expo-blur. Queues.MAIN is documented and present in installed expo-modules-core.
+- Local module shape is compatible with SDK57. Installed Expo autolinking resolves skopje-parking-map-keyboard and its Kotlin module classifier. Gradle plugin declarations match installed expo-blur. Queues.MAIN is documented and present in installed expo-modules-core.
 - API30+ WindowInsetsController.hide(Type.ime) and older InputMethodManager fallback are appropriately SDK-gated. Module requires rebuild; optional loader safely supports older clients/non-Android.
 
 ## Findings sent to owner/root

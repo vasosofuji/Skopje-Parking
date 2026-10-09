@@ -10,7 +10,7 @@ npx eas-cli@latest build --platform android --profile production
 ```
 
 - `EXPO_PUBLIC_API_URL` must be the public HTTPS API (`eas.json` sets it; `app.config.ts` refuses anything else).
-- Leave `PARKINO_BACKGROUND_LOCATION` unset. Store builds then contain no background location,
+- Leave `SKOPJE_PARKING_BACKGROUND_LOCATION` unset. Store builds then contain no background location,
   no foreground location service and no background reminder setting (see "Background location").
 - Check the merged manifest of the built AAB before uploading:
   `bundletool dump manifest --bundle app.aab | grep uses-permission`. The 2026-10-08 build has exactly:
@@ -38,16 +38,16 @@ npx eas-cli@latest build --platform android --profile production
 own composer with the number and message filled in, and the driver presses Send.
 
 **Location permissions declaration** — not needed while background location is off (foreground
-"while using the app" only). If you later enable reminders with `PARKINO_BACKGROUND_LOCATION=1`, you
+"while using the app" only). If you later enable reminders with `SKOPJE_PARKING_BACKGROUND_LOCATION=1`, you
 must submit the background-location declaration with a short video showing the in-app prominent
 disclosure (Settings → Location & notifications → Enable parking reminders) and the core feature.
 
 **Foreground service declaration** — not needed while background location is off.
 
-**Financial features** — "My app doesn't provide any financial features". Parkino does not process
+**Financial features** — "My app doesn't provide any financial features". Skopje Parking does not process
 payments; parking is charged by the driver's mobile operator after the driver sends the SMS.
 
-**Government apps / misrepresentation** — Parkino is not a government app. The store listing must
+**Government apps / misrepresentation** — Skopje Parking is not a government app. The store listing must
 say it is independent and not affiliated with the City of Skopje, JP Gradski Parking or JP Parkinzi na
 Opshtina Centar (the app says the same in Zones & sources and in the payment sheet). Do not use their
 logos.
@@ -73,14 +73,14 @@ reading with your own free key").
 | Precise location | Yes, optional | No | App functionality | Used on the device; coordinates leave the phone only when the driver adds a parking place or boundary. |
 | Approximate location | Yes, optional | No | App functionality | Same as above. |
 | User IDs (username) | Yes, optional | No | Account management | Guests have no username. |
-| Photos | Only with the driver's own AI key; processed ephemerally | No | App functionality | Photos are read and deleted on the phone and never reach Parkino's servers. A driver who adds their own Gemini/Groq key sends the photo they are reading straight to that provider (user-initiated). Without a key, answer No. |
+| Photos | Only with the driver's own AI key; processed ephemerally | No | App functionality | Photos are read and deleted on the phone and never reach Skopje Parking's servers. A driver who adds their own Gemini/Groq key sends the photo they are reading straight to that provider (user-initiated). Without a key, answer No. |
 | Other user-generated content | Yes, optional | No | App functionality | Parking reports, prices, zone labels, sign details. |
 | Device or other IDs | Yes, optional | No | App functionality | Push token, only when destination alerts are turned on. |
 | App activity / interactions | No | No | — | No analytics SDKs. |
 | App info and performance (diagnostics) | Yes | No | Analytics | Collected by Google's ML Kit SDK (device model, OS, app version, latency, error codes) when a sign photo is read on the phone. See https://developers.google.com/ml-kit/android-data-disclosure. |
 | Financial info, contacts, messages | No | No | — | SMS is composed in the system app; the licence plate stays on the device. |
 
-- Encrypted in transit: Yes (HTTPS only; cleartext is allowed only in `PARKINO_DEVICE_TEST` builds).
+- Encrypted in transit: Yes (HTTPS only; cleartext is allowed only in `SKOPJE_PARKING_DEVICE_TEST` builds).
 - Users can request deletion: Yes (in-app and the web URL above).
 - Licence plate and the AI key are stored only on the device (keystore) and are not "collected".
 

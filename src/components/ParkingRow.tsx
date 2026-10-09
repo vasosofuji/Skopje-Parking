@@ -80,7 +80,7 @@ export default function ParkingRow({
         </View>
       </View>
       <View style={s.price}>
-        <Text numberOfLines={1} style={[s.amount, displayCost === 0 && s.freeAmount]}>{displayCost === null ? "—" : displayCost === 0 ? t("Free", "Бесплатно") : displayCost}</Text>
+        <Text numberOfLines={1} style={[s.amount, displayCost === 0 && s.freeAmount]}>{displayCost === null ? "?" : displayCost === 0 ? t("Free", "Бесплатно") : displayCost}</Text>
         {displayCost !== 0 ? <Text style={s.currency}>
           {displayCost === null
             ? t("unknown", "непознато")

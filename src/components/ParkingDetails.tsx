@@ -11,6 +11,7 @@ import RemoveParking from "./RemoveParking";
 import { currentAvailability, nearestAvailableParking, parkingPrice } from "../domain/parking";
 import { availabilityReportTime } from "../domain/report-feedback";
 import type { Geometry, ParkingPlace } from "../domain/types";
+import { plainHours } from "../domain/payment-hours";
 import type { SignDraft } from "../services/signScan";
 import { api } from "../services/api";
 import { useParking } from "../state/ParkingContext";
@@ -71,7 +72,7 @@ export default function ParkingDetails({ place, visible, onClose, onEditBoundary
         {price && price.nextHour !== price.firstHour ? <Note>{price.nextHour} {t("MKD / following hour", "ден. / следен час")}</Note> : null}
         {place.capacity !== null ? <Note>{place.capacity} {t("total spaces", "вкупно места")}</Note> : null}
         {availability.status === "spaces" || availability.status === "full" ? <Note>{availability.status === "spaces" ? availability.freeSpaces !== undefined ? `${availability.freeSpaces} ${t("free spaces", "слободни места")}` : t("Spaces available", "Има места") : t("Full", "Полн")}{reportedAt ? ` · ${t("Reported at", "Пријавено во")} ${reportedAt}` : ""}</Note> : null}
-        {place.paymentSchedule ? <View style={{ gap: 4 }}><Note>{t("Paying hours", "Часови на наплата")}: {place.paymentSchedule.chargingHours || t("Not sure", "Не знам")}</Note>{place.paymentSchedule.freeWeekends ? <Note>{weekendLabel(place.paymentSchedule.freeWeekends, t)}</Note> : null}</View> : null}
+        {place.paymentSchedule ? <View style={{ gap: 4 }}><Note>{t("Paying hours", "Часови на наплата")}: {(place.paymentSchedule.chargingHours && plainHours(place.paymentSchedule.chargingHours)) || t("Not sure", "Не знам")}</Note>{place.paymentSchedule.freeWeekends ? <Note>{weekendLabel(place.paymentSchedule.freeWeekends, t)}</Note> : null}</View> : null}
         {place.openingHours ? <Note>{place.openingHours}</Note> : null}
         {place.access === "restricted" || place.access === "customers" ? <Note>{place.access === "restricted" ? t("Restricted access", "Ограничен пристап") : t("Customer parking", "Паркинг за клиенти")}</Note> : null}
       </> : null}

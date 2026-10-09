@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="mk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skopje Parking · Најди, провери и плати паркинг во Скопје</title>
+<meta name="description" content="Skopje Parking ги прикажува паркиралиштата, гаражите и платените зони околу вас, колку чинат и дали друг возач штотуку нашол место. Платете ги зоните на Градски паркинг и ПОЦ со СМС. Бесплатно за Android.">
+<meta name="theme-color" content="#f3eee4">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:title" content="Skopje Parking">
+<meta property="og:description" content="Паркиралишта, цени, пријави за слободни места и плаќање со СМС за Скопје, во една Android апликација.">
+<meta property="og:image" content="https://parking.vasojevich.com/img/og-logo.png">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="mk_MK">
+<link rel="preload" href="/fonts/oswald-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles.css">
+<link rel="alternate" hreflang="en" href="https://parking.vasojevich.com/">
+<link rel="alternate" hreflang="mk" href="https://parking.vasojevich.com/mk/">
+<script src="/lang.js"></script>
+<script src="/apply.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Прескокни до содржината</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/mk/" aria-label="Skopje Parking, почетна"><img src="/logo.svg" alt="" width="30" height="31">Skopje Parking</a>
+    <nav aria-label="Главна навигација">
+      <a href="#how">Како работи</a>
+      <a href="#features">Можности</a>
+      <a href="#privacy">Приватност</a>
+      <a href="#faq">Прашања</a>
+      <span class="lang"><a href="/" data-lang="en" hreflang="en" lang="en">EN</a><a href="/mk/" data-lang="mk" hreflang="mk" aria-current="true">МК</a></span>
+      <button class="btn btn-primary btn-small" type="button" data-apply>Пријави се за тестирање</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero" aria-labelledby="hero-title">
+  <div class="wrap">
+    <div>
+      <h1 class="display" id="hero-title"><span>Каде да</span><span>паркирам</span><span class="red">во Скопје</span></h1>
+      <p class="lead">Видете ги паркиралиштата, гаражите и платените зони околу вас, колку чинат и дали друг возач штотуку нашол слободно место. Потоа платете ја зоната со СМС од истиот екран.</p>
+      <div class="buttons">
+        <button class="btn btn-primary" type="button" data-apply>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+          Пријави се за тестирање
+        </button>
+        <span class="btn btn-ghost btn-soon" aria-disabled="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          Наскоро на Google Play
+        </span>
+      </div>
+      <p class="note">Бесплатно, без реклами. Моментално во затворено тестирање на Android.</p>
+    </div>
+    <div class="hero-art">
+      <div class="device">
+        <img src="/img/mk/map.webp" srcset="/img/mk/map.webp 540w, /img/mk/map@2x.webp 1080w" sizes="300px" width="540" height="1167" alt="Мапата на Skopje Parking со центарот на Скопје, точки за паркинзи, ПОЦ секторите и зелени точки каде возачите пријавиле слободни места" fetchpriority="high">
+      </div>
+      <img class="float-card" src="/img/mk/arrival-card.webp" width="540" height="226" alt="Прашањето Има ли слободни места тука? со копчињата Да и Не" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section class="intro section" aria-labelledby="intro-title">
+  <div class="wrap">
+    <div>
+      <h2 class="display" id="intro-title">Сите сме кружеле низ Центар <em>барајќи место.</em></h2>
+    </div>
+    <div class="copy">
+      <p>Информациите постојат, но се расфрлани меѓу веб-страниците на операторите, таблите на столбовите и она што пријател ви кажал минатата недела. Skopje Parking ги собира на една мапа.</p>
+      <p>Цените доаѓаат од објавените тарифи на операторите и од возачите што паркираат таму. Пријавите за слободни места исчезнуваат по 15 минути, па мапата не прикажува паркинг што се пополнил пред еден час.</p>
+    </div>
+  </div>
+  <div class="wrap numbers">
+    <div><b>866</b><span>паркиралишта, гаражи и улични места на мапата</span></div>
+    <div><b>48</b><span>платени зони на Градски паркинг и ПОЦ</span></div>
+    <div><b>10 сек</b><span>ви се доволни да им кажете на другите возачи дали има место</span></div>
+    <div><b>4</b><span>јазици: македонски, албански, турски и англиски</span></div>
+  </div>
+</section>
+
+<section class="section" id="how" aria-labelledby="how-title">
+  <div class="wrap">
+    <div class="head">
+      <h2 class="display" id="how-title">Како работи</h2>
+      <p>Од моментот кога знаете каде одите до моментот кога ќе се оддалечите од автомобилот.</p>
+    </div>
+    <div class="steps">
+      <article class="step">
+        <p class="num">01</p>
+        <h3>Изберете дестинација</h3>
+        <p>Пребарајте улица или знаменитост, или поставете точка на мапата. Блиските паркинзи се подредуваат по оддалеченост или по цена за првиот час.</p>
+        <div class="device"><img src="/img/mk/cheapest.webp" srcset="/img/mk/cheapest.webp 540w, /img/mk/cheapest@2x.webp 1080w" sizes="300px" width="540" height="1167" alt="Паркинзи до Плоштад Македонија подредени по цена, со Катна гаража Беко за 30 денари и пријавени слободни места" loading="lazy"></div>
+      </article>
+      <article class="step">
+        <p class="num">02</p>
+        <h3>Проверете пред да тргнете</h3>
+        <p>Допрете точка за тарифата, часовите на наплата, временското ограничување и последната пријава од некој што бил таму.</p>
+        <div class="device"><img src="/img/mk/preview.webp" srcset="/img/mk/preview.webp 540w, /img/mk/preview@2x.webp 1080w" sizes="300px" width="540" height="1167" alt="Картичка за зона A3 со 40 денари за прв час, часови на наплата, бесплатно во недела и 3 пријавени слободни места" loading="lazy"></div>
+      </article>
+      <article class="step">
+        <p class="num">03</p>
+        <h3>Платете со СМС</h3>
+        <p>Изберете ја зоната и апликацијата ја пишува пораката за Градски паркинг или ПОЦ. Потврдувате дека таблата се совпаѓа и ја праќате сами.</p>
+        <div class="device"><img src="/img/mk/pay-sms.webp" srcset="/img/mk/pay-sms.webp 540w, /img/mk/pay-sms@2x.webp 1080w" sizes="300px" width="540" height="1167" alt="Плаќање со СМС за зона A3 со бројот 144144, пораката со регистарската табличка и пораката за крај" loading="lazy"></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="feature-row section" aria-labelledby="reports-title">
+  <div class="wrap">
+    <div class="copy">
+      <h2 class="display" id="reports-title">Еден допир му кажува на следниот возач</h2>
+      <p>Кога телефонот ќе мирува на паркинг околу десет секунди, апликацијата прашува дали имало слободни места. Вашиот одговор ја бои точката зелено или црвено во следните 15 минути.</p>
+      <ul class="checks">
+        <li>Прашањето се појавува дури откако ќе застанете</li>
+        <li>Секој паркинг ги покажува тарифата, часовите и временското ограничување</li>
+        <li>Цените што ги пријавуваат возачите се датирани, па знаете колку се свежи</li>
+      </ul>
+    </div>
+    <div class="stage">
+      <div class="device"><img src="/img/mk/details.webp" srcset="/img/mk/details.webp 540w, /img/mk/details@2x.webp 1080w" sizes="300px" width="540" height="1167" alt="Детали за зона A3 со тарифа, максимален престој од 120 минути, упатство за СМС и последната пријава" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<section class="feature-row flip section" aria-labelledby="signs-title">
+  <div class="wrap">
+    <div class="copy">
+      <h2 class="display" id="signs-title">Таблата, препишана наместо вас</h2>
+      <p>Насочете ја камерата кон табла за паркирање. Препознавањето текст работи на телефонот и ја претвора во дигитална картичка со зоната, цената, часовите и бесплатните денови. Чита табли на македонски, албански и англиски.</p>
+      <p>Ја споредувате картичката со фотографијата и поправате што погрешило. Се објавуваат само податоците што ги потврдувате, а фотографијата се брише штом ќе завршите.</p>
+    </div>
+    <div class="stage">
+      <div class="device"><img src="/img/mk/sign-review.webp" srcset="/img/mk/sign-review.webp 540w, /img/mk/sign-review@2x.webp 1080w" sizes="300px" width="540" height="1167" alt="Табла на Градски паркинг прочитана на телефонот и прикажана како дигитална картичка за зона A3" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<section class="features section" id="features" aria-labelledby="features-title">
+  <div class="wrap">
+    <div class="head">
+      <h2 class="display" id="features-title">Уште во апликацијата</h2>
+      <p>Сето ова веќе работи во Скопје.</p>
+    </div>
+    <div class="grid6">
+      <article>
+        <svg viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="4" width="40" height="28" rx="6" fill="#1d1613"/><path d="M10 31h12l-12 10z" fill="#1d1613"/><rect x="10" y="12" width="16" height="4" rx="2" fill="#962e2b"/><rect x="10" y="20" width="24" height="4" rx="2" fill="#faf6ee"/></svg>
+        <h3>Правила за плаќање според таблата</h3>
+        <p>Кодовите на зоните, СМС-броевите и часовите на наплата доаѓаат од правилата на самите оператори. Неделите и државните празници се означени како бесплатни таму каде што се.</p>
+      </article>
+      <article>
+        <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="24" r="17" fill="none" stroke="#1d1613" stroke-width="4"/><path d="M22 14v10l6 4" fill="none" stroke="#962e2b" stroke-width="4" stroke-linecap="round"/><rect x="16" y="2" width="12" height="5" rx="2" fill="#1d1613"/></svg>
+        <h3>Потсетник пред да истече времето</h3>
+        <p>Во зоните со временско ограничување, апликацијата ве потсетува 15 минути пред крајот, со подготвена порака за завршување.</p>
+      </article>
+      <article>
+        <svg viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="2" width="18" height="18" rx="4" fill="#1d1613"/><rect x="24" y="2" width="18" height="18" rx="4" fill="#962e2b"/><rect x="2" y="24" width="18" height="18" rx="4" fill="#962e2b"/><rect x="24" y="24" width="18" height="18" rx="4" fill="#1d1613"/></svg>
+        <h3>Мапа што работи без интернет</h3>
+        <p>Улиците на Скопје се дел од апликацијата, па мапата се отвора и во подземна гаража без сигнал.</p>
+      </article>
+      <article>
+        <svg viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="2" width="40" height="40" rx="10" fill="none" stroke="#1d1613" stroke-width="4"/><rect x="19" y="11" width="6" height="22" rx="3" fill="#962e2b"/><rect x="11" y="19" width="22" height="6" rx="3" fill="#962e2b"/></svg>
+        <h3>Додајте што недостасува</h3>
+        <p>Ако некој паркинг го нема на мапата, додајте го со фотографија од таблата или рачно, нацртајте го периметарот и внесете колку места има.</p>
+      </article>
+      <article>
+        <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="14" cy="14" r="11" fill="#962e2b"/><circle cx="30" cy="14" r="11" fill="#1d1613"/><circle cx="14" cy="30" r="11" fill="#1d1613"/><circle cx="30" cy="30" r="11" fill="#1d1613"/></svg>
+        <h3>Поени за помош</h3>
+        <p>Пријавите и новите места носат поени. Со нив отклучувате бои за апликацијата и акцент на точките што сте ги додале, а никогаш не ги трошите.</p>
+      </article>
+      <article>
+        <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M4 20 40 4 24 40l-4-16z" fill="#1d1613"/><path d="M20 24 40 4 24 40z" fill="#962e2b"/></svg>
+        <h3>Насоки кога сте подготвени</h3>
+        <p>Копчето Оди ја отвора рутата во Google Maps или во апликацијата за навигација што сте ја избрале во поставките.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="night section" aria-labelledby="night-title">
+  <div class="wrap">
+    <div>
+      <h2 class="display" id="night-title">Направена и за доцни пристигнувања</h2>
+      <p>Темната тема ја прави мапата лесна за читање по зајдисонце, а апликацијата може и да ја следи поставката на телефонот. Изберете го јазикот што ви е најблизок.</p>
+      <ul class="langs" aria-label="Јазици"><li>Македонски</li><li>Shqip</li><li>Türkçe</li><li>English</li></ul>
+    </div>
+    <div class="device"><img src="/img/mk/dark.webp" srcset="/img/mk/dark.webp 540w, /img/mk/dark@2x.webp 1080w" sizes="300px" width="540" height="1167" alt="Мапата на Skopje Parking во темна тема" loading="lazy"></div>
+  </div>
+</section>
+
+<section class="privacy section" id="privacy" aria-labelledby="privacy-title">
+  <div class="wrap">
+    <h2 class="display" id="privacy-title">Што останува на вашиот телефон</h2>
+    <div>
+      <p>Регистарската табличка и историјата на GPS остануваат на телефонот, а фотографиите од таблите никогаш не се испраќаат до Skopje Parking. Ако додадете свој Gemini или Groq клуч за табли што тешко се читаат, фотографијата оди директно до тој провајдер, а клучот се чува во безбедната меморија на телефонот.</p>
+      <p>Серверот ги чува корисничкото име, пријавите што ги праќате и местата што ги додавате. Сето тоа може да го избришете од апликацијата или од оваа страница со корисничко име и лозинка.</p>
+      <div class="links"><a href="/mk/privacy">Политика за приватност</a><a href="/mk/terms">Услови за користење</a><a href="/mk/delete-account">Избришете го профилот</a></div>
+    </div>
+  </div>
+</section>
+
+<section class="faq section" id="faq" aria-labelledby="faq-title">
+  <div class="wrap">
+    <h2 class="display" id="faq-title">Прашања</h2>
+    <div>
+      <details>
+        <summary>Дали Skopje Parking е официјална апликација?</summary>
+        <p>Не. Независна е и не е поврзана со Град Скопје, ЈП Градски паркинг или ЈП Паркинзи на Општина Центар. Правилата за плаќање доаѓаат од она што овие оператори го објавуваат, а таблата до вашиот автомобил секогаш има предност.</p>
+      </details>
+      <details>
+        <summary>Дали чини нешто?</summary>
+        <p>Апликацијата е бесплатна. Паркингот го плаќате на операторот, а мобилниот оператор ја наплаќа СМС-пораката по вообичаената цена.</p>
+      </details>
+      <details>
+        <summary>Може ли апликацијата да плати наместо мене?</summary>
+        <p>Ја отвора апликацијата за пораки со точниот број и порака веќе внесени. Вие притискате испрати, па ништо не се плаќа без да го видите. Почекајте СМС-потврда од операторот пред да заминете.</p>
+      </details>
+      <details>
+        <summary>На кои телефони работи?</summary>
+        <p>На Android. Апликацијата моментално е во затворено тестирање на Google Play, па пријавете се на оваа страница и ќе ви испратиме покана.</p>
+      </details>
+      <details>
+        <summary>Дали работи надвор од Скопје?</summary>
+        <p>Сѐ уште не. Мапата, зоните и цените го покриваат само Скопје.</p>
+      </details>
+      <details>
+        <summary>Дали ми треба профил?</summary>
+        <p>Може да започнете како гостин. Додајте корисничко име и лозинка ако сакате да ги задржите поените и придонесите по повторна инсталација или промена на телефон.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="download section" id="download" aria-labelledby="download-title">
+  <div class="wrap">
+    <div class="panel">
+      <div>
+        <h2 class="display" id="download-title">Приклучете се на тестирањето</h2>
+        <p>Skopje Parking е во затворено тестирање на Google Play. Пријавете се со Google профилот што го користите на телефонот, а ние ќе ве додадеме во тестирањето и ќе ви ја испратиме врската за инсталација.</p>
+        <div class="buttons">
+          <button class="btn btn-primary" type="button" data-apply>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+            Пријави се за тестирање
+          </button>
+          <span class="btn btn-ghost btn-soon" aria-disabled="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            Наскоро на Google Play
+          </span>
+        </div>
+      </div>
+      <img class="mark" src="/img/logo-white.svg" width="240" height="250" alt="">
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="/mk/" aria-label="Skopje Parking, почетна"><img src="/img/logo-white.svg" alt="" width="30" height="31">Skopje Parking</a>
+      <p>Паркиралишта, цени, пријави за слободни места и плаќање со СМС за Скопје, во една Android апликација.</p>
+    </div>
+    <div>
+      <h3>Апликација</h3>
+      <ul><li><a href="#how">Како работи</a></li><li><a href="#features">Можности</a></li><li><a href="#faq">Прашања</a></li><li><a href="#download">Приклучете се</a></li></ul>
+    </div>
+    <div>
+      <h3>Правно</h3>
+      <ul><li><a href="/mk/privacy">Политика за приватност</a></li><li><a href="/mk/terms">Услови за користење</a></li><li><a href="/mk/delete-account">Избришете го профилот</a></li><li><a href="mailto:contact@vasojevich.com">contact@vasojevich.com</a></li></ul>
+    </div>
+    <div>
+      <h3>Податоци за мапата</h3>
+      <ul><li><a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a></li><li><a href="https://openmaptiles.org/">© OpenMapTiles</a></li><li><a href="https://openfreemap.org/">OpenFreeMap</a></li></ul>
+    </div>
+    <div class="legal">
+      <span>© 2026 Skopje Parking</span>
+      <span>Не е поврзана со Град Скопје, ЈП Градски паркинг или ЈП Паркинзи на Општина Центар.</span>
+    </div>
+  </div>
+</footer>
+
+<dialog class="apply" id="apply" aria-labelledby="apply-title">
+  <form id="apply-form" novalidate>
+    <button class="close" type="button" data-close aria-label="Затвори">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <h2 class="display" id="apply-title">Пријава за тестирање</h2>
+    <p class="intro-text">Тестерите ги додаваме на Google Play рачно. Пополнете го формуларот и ќе ја испратиме поканата на вашиот Google профил.</p>
+    <label>Име и презиме<input type="text" name="name" autocomplete="name" required maxlength="100"></label>
+    <label>Е-пошта на Google профилот<input type="email" name="email" autocomplete="email" required maxlength="200"><span class="hint">Gmail адресата што ја користите за Play Store на телефонот. Таму стигнува поканата.</span></label>
+    <label>Телефонски број<input type="tel" name="phone" autocomplete="tel" required maxlength="30" placeholder="+389 70 123 456"></label>
+    <fieldset><legend>Дали имате возачка дозвола?</legend><label class="choice"><input type="radio" name="licence" value="yes" required>Да</label><label class="choice"><input type="radio" name="licence" value="no">Не</label></fieldset>
+    <fieldset><legend>Дали имате автомобил?</legend><label class="choice"><input type="radio" name="car" value="yes" required>Да</label><label class="choice"><input type="radio" name="car" value="no">Не</label></fieldset>
+    <input class="trap" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p class="consent">Овие податоци ги користиме само за да ве поканиме на тестирањето и да ве контактираме во врска со него. Погледнете ја <a href="/mk/privacy">политиката за приватност</a>.</p>
+    <button class="btn btn-primary" type="submit">Испрати пријава</button>
+    <p class="status" id="apply-status" role="status" aria-live="polite"></p>
+  </form>
+  <div class="done" id="apply-done" hidden>
+    <h2 class="display">Ви благодариме</h2>
+    <p id="apply-done-text"></p>
+    <button class="btn btn-primary" type="button" data-close>Затвори</button>
+  </div>
+</dialog>
+</body>
+</html>

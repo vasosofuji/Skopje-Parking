@@ -2,7 +2,7 @@ import { weekendLabel } from "./PaymentScheduleFields";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { SignInfo } from "../domain/types";
-import { plainHours } from "../domain/payment-hours";
+import { localHours } from "../domain/payment-hours";
 import { useParking } from "../state/ParkingContext";
 import { useTheme } from "../state/ThemeContext";
 
@@ -12,7 +12,7 @@ export default function DigitalParkingSign({ info, compact = false, preview = fa
   preview?: boolean;
   sourceName?: string;
 }) {
-  const { t } = useParking();
+  const { t, language } = useParking();
   const { colors } = useTheme();
   const free = info.firstHour === 0 && info.nextHour === 0;
   return (
@@ -31,7 +31,7 @@ export default function DigitalParkingSign({ info, compact = false, preview = fa
             : t("Price not shown", "Нема наведена цена")}
         </Text>
         {!free && info.nextHour !== null && info.nextHour !== info.firstHour ? <Text style={{ color: colors.ink }}>{info.nextHour} {info.currency ?? ""} / {t("following hour", "следен час")}</Text> : null}
-        {info.chargingHours ? <Text style={{ color: colors.ink, fontWeight: "600" }}>{plainHours(info.chargingHours)}</Text> : null}
+        {info.chargingHours ? <Text style={{ color: colors.ink, fontWeight: "600" }}>{localHours(info.chargingHours, language)}</Text> : null}
         {info.freeWeekends ? <Text style={{ color: colors.ink }}>{weekendLabel(info.freeWeekends, t)}</Text> : null}
         {!compact && info.maxStayMinutes !== null ? <Text style={{ color: colors.ink }}>{t("Maximum stay", "Максимален престој")}: {info.maxStayMinutes} {t("min", "мин")}</Text> : null}
         {!compact && info.paymentInstructions ? <Text style={{ color: colors.ink, lineHeight: 20 }}>{info.paymentInstructions}</Text> : null}

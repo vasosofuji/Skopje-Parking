@@ -32,6 +32,7 @@ for (const backend of ["sqlite", "postgres"] as const) test(`${backend}: phones 
     const changes = async (since: number) => (await app.inject({ url: `/v1/changes?since=${since}`, headers })).json();
     const full = await changes(0);
     assert.equal(full.full, true);
+    assert.ok(full.cursor > Date.now() - 60_000, "an empty change log still moves the cursor, so the next poll is a small delta");
     assert.equal(full.places.length, (await app.inject("/v1/catalog")).json().places.length, "a fresh install gets every place once");
     const quiet = await changes(Date.now() + 60_000);
     assert.deepEqual([quiet.full, quiet.places, quiet.removed], [false, [], []], "nothing changed, nothing sent");

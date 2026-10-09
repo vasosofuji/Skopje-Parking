@@ -100,18 +100,15 @@ export async function enrichPlaces(query: Query, places: ParkingPlace[], ids: st
 /** The cursor stays this far behind the clock, so a write stamped earlier but committed later is never
  * skipped; only changes from these last seconds are sent twice. Transactions are far shorter. */
 export const CHANGE_SETTLE_MS = 15_000;
-const settledCursor = (since: number, newest: unknown, now: number) => Math.max(since, Math.min(Number(newest ?? 0), now - CHANGE_SETTLE_MS));
+const settledCursor = (since: number, now: number) => Math.max(since, now - CHANGE_SETTLE_MS);
 /**
  * Which places to send for a delta since `since`: those written to, every sector sharing a changed
  * zone's operator and code (they share its price), and parkings inside a changed zone (they inherit
  * its sign). `assemble` adds zones containing changed parkings, needed to compute their inherited sign.
  */
 export async function catalogChanges(query: Query, catalog: Catalog, since: number, now = Date.now()) {
-  const [rows, [newest]] = await Promise.all([
-    query("SELECT place_id,removed FROM place_changes WHERE changed>?", [since]),
-    query("SELECT MAX(changed) AS changed FROM place_changes"),
-  ]);
-  const cursor = settledCursor(since, newest?.changed, now);
+  const rows = await query("SELECT place_id,removed FROM place_changes WHERE changed>?", [since]);
+  const cursor = settledCursor(since, now);
   const removed = rows.filter(row => Number(row.removed) === 1 || row.removed === true).map(row => String(row.place_id));
   const direct = new Set(rows.filter(row => !removed.includes(String(row.place_id))).map(row => String(row.place_id)));
   if (!direct.size) return { cursor, removed, output: new Set<string>(), assemble: [] as string[] };
@@ -139,8 +136,7 @@ export async function catalogChanges(query: Query, catalog: Catalog, since: numb
 /** Full catalog (since = 0, a fresh install or monthly resync) or only what changed since a cursor. */
 export async function catalogDelta(query: Query, catalog: Catalog, since: number, load: (ids?: string[]) => Promise<ParkingPlace[]>) {
   if (!since) {
-    const [newest] = await query("SELECT MAX(changed) AS changed FROM place_changes");
-    return { cursor: settledCursor(0, newest?.changed, Date.now()), full: true, places: await enrichPlaces(query, await load(), null), removed: [] as string[] };
+    return { cursor: settledCursor(0, Date.now()), full: true, places: await enrichPlaces(query, await load(), null), removed: [] as string[] };
   }
   const delta = await catalogChanges(query, catalog, since);
   if (!delta.assemble.length) return { cursor: delta.cursor, full: false, places: [] as ParkingPlace[], removed: delta.removed };

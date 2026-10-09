@@ -17,12 +17,12 @@ export function readCatalog(): Catalog {
 
 /** A background task runner means a serverless function (Supabase Edge): no timers, a small pool, and
  * no seeding on cold start (`npm run db:migrate` seeds the catalog once per catalog update). */
-export async function createApp(backgroundTask?: (task: Promise<void>) => void, catalog = readCatalog()) {
+export async function createApp(backgroundTask?: (task: Promise<void>) => void, catalog = readCatalog(), databaseCa?: string) {
   if ((backgroundTask || process.env.NODE_ENV === "production") && !process.env.DATABASE_URL)
     throw new Error("Production API requires DATABASE_URL; refusing temporary local storage.");
   let store: ParkingStore | PostgresParkingStore;
   if (process.env.DATABASE_URL) {
-    const database = new PgDatabase(process.env.DATABASE_URL, undefined, backgroundTask ? 3 : 8);
+    const database = new PgDatabase(process.env.DATABASE_URL, undefined, backgroundTask ? 3 : 8, databaseCa);
     try {
       await database.prepare("SELECT 1 FROM profiles LIMIT 1").all();
       if (backgroundTask) await database.prepare("SELECT 1 FROM request_limits LIMIT 1").all();

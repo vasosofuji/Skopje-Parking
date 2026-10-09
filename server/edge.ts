@@ -14,11 +14,10 @@ const unavailable = (status: number, error: string) =>
 
 let application: Promise<FastifyInstance> | undefined;
 function app() {
-  if (typeof __DATABASE_CA__ === "string") process.env.DATABASE_CA ??= __DATABASE_CA__;
   application ??= createApp(task => {
     const work = task.catch(() => {});
     if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(work);
-  }, structuredClone(seed) as Catalog).then(async instance => { await instance.ready(); return instance; }).catch(error => {
+  }, structuredClone(seed) as Catalog, typeof __DATABASE_CA__ === "string" ? __DATABASE_CA__ : undefined).then(async instance => { await instance.ready(); return instance; }).catch(error => {
     application = undefined;
     throw error;
   });
@@ -45,9 +44,10 @@ export const handle = edgeHandler(app);
 
 export function edgeHandler(app: () => Promise<FastifyInstance>) { return async (request: Request): Promise<Response> => {
   let instance: FastifyInstance;
-  try { instance = await app(); } catch {
-    // Do not expose connection strings or provider errors to public clients.
-    console.error("API initialization failed; check database configuration and migrations.");
+  try { instance = await app(); } catch (error) {
+    // Do not expose connection strings or provider errors to public clients; the private log gets the cause.
+    const cause = error instanceof Error ? `${error.name}: ${error.message} @ ${(error.stack ?? "").split("\n").slice(1, 5).join(" | ")}` : String(error);
+    console.error("API initialization failed:", cause.replace(/postgres(ql)?:\/\/\S+/gi, "<database url>"));
     return unavailable(503, "unavailable");
   }
   const payload = await body(request);

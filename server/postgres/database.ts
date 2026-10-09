@@ -36,7 +36,7 @@ export class PgDatabase {
   private local = new AsyncLocalStorage<PoolClient>();
   private initialized = new WeakSet<PoolClient>();
   private transactionPool: boolean;
-  constructor(url: string, poolMode = process.env.DATABASE_POOL_MODE ?? "session", max = 8) {
+  constructor(url: string, poolMode = process.env.DATABASE_POOL_MODE ?? "session", max = 8, bundledCa?: string) {
     this.transactionPool = poolMode === "transaction";
     const connection = new URL(url);
     // Plain connections only for a database on this computer (local tests).
@@ -44,7 +44,7 @@ export class PgDatabase {
     // Keep TLS verification enabled; do not let URL sslmode silently override it.
     for (const key of ["sslmode", "sslcert", "sslkey", "sslrootcert"])
       connection.searchParams.delete(key);
-    const ca = process.env.DATABASE_CA ?? (process.env.DATABASE_CA_FILE ? readFileSync(process.env.DATABASE_CA_FILE, "utf8") : undefined);
+    const ca = bundledCa ?? process.env.DATABASE_CA ?? (process.env.DATABASE_CA_FILE ? readFileSync(process.env.DATABASE_CA_FILE, "utf8") : undefined);
     this.pool = new Pool({
       connectionString: connection.toString(),
       max,

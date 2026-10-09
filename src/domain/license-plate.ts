@@ -1,8 +1,13 @@
-/** Compact plates are required by the independently verified SMS protocol. */
+/** Macedonian plates: two city letters, four (older series: three) digits and two serial letters. */
+export function isCompactLicensePlate(value: unknown): value is string {
+  return typeof value === "string" && /^[A-Z]{2}\d{3,4}[A-Z]{2}$/.test(value);
+}
+
+/** Accept familiar pasted spacing, but always store and send the compact format. */
 export function normalizeLicensePlate(value: unknown): string | null {
   if (typeof value !== "string" || value.length > 24 || !/^[A-Za-z0-9 -]+$/.test(value)) return null;
   const plate = value.toUpperCase().replace(/[ -]/g, "");
-  return /^(?=.*[A-Z])(?=.*\d)[A-Z0-9]{3,12}$/.test(plate) ? plate : null;
+  return isCompactLicensePlate(plate) ? plate : null;
 }
 
 export function validSmsDraft(recipient: unknown, message: unknown): recipient is string {

@@ -32,7 +32,9 @@ export function createDeviceVehicleStore(storage: Storage) {
         const raw = await storage.getItem(DEVICE_VEHICLE_KEY);
         const record = raw && raw.length <= 4096 ? JSON.parse(raw) : null;
         if (record?.version === 1 && record.accountId === accountId) {
-          next = { ...next, savedPlate: normalizeLicensePlate(record.savedPlate), pendingStop: validPendingSmsStop(record.pendingStop) ? record.pendingStop : null, offerPlate: record.offerPlate === true };
+          const savedPlate = normalizeLicensePlate(record.savedPlate);
+          const needsPlateCorrection = record.savedPlate != null && record.savedPlate !== "" && !savedPlate;
+          next = { ...next, savedPlate, pendingStop: validPendingSmsStop(record.pendingStop) ? record.pendingStop : null, offerPlate: record.offerPlate === true || needsPlateCorrection };
         } else if (raw) await storage.removeItem(DEVICE_VEHICLE_KEY);
       } catch { /* A storage read failure never exposes another account's data. */ }
       if (current === version) publish(next);

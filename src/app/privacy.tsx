@@ -49,27 +49,27 @@ export default function Privacy() {
         <Text style={s.title}>{t("Location", "Локација")}</Text>
         <Note>
           {t(
-            "GPS finds nearby parking and can ask a quick question after about 10 seconds of accurate, stationary readings. Optional background reminders use location even when the app is minimized; your phone controls delivery timing, and force-closing can stop them. The latest arrival location and reminder cooldowns stay on this device and are cleared when you turn reminders off or sign out. Adding a parking place shares its coordinates; an availability report shares the parking ID. Address searches, maps and navigation use their providers’ services.",
-            "GPS наоѓа блиски паркинзи и може да постави кратко прашање по околу 10 секунди прецизни, неподвижни мерења. Потсетниците во заднина се по избор и користат локација и кога апликацијата е минимизирана; телефонот го одредува времето на испорака, а присилното затворање може да ги запре. Последната локација на пристигнување и паузите меѓу потсетниците остануваат на уредот и се бришат кога ги исклучувате потсетниците или се одјавувате. Додавањето паркинг ги споделува неговите координати; пријавата го споделува идентификаторот на паркингот. Пребарувањето, мапите и навигацијата користат услуги од нивните провајдери.",
+            "GPS finds nearby parking and can ask a quick question after about 10 seconds of accurate, stationary readings. Optional background reminders use location even when the app is minimized; your phone controls delivery timing, and force-closing can stop them. Pending arrival locations and reminders stay on this device and are cleared when you turn reminders off or sign out. A submitted report’s parking ID and time are stored locally per account to prevent repeated questions for six hours. Adding a parking place shares its coordinates; an availability report shares the parking ID. Address searches, maps and navigation use their providers’ services.",
+            "GPS наоѓа блиски паркинзи и може да постави кратко прашање по околу 10 секунди прецизни, неподвижни мерења. Потсетниците во заднина се по избор и користат локација и кога апликацијата е минимизирана; телефонот го одредува времето на испорака, а присилното затворање може да ги запре. Локациите и потсетниците за пристигнување што чекаат остануваат на уредот и се бришат кога ги исклучувате потсетниците или се одјавувате. Идентификаторот на паркингот и времето на испратената пријава се зачувуваат локално за секоја сметка за да се избегнат повторени прашања во текот на шест часа. Додавањето паркинг ги споделува неговите координати; пријавата го споделува идентификаторот на паркингот. Пребарувањето, мапите и навигацијата користат услуги од нивните провајдери.",
           )}
         </Note>
         <Note>
           {t(
-            "Sign photos and drawn zones are public. Photos are sent to Google Gemini to read prices and sign details. Upload only the sign, without faces or registration plates.",
-            "Сликите од табли и нацртаните зони се јавни. Сликите се испраќаат до Google Gemini за читање на цените и деталите. Прикачувајте само табли, без лица или регистарски таблички.",
+            "Sign photos are read on your phone and never uploaded; each photo is deleted after you check it. Only the sign details you confirm and the zones you draw are shared, and they are public. Text is read with Google ML Kit, which sends Google diagnostic data such as device model, app version and performance. If you add your own Google Gemini or Groq API key, a sign photo you read is sent from your phone directly to that provider, under your account and its terms. Your key stays in this phone's secure storage and is never sent to Parkino.",
+            "Сликите од табли се читаат на вашиот телефон и никогаш не се испраќаат; секоја слика се брише откако ќе ја проверите. Се споделуваат само потврдените податоци од таблата и нацртаните зони, и тие се јавни. Текстот се чита со Google ML Kit, кој на Google му праќа дијагностички податоци, како модел на уредот, верзија на апликацијата и перформанси. Ако додадете свој Google Gemini или Groq API клуч, сликата што ја читате се испраќа директно од телефонот до тој провајдер, под ваш профил и неговите услови. Клучот останува во безбедната меморија на телефонот и никогаш не се испраќа до Parkino.",
           )}
         </Note>
         <Text style={s.subhead}>{t("What is saved", "Што се зачувува")}</Text>
         <Note>
           {t(
-            "Your optional license plate is saved only on this device and cleared when you sign out. SMS parking opens your messaging app with the sign’s number and message; you choose whether to send it. Your mobile operator may charge for the message and parking. Wait for the parking operator’s confirmation.",
-            "Регистарската табличка е по избор, се зачувува само на овој уред и се брише при одјавување. СМС-плаќањето ја отвора апликацијата за пораки со бројот и пораката од таблата; вие одлучувате дали да ја испратите. Мобилниот оператор може да наплати за пораката и паркирањето. Почекајте потврда од паркинг-операторот.",
+            "Your optional license plate is saved only on this device and cleared when you sign out. SMS parking opens your messaging app with the parking operator’s number and message, taken from Gradski Parking’s or POC’s published rules; you choose whether to send it. Your mobile operator may charge for the message and parking. Wait for the parking operator’s confirmation. A reminder before a zone’s time limit is scheduled only on this device, if you allow notifications.",
+            "Регистарската табличка е по избор, се зачувува само на овој уред и се брише при одјавување. СМС-плаќањето ја отвора апликацијата за пораки со бројот и пораката на паркинг-операторот, од објавените правила на Градски паркинг или ПОЦ; вие одлучувате дали да ја испратите. Мобилниот оператор може да наплати за пораката и паркирањето. Почекајте потврда од паркинг-операторот. Потсетникот пред истекот на дозволеното време се закажува само на овој уред, ако дозволите известувања.",
           )}
         </Note>
         <Note>
           {t(
-            "The server stores your username, a salted password hash if you set a password, hashed sign-in tokens, contribution points and history, parking reports, prices, coordinates, boundaries and confirmations. Your password is never stored as plain text. Price reports and location confirmations are displayed for 90 days. Shared parking details and confirmation counts are public. Do not include names, registration plates or other personal information in notes. Availability reports expire after 15 minutes.",
-            "Серверот зачувува корисничко име, безбедно хеширана лозинка ако ја поставите, хеширани токени за најава, поени и историја на придонеси, пријави, цени, координати, граници и потврди. Лозинката не се чува како обичен текст. Цените и потврдите се прикажуваат 90 дена. Деталите за паркинзи и бројот на потврди се јавни. Не внесувајте имиња, регистарски таблички или лични податоци. Пријавите за достапност истекуваат по 15 минути.",
+            "The server stores your username, a salted password hash if you set a password, hashed sign-in tokens, contribution points and history, parking reports, confirmed sign details, prices, coordinates, boundaries and confirmations. Your password is never stored as plain text. Price reports and location confirmations are displayed for 90 days. Shared parking details and confirmation counts are public. Do not include names, registration plates or other personal information in notes. Availability reports expire after 15 minutes.",
+            "Серверот зачувува корисничко име, безбедно хеширана лозинка ако ја поставите, хеширани токени за најава, поени и историја на придонеси, пријави, потврдени податоци од табли, цени, координати, граници и потврди. Лозинката не се чува како обичен текст. Цените и потврдите се прикажуваат 90 дена. Деталите за паркинзи и бројот на потврди се јавни. Не внесувајте имиња, регистарски таблички или лични податоци. Пријавите за достапност истекуваат по 15 минути.",
           )}
         </Note>
         <Text style={s.subhead}>
@@ -77,10 +77,12 @@ export default function Privacy() {
         </Text>
         <Note>
           {t(
-            "Deleting removes your username, password, all sign-in sessions, points, uploaded photos, zone-label edits, price and availability reports and confirmations. Published parking locations and boundaries remain on the shared map. To keep your account and use it later, sign out from Your account instead.",
-            "Бришењето ги отстранува името, лозинката, сите сесии, поените, сликите, измените на ознаки, пријавите и потврдите. Објавените паркинзи и граници остануваат на заедничката мапа. За да го зачувате профилот за подоцна, одјавете се преку Вашиот профил.",
+            "Deleting removes your username, password, all sign-in sessions, points, sign details, zone-label edits, price and availability reports and confirmations. Published parking locations and boundaries remain on the shared map. To keep your account and use it later, sign out from Your account instead.",
+            "Бришењето ги отстранува името, лозинката, сите сесии, поените, податоците од табли, измените на ознаки, пријавите и потврдите. Објавените паркинзи и граници остануваат на заедничката мапа. За да го зачувате профилот за подоцна, одјавете се преку Вашиот профил.",
           )}
         </Note>
+        {/* Above the button: after deletion the button disables and this is the only feedback. */}
+        {message ? <Note>{message}</Note> : null}
         <Button
           title={
             busy
@@ -91,7 +93,6 @@ export default function Privacy() {
           disabled={busy || !connected || !account.profile}
           onPress={() => setConfirmDelete(true)}
         />
-        {message ? <Note>{message}</Note> : null}
       </ScrollView>
       <Sheet visible={confirmDelete} title={t("Delete your account?", "Да се избрише профилот?")} onClose={() => { if (!busy) setConfirmDelete(false); }}>
         <Note>{t("Your username, points and private account data will be permanently removed. You cannot sign back in to this account after deletion.", "Вашето име, поени и приватни податоци трајно ќе се избришат. По бришењето нема да можете повторно да се најавите на овој профил.")}</Note>

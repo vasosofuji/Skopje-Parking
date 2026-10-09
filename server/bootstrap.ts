@@ -3,26 +3,31 @@ import { resolve } from "node:path";
 import type { Catalog } from "../src/domain/types";
 import { ParkingStore } from "./store";
 import { buildApp } from "./app";
-import { configuredExtractor } from "./sign-ai";
 import { PgDatabase } from "./postgres/database";
 import { PostgresParkingStore } from "./postgres/store";
 
-export async function createApp(backgroundTask?: (task: Promise<void>) => void) {
-  if ((backgroundTask || process.env.NODE_ENV === "production") && !process.env.DATABASE_URL)
-    throw new Error("Production API requires DATABASE_URL; refusing temporary local storage.");
+export function readCatalog(): Catalog {
   const catalog: Catalog = JSON.parse(readFileSync(resolve("data/catalog.json"), "utf8"));
   if (existsSync(resolve("data/partners"))) {
     for (const name of readdirSync(resolve("data/partners")).filter(name => name.endsWith(".json")))
       catalog.places.push(...JSON.parse(readFileSync(resolve("data/partners", name), "utf8")));
   }
+  return catalog;
+}
+
+/** A background task runner means a serverless function (Supabase Edge): no timers, a small pool, and
+ * no seeding on cold start (`npm run db:migrate` seeds the catalog once per catalog update). */
+export async function createApp(backgroundTask?: (task: Promise<void>) => void, catalog = readCatalog()) {
+  if ((backgroundTask || process.env.NODE_ENV === "production") && !process.env.DATABASE_URL)
+    throw new Error("Production API requires DATABASE_URL; refusing temporary local storage.");
   let store: ParkingStore | PostgresParkingStore;
   if (process.env.DATABASE_URL) {
-    const database = new PgDatabase(process.env.DATABASE_URL);
+    const database = new PgDatabase(process.env.DATABASE_URL, undefined, backgroundTask ? 3 : 8);
     try {
       await database.prepare("SELECT 1 FROM profiles LIMIT 1").all();
       if (backgroundTask) await database.prepare("SELECT 1 FROM request_limits LIMIT 1").all();
       store = new PostgresParkingStore(database, Date.now, process.env.DEMO_TRUST_INPUTS !== "false");
-      await store.seed(catalog);
+      if (!backgroundTask) await store.seed(catalog);
     } catch (error) {
       await database.close();
       throw error;
@@ -37,9 +42,8 @@ export async function createApp(backgroundTask?: (task: Promise<void>) => void) 
       adminKey: process.env.ADMIN_API_KEY,
       feedKeys: process.env.OPERATOR_FEED_KEYS ? JSON.parse(process.env.OPERATOR_FEED_KEYS) : {},
       origins: process.env.ALLOWED_ORIGINS?.split(",").map(value => value.trim()).filter(Boolean),
-      signExtractor: configuredExtractor(),
       requireOnboarding: true,
-      // Vercel overwrites forwarded client IPs; trust its immediate ingress hop.
+      // The function's gateway appends the client address; trust only that hop.
       trustedProxies: backgroundTask ? (_address, hop) => hop === 0 :
         process.env.TRUSTED_PROXIES?.split(",").map(value => value.trim()).filter(Boolean),
       backgroundTask,

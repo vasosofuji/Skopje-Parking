@@ -1,4 +1,5 @@
-export const PUBLIC_API_URL = "https://parkino-api-vaso.vercel.app";
+// The parking API runs as a Supabase Edge Function (supabase/functions/api).
+export const PUBLIC_API_URL = "https://vkqxtqcuoobiijbnpxod.supabase.co/functions/v1/api";
 
 export function apiEndpoint(options: {
   configured?: string;

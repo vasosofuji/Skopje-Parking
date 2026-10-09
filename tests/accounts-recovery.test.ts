@@ -146,14 +146,37 @@ test("password derivation uses unique salts and rejects incorrect or malformed v
   await assert.rejects(hashPassword(" ".repeat(20)), /10–128/);
 });
 
-test("login throttle counts case-equivalent usernames across IPs and expires", () => {
+test("login throttle counts failed case-equivalent usernames across IPs, resets on success and expires", () => {
   let now = 1000;
-  const limiter = new LoginAttemptLimiter(() => now);
-  for (let i = 0; i < 8; i++) limiter.consume(i % 2 ? "Ｄｒｉｖｅｒ" : "driver");
-  assert.throws(() => limiter.consume("Driver"), { statusCode: 429 });
-  assert.doesNotThrow(() => limiter.consume("another_driver"));
+  const limiter = new LoginAttemptLimiter(() => now, 50);
+  for (let i = 0; i < 8; i++) limiter.failed(i % 2 ? "Ｄｒｉｖｅｒ" : "driver", `10.0.0.${i}`);
+  assert.equal(limiter.blocked("Driver", "10.9.9.9"), true);
+  assert.equal(limiter.blocked("another_driver", "10.0.0.1"), false);
   now += 15 * 60 * 1000;
-  assert.doesNotThrow(() => limiter.consume("driver"));
+  assert.equal(limiter.blocked("driver", "10.0.0.1"), false);
+  for (let i = 0; i < 7; i++) limiter.failed("driver", "10.0.0.1");
+  limiter.succeeded("DRIVER");
+  assert.equal(limiter.blocked("driver", "10.0.0.1"), false, "a correct password clears that username's failures");
+  // A carrier IP shared by many drivers is only blocked by sustained password spraying.
+  for (let i = 0; i < 99; i++) limiter.failed(`user_${i}`, "100.64.0.1");
+  assert.equal(limiter.blocked("someone_new", "100.64.0.1"), false);
+  limiter.failed("user_last", "100.64.0.1");
+  assert.equal(limiter.blocked("someone_new", "100.64.0.1"), true);
+  assert.equal(limiter.blocked("someone_new", "100.64.0.2"), false);
+});
+
+test("many drivers behind one carrier IP can all sign in; failures alone trigger limits", async () => {
+  const { app, store, accounts } = await fixture("sqlite");
+  try {
+    for (let i = 0; i < 15; i++) {
+      const session = await store.createSession();
+      await accounts.register(session.token, `cgnat_driver_${i}`, TERMS_VERSION, true, PASSWORD);
+    }
+    for (let i = 0; i < 15; i++) {
+      const login = await app.inject({ method: "POST", url: "/v1/auth/login", remoteAddress: "100.64.0.7", payload: { username: `cgnat_driver_${i}`, password: PASSWORD } });
+      assert.equal(login.statusCode, 200, login.body);
+    }
+  } finally { await app.close(); }
 });
 
 test("login API enforces username throttle and never returns a bearer token for failed login", async () => {

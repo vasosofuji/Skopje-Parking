@@ -1,4 +1,5 @@
 import test from "node:test";
+import * as languageModule from "../src/domain/language";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
@@ -48,6 +49,8 @@ function popup(platform = "android") {
   vm.runInNewContext(transpile("src/hooks/useParkingPopupMotion.ts"), hook);
   const component = { exports: {} as { default: (props: PreviewProps) => Element }, require(name: string) {
     if (name === "react") return { ...react, default: react, __esModule: true };
+    if (name === "../domain/language") return languageModule;
+    if (name === "../hooks/usePriceCheck") return { usePriceCheck: () => () => true };
     if (name === "react-native") return native;
     if (name === "../domain/report-feedback") return feedbackDomain;
     if (name === "./ui") return { Button: "Button", IconButton: "IconButton" };
@@ -57,7 +60,8 @@ function popup(platform = "android") {
     if (name === "../domain/marker-appearance") return markerDomain;
     if (name === "../domain/preview-layout") return previewLayout;
     if (name === "../hooks/useParkingPopupMotion") return hook.exports;
-    if (name === "../services/navigation") return { openParkingDirections: async () => {} };
+    if (name === "../services/navigation") return { useNavigationPreference: () => "default" };
+    if (name === "../services/parkingNavigation") return { navigateToParking: async () => "" };
     if (name === "./DigitalParkingSign") return { __esModule: true, default: "DigitalParkingSign" };
     throw new Error(`Unexpected popup dependency: ${name}`);
   } };

@@ -1,5 +1,6 @@
 import type { ParkingPlace } from "./types";
 import { currentAvailability } from "./parking";
+import { isPocSector } from "./zone-interaction";
 export function groupParking(
   places: ParkingPlace[],
   latitudeStep: number,
@@ -15,7 +16,7 @@ export function groupParking(
     const buckets = new Map<string, ParkingPlace[][]>();
     const groups: ParkingPlace[][] = [];
     for (const place of places) {
-      if (place.kind === "zone") continue;
+      if (isPocSector(place)) continue;
       if (place.id === selectedId) { groups.push([place]); continue; }
       const x = Math.floor(place.coordinate.latitude / lat), y = Math.floor(place.coordinate.longitude / lon);
       let match: ParkingPlace[] | undefined;
@@ -36,7 +37,7 @@ export function groupParking(
   }
   const cells = new Map<string, ParkingPlace[]>();
   for (const place of places) {
-    if (place.kind === "zone") continue;
+    if (isPocSector(place)) continue;
     const key =
       !latitudeStep ||
       place.id === selectedId ||

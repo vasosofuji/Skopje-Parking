@@ -1,10 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { featureFilter, validateStyleMin } from "@maplibre/maplibre-gl-style-spec";
 import { createBasemapStyle, googleBasemapStyle, BASEMAP_ATTRIBUTION } from "../src/domain/basemap-style";
-import { guardVectorLayerRemoval, installBasemap } from "../src/domain/basemap-lifecycle";
+import { guardVectorLayerRemoval, installBasemap, registerOfflineBasemap } from "../src/domain/basemap-lifecycle";
 
 test("clean basemap validates and retains street names plus only named food and shops", () => {
   const style = createBasemapStyle();
@@ -30,14 +30,14 @@ test("clean basemap validates and retains street names plus only named food and 
   assert.ok(readFileSync("src/vendor/maplibre.web.ts", "utf8").length < 300, "web bundling cannot include the native WebView's UMD asset strings");
 });
 
-function basemap(options: { supported?: boolean; forceRaster?: boolean; throws?: boolean; timeout?: number; removeThrows?: boolean } = {}) {
+function basemap(options: { supported?: boolean; forceRaster?: boolean; throws?: boolean; timeout?: number; removeThrows?: boolean; underlay?: boolean } = {}) {
   let rasters = 0, rasterRemovals = 0, vectors = 0, vectorRemovals = 0, shows = 0;
   let ready = () => {}, error = (_fatal?: boolean) => {};
   const dispose = installBasemap({
     supported: () => options.supported !== false,
     addRaster: () => { rasters++; return { remove() { rasterRemovals++; } }; },
     addVector: () => { vectors++; if (options.throws) throw new Error("WebGL unavailable"); return { remove() { vectorRemovals++; if (options.removeThrows) throw new Error("already removed"); }, show() { shows++; }, onReady(callback) { ready = callback; }, onError(callback) { error = callback; } }; },
-  }, options.forceRaster, options.timeout);
+  }, options.forceRaster, options.timeout, options.underlay);
   return { ready: () => ready(), error: (fatal = false) => error(fatal), dispose, counts: () => ({ rasters, rasterRemovals, vectors, vectorRemovals, shows }) };
 }
 
@@ -55,6 +55,18 @@ test("basemap supports custom raster overrides, unavailable WebGL, network error
   const failed = basemap({ throws: true }); assert.equal(failed.counts().rasters, 1); failed.dispose();
   const network = basemap(); network.error(); network.error(); assert.equal(network.counts().vectorRemovals, 0); network.error(); assert.equal(network.counts().vectorRemovals, 1); network.dispose();
   const timeout = basemap({ timeout: 5 }); await new Promise(resolve => setTimeout(resolve, 20)); assert.equal(timeout.counts().vectorRemovals, 1); assert.equal(timeout.counts().rasterRemovals, 0); timeout.dispose();
+});
+
+test("the app map loads OSM raster tiles only when the vector basemap cannot be used", async () => {
+  const healthy = basemap({ underlay: false });
+  healthy.ready(); assert.deepEqual(healthy.counts(), { rasters: 0, rasterRemovals: 0, vectors: 1, vectorRemovals: 0, shows: 1 });
+  healthy.error(true); assert.equal(healthy.counts().rasters, 1, "context loss still falls back to raster");
+  healthy.dispose(); assert.equal(healthy.counts().rasterRemovals, 1);
+  for (const options of [{ supported: false }, { throws: true }, { forceRaster: true }]) {
+    const map = basemap({ ...options, underlay: false }); assert.equal(map.counts().rasters, 1); map.dispose();
+  }
+  const slow = basemap({ underlay: false, timeout: 5 }); await new Promise(resolve => setTimeout(resolve, 20));
+  assert.equal(slow.counts().rasters, 1); slow.dispose();
 });
 
 test("the installed adapter initializes against a read-only v5 transform and unregisters failed GL layers", () => {
@@ -111,3 +123,36 @@ test("the installed adapter initializes against a read-only v5 transform and unr
   }
 });
 
+
+test("the Android map reads the bundled Skopje streets, and falls back to online tiles in a build without them", async () => {
+  const offline = createBasemapStyle(true);
+  assert.deepEqual(validateStyleMin(offline), []);
+  const source = offline.sources.openmaptiles;
+  assert.ok(source.type === "vector" && source.tiles?.[0] === "offline://tiles/{z}/{x}/{y}.pbf" && source.maxzoom === 14);
+  assert.deepEqual(source.type === "vector" && source.bounds, [21.22, 41.86, 21.66, 42.13]);
+  assert.equal(offline.glyphs, "offline://fonts/{fontstack}/{range}.pbf");
+  assert.equal(JSON.stringify(offline).includes("openfreemap.org/planet"), false, "no tile server");
+  assert.ok(existsSync("assets/offline-map/fonts/Noto Sans Regular/1024-1279.pbf"), "Cyrillic street names");
+  for (const layer of offline.layers) if (layer.type === "symbol") for (const font of layer.layout?.["text-font"] as string[] ?? [])
+    assert.ok(existsSync(`assets/offline-map/fonts/${font}/0-255.pbf`), font);
+
+  const files: Record<string, ArrayBuffer> = { "manifest.json": new ArrayBuffer(2), "tiles/14/9046/6012.pbf": new ArrayBuffer(9), "fonts/Noto Sans Bold/0-255.pbf": new ArrayBuffer(5) };
+  const opened: string[] = [];
+  const serve = (available: Record<string, ArrayBuffer>) => class {
+    responseType = ""; status = 0; response: ArrayBuffer | null = null; onload: (() => void) | null = null; onerror: (() => void) | null = null; private url = "";
+    open(_method: string, url: string) { this.url = url; opened.push(url); }
+    send() { const path = this.url.replace("file:///android_asset/offline-map/", ""); setImmediate(() => { if (available[path]) { this.response = available[path]; this.onload?.(); } else this.onerror?.(); }); }
+  };
+  const protocols = new Map<string, (params: { url: string }) => Promise<{ data: ArrayBuffer }>>();
+  const maplibre = { addProtocol: (name: string, load: (params: { url: string }) => Promise<{ data: ArrayBuffer }>) => { protocols.set(name, load); } };
+  const ready = await new Promise<boolean>(resolve => registerOfflineBasemap(maplibre, "file:///android_asset/offline-map/", serve(files), resolve));
+  assert.equal(ready, true);
+  const load = protocols.get("offline")!;
+  assert.equal((await load({ url: "offline://tiles/14/9046/6012.pbf" })).data.byteLength, 9);
+  assert.equal((await load({ url: "offline://fonts/Noto%20Sans%20Bold/0-255.pbf" })).data.byteLength, 5);
+  assert.equal((await load({ url: "offline://tiles/14/1/1.pbf" })).data.byteLength, 0, "outside Skopje is empty, not an error");
+  protocols.clear();
+  const old = await new Promise<boolean>(resolve => registerOfflineBasemap(maplibre, "file:///android_asset/offline-map/", serve({}), resolve));
+  assert.equal(old, false); assert.equal(protocols.size, 0);
+  assert.ok(opened.every(url => url.startsWith("file:///android_asset/offline-map/")));
+});

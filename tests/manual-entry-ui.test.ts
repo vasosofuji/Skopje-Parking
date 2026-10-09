@@ -1,4 +1,5 @@
 import test from "node:test";
+import * as languageModule from "../src/domain/language";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
@@ -26,6 +27,8 @@ function wizard(initial: Record<string, unknown> = {}) {
   };
   const context = { exports: {} as { body: (props: Record<string, unknown>) => Element }, require(name: string) {
     if (name === "react") return { ...react, default: react, __esModule: true };
+    if (name === "../domain/language") return languageModule;
+    if (name === "../hooks/usePriceCheck") return { usePriceCheck: () => () => true };
     if (name === "react-native") return { Keyboard: { dismiss() {} }, Pressable: "Pressable", Text: "Text", TextInput: "TextInput", View: "View", StyleSheet: { create: (value: unknown) => value } };
     if (name === "expo-crypto") return { randomUUID: () => "fixed-request" };
     if (name === "./ui") return { Button: "Button", Icon: "Icon", Note: "Note", useSheetReveal: () => ({}), useSheetBack: (action: typeof back) => { back = action; }, useSheetContinue: () => false };

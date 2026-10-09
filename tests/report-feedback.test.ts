@@ -16,12 +16,13 @@ test("arrival asks yes/no availability then only asks missing pricing, including
     { ...place, tariff: { firstHour: 25, nextHour: 25, maxStayMinutes: null, evidence: "official", source: place.source } },
     { ...place, tariff: { firstHour: 0, nextHour: 0, maxStayMinutes: null, evidence: "community", source: place.source } },
     { ...place, communityPrice: { firstHour: 0, nextHour: 0, observedAt: new Date(now - 10).toISOString(), reports: 1 } },
-    { ...place, signInfo: { ...blank, firstHour: 25, nextHour: 25, confirmedAt: new Date(now - 10).toISOString(), observedAt: new Date(now - 10).toISOString(), photoId: "s", model: "model" } },
+    { ...place, signInfo: { ...blank, firstHour: 25, nextHour: 25, confirmedAt: new Date(now - 10).toISOString(), observedAt: new Date(now - 10).toISOString(), readingId: "s", model: "model" } },
   ];
   for (const priced of known) {
     assert.equal(arrivalQuestion(priced, false, now), "availability");
     assert.equal(arrivalQuestion(priced, true, now), null);
-    assert.equal(arrivalQuestion({ ...priced, kind: "zone" }, false, now), null);
+    assert.equal(arrivalQuestion({ ...priced, kind: "zone" }, false, now), null, "zones never take availability reports");
+    assert.equal(arrivalQuestion({ ...priced, id: "poc:zone:1:0", kind: "zone", operator: "poc", zoneCode: "POC 1" }, false, now), null);
   }
   assert.equal(arrivalQuestion({ ...place, communityPrice: { firstHour: 0, nextHour: 0, observedAt: new Date(now - PRICE_REPORT_TTL_MS).toISOString(), reports: 1 } }, true, now), "price");
   assert.equal(arrivalQuestion({ ...place, kind: "zone" }, false, now), "price");

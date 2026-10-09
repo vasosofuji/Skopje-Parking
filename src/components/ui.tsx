@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useTheme, lightColors, type ThemeColors } from "../state/ThemeContext";
+import { useTranslate } from "../state/ParkingContext";
 import ModalBackdrop from "./ModalBackdrop";
 import { formRevealOffset } from "../domain/form-reveal";
 import { ContributionNotice } from "../state/ContributionFeedback";
@@ -212,7 +213,7 @@ export function Sheet({
   onDismiss,
   onShow,
   onBack,
-  backLabel = "Back / Назад",
+  backLabel,
   backDisabled,
   fullPage = false,
 }: {
@@ -229,13 +230,14 @@ export function Sheet({
   fullPage?: boolean;
 }) {
   const { colors } = useTheme();
+  const t = useTranslate();
   const s = styles(colors);
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const [registeredBack, registerBack] = useState<HeaderBackAction | null>(null);
   const [registeredContinue, registerContinue] = useState<ContinueAction | null>(null);
   const { scroll, content, reveal, events } = useFormViewport();
-  const back = registeredBack ?? (onBack ? { onPress: onBack, label: backLabel, disabled: backDisabled } : null);
+  const back = registeredBack ?? (onBack ? { onPress: onBack, label: backLabel ?? t("Back", "Назад"), disabled: backDisabled } : null);
   return (
     <SheetBackContext.Provider value={registerBack}>
     <SheetContinueContext.Provider value={registerContinue}>
@@ -263,7 +265,7 @@ export function Sheet({
       >
         {!fullPage ? <ModalBackdrop /> : null}
         {!fullPage ? <Pressable
-          accessibilityLabel="Close dialog"
+          accessibilityLabel={t("Close dialog", "Затвори прозорец")}
           onPress={onClose}
           style={StyleSheet.absoluteFill}
         /> : null}
@@ -284,7 +286,7 @@ export function Sheet({
               {title}
             </Text>
             {!fullPage && back && !registeredContinue ? <IconButton name="arrow-left" compact label={back.label} disabled={back.disabled} onPress={back.onPress} /> : null}
-            <View style={fullPage ? { width: 44, alignItems: "center" } : undefined}><IconButton name="x" label="Close / Затвори" onPress={onClose} /></View>
+            <View style={fullPage ? { width: 44, alignItems: "center" } : undefined}><IconButton name="x" label={t("Close", "Затвори")} onPress={onClose} /></View>
           </View>
           <ScrollView
             ref={scroll}

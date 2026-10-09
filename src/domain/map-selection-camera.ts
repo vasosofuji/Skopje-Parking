@@ -1,5 +1,16 @@
+/** Near me always frames the latest fix at street level, regardless of prior zoom. */
+export const CURRENT_LOCATION_ZOOM = 18;
+
+/** Match native framing to the Leaflet overview and its absolute zoom levels. */
+export function mapCameraDeltas(zoom = 15) {
+  const span = 0.022 / 2 ** (zoom - 15);
+  return { latitudeDelta: span, longitudeDelta: span };
+}
+
 /** POC tariff sectors need context around their streets, rather than a pin-sized close-up. */
 export function parkingSelectionZoom(currentZoom: number, pocSector: boolean) {
+  // Injected into the map WebView via toString(); Hermes keeps source only with this directive.
+  "show source";
   const current = Number.isFinite(currentZoom) && currentZoom > 0 ? currentZoom : 15;
   return pocSector ? Math.max(current, Math.min(16, current + 0.5)) : Math.max(16, current);
 }

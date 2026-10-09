@@ -3,12 +3,12 @@ import assert from "node:assert/strict";
 import { ArrivalDetector, ARRIVAL_COOLDOWN_MS, type Fix } from "../src/domain/arrival";
 import {
   advanceArrival,
+  acknowledgeArrivalReport,
   ARRIVAL_REMINDER_KIND,
   emptyReminderState,
   freshPendingArrival,
   openArrivalNotification,
   REMINDER_EXPIRY_MS,
-  REMINDER_GAP_MS,
 } from "../src/domain/backgroundArrival";
 import type { ParkingPlace } from "../src/domain/types";
 const start = Date.parse("2026-10-01T12:00:00Z");
@@ -69,13 +69,19 @@ test("batch sorting tolerates delayed delivery but never invents dwell across a 
   assert.equal(advanceArrival(initial.state, [fix(60)], [place], true, start + 60000).place, null);
 });
 
-test("nearby parking areas cannot spam successive reminders", () => {
-  const first = advanceArrival(emptyReminderState(), [fix(0), fix(10)], [place], false, start + 10000);
-  const other = { ...place, id: "neighbor" };
-  const early = advanceArrival(first.state, [fix(20), fix(30)], [other], true, start + 30000);
-  assert.equal(early.place, null);
-  const seconds = REMINDER_GAP_MS / 1000 + 20;
-  assert.equal(advanceArrival(first.state, [fix(seconds), fix(seconds + 10)], [other], true, start + (seconds + 10) * 1000).place?.id, other.id);
+test("dismissed or opened questions suppress only the current visit; reports start the cooldown", () => {
+  const first = advanceArrival(emptyReminderState(), [fix(0), fix(10)], [place], true, start + 10000);
+  const opened = openArrivalNotification(first.state, { kind: ARRIVAL_REMINDER_KIND, placeId: place.id, createdAt: start + 10000 }, start + 11000);
+  const consumed = { ...opened, pending: null };
+  assert.deepEqual(consumed.detector.prompted, [], "opening never records a report");
+  const staying = advanceArrival(consumed, [fix(20), fix(30)], [place], true, start + 30000);
+  assert.equal(staying.place, null);
+  const left = advanceArrival(staying.state, [fix(35, { latitude: 42.1 })], [place], false, start + 35000);
+  const reentered = advanceArrival(left.state, [fix(40), fix(50)], [place], false, start + 50000);
+  assert.equal(reentered.place?.id, place.id, "leaving and returning asks again without a 30-minute wait");
+  const reported = acknowledgeArrivalReport(reentered.state, place.id, start + 51000);
+  const departed = advanceArrival(reported, [fix(55, { latitude: 42.1 })], [place], false, start + 55000);
+  assert.equal(advanceArrival(departed.state, [fix(60), fix(70)], [place], false, start + 70000).place, null, "a submitted report prevents repeat questions");
 });
 
 test("background surveyed boundaries exclude holes and do not treat approximate zone labels as parking", () => {
@@ -91,6 +97,18 @@ test("background surveyed boundaries exclude holes and do not treat approximate 
   const surveyed = { ...zone, geometry: { ...zone.geometry!, coordinates: [zone.geometry!.coordinates[0]] } };
   assert.equal(advanceArrival(emptyReminderState(), [fix(0), fix(10)], [surveyed], true, start + 10000).place?.id, place.id);
   const pricedZone = { ...surveyed, communityPrice: { firstHour: 30, nextHour: 30, observedAt: new Date(start).toISOString(), reports: 1 } };
-  assert.equal(advanceArrival(emptyReminderState(), [fix(0), fix(10)], [pricedZone], true, start + 10000).place, null, "a tariff zone with known prices has no quick question to ask");
+  // The API rejects availability for tariff zones, so a priced zone has nothing to ask.
+  assert.equal(advanceArrival(emptyReminderState(), [fix(0), fix(10)], [pricedZone], true, start + 10000).place, null, "known-price zones do not prompt");
+  const tariff = { ...pricedZone, id: "poc:zone:1:0", operator: "poc", zoneCode: "POC 1" };
+  assert.equal(advanceArrival(emptyReminderState(), [fix(0), fix(10)], [tariff], true, start + 10000).place, null, "large tariff overlays cannot block the SMS prompt");
   assert.equal(advanceArrival(emptyReminderState(), [fix(0), fix(10)], [{ ...pricedZone, id: "zone" }, place], true, start + 10000).place?.id, place.id, "a real parking facility still asks about availability inside a known-price zone");
+});
+
+
+test("a batch rejected before delivery does not suppress the next accurate arrival", () => {
+  const rejected = advanceArrival(emptyReminderState(), [fix(0), fix(10), fix(12, { accuracy: 80 })], [place], true, start + 12000);
+  assert.equal(rejected.place, null);
+  assert.equal(rejected.state.detector.visit, null);
+  const retry = advanceArrival(rejected.state, [fix(15), fix(25)], [place], true, start + 25000);
+  assert.equal(retry.place?.id, place.id);
 });

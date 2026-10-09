@@ -1,6 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parkingSelectionDeltas, parkingSelectionZoom } from "../src/domain/map-selection-camera";
+import { CURRENT_LOCATION_ZOOM, mapCameraDeltas, parkingSelectionDeltas, parkingSelectionZoom } from "../src/domain/map-selection-camera";
+
+test("current-location camera is eight times closer than overview at a fixed native span", () => {
+  assert.equal(CURRENT_LOCATION_ZOOM, 18);
+  assert.deepEqual(mapCameraDeltas(), { latitudeDelta: 0.022, longitudeDelta: 0.022 });
+  assert.deepEqual(mapCameraDeltas(CURRENT_LOCATION_ZOOM), { latitudeDelta: 0.00275, longitudeDelta: 0.00275 });
+});
 test("POC selection adds a half level from overview and caps repeated selections at street context", () => {
   assert.equal(parkingSelectionZoom(15, true), 15.5);
   assert.equal(parkingSelectionZoom(15.5, true), 16);

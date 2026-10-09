@@ -1,4 +1,5 @@
 import test from "node:test";
+import * as languageModule from "../src/domain/language";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
@@ -30,6 +31,8 @@ test("drawer keeps its animated transform attached across collapse and catalog m
   const source = ts.transpileModule(readFileSync("src/components/MapDrawer.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText;
   vm.runInNewContext(source, { exports, require(name: string) {
     if (name === "react") return { ...react, default: react, __esModule: true };
+    if (name === "../domain/language") return languageModule;
+    if (name === "../hooks/usePriceCheck") return { usePriceCheck: () => () => true };
     if (name === "react-native") return { View: "View", ScrollView: "ScrollView", Platform: { OS: "web" }, useWindowDimensions: () => ({ height: 844 }), StyleSheet: { create: (styles: any) => styles }, Animated: { View: "AnimatedView", Value, subtract: (a: Value, b: Value) => ({ a, b }), spring: (value: Value, config: any) => ({ start: () => springs.push({ value, config }) }) } };
     if (name.endsWith("ThemeContext")) return { useTheme: () => ({ colors: {} }) };
     if (name.endsWith("ParkingContext")) return { useParking: () => ({ t: (en: string) => en }) };
@@ -88,6 +91,8 @@ test("native drawer long hold stays closed while a new short press still opens",
   const source = ts.transpileModule(readFileSync("src/components/DrawerHandle.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText;
   vm.runInNewContext(source, { exports, require(name: string) {
     if (name === "react") return { ...react, default: react, __esModule: true };
+    if (name === "../domain/language") return languageModule;
+    if (name === "../hooks/usePriceCheck") return { usePriceCheck: () => () => true };
     return { View: "View", Pressable: "Pressable", PanResponder: { create: () => ({ panHandlers: {} }) } };
   } });
   const tree = exports.default({ onToggle: () => toggles++ });

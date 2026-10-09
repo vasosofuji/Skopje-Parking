@@ -1,10 +1,18 @@
 import liberty from "./openfreemap-liberty.json";
+import offlineMap from "../../assets/offline-map/manifest.json";
 import type { StyleSpecification, LayerSpecification } from "maplibre-gl";
 
 export const BASEMAP_ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · <a href="https://openfreemap.org/">OpenFreeMap</a> · <a href="https://openmaptiles.org/">OpenMapTiles</a>';
 
+/** The Skopje extract bundled with the Android app (scripts/update-offline-map.mjs): no tile server. */
+export const OFFLINE_BASEMAP: Pick<StyleSpecification, "sources" | "glyphs"> = {
+  sources: { openmaptiles: { type: "vector", tiles: ["offline://tiles/{z}/{x}/{y}.pbf"], minzoom: offlineMap.minzoom, maxzoom: offlineMap.maxzoom,
+    bounds: [offlineMap.bbox.west, offlineMap.bbox.south, offlineMap.bbox.east, offlineMap.bbox.north], attribution: BASEMAP_ATTRIBUTION } },
+  glyphs: "offline://fonts/{fontstack}/{range}.pbf",
+};
+
 /** Keep street names and a quiet set of useful named businesses, without POI icons. */
-export function createBasemapStyle(): StyleSpecification {
+export function createBasemapStyle(offline = false): StyleSpecification {
   const style = JSON.parse(JSON.stringify(liberty)) as StyleSpecification;
   style.name = "Parkino streets";
   style.layers = style.layers.filter(layer => {
@@ -44,16 +52,16 @@ export function createBasemapStyle(): StyleSpecification {
   delete style.sprite;
   delete style.sources.ne2_shaded;
   style.transition = { duration: 180, delay: 0 };
-  return style;
+  return offline ? { ...style, ...OFFLINE_BASEMAP } : style;
 }
 
 export function googleBasemapStyle(dark: boolean) {
   return [
-    { elementType: "geometry", stylers: [{ color: dark ? "#302b25" : "#f3eee4" }] },
-    { elementType: "labels.text.fill", stylers: [{ color: dark ? "#d4c7b5" : "#655b50" }] },
-    { elementType: "labels.text.stroke", stylers: [{ color: dark ? "#302b25" : "#fffdf8" }] },
-    { featureType: "water", elementType: "geometry", stylers: [{ color: dark ? "#243e40" : "#c5d9d8" }] },
-    { featureType: "road", elementType: "geometry", stylers: [{ color: dark ? "#574d40" : "#fffdf8" }] },
+    { elementType: "geometry", stylers: [{ color: dark ? "#42484b" : "#f3eee4" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: dark ? "#e0e1dc" : "#655b50" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: dark ? "#42484b" : "#fffdf8" }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: dark ? "#3c595e" : "#c5d9d8" }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ color: dark ? "#62696b" : "#fffdf8" }] },
     { featureType: "poi", stylers: [{ visibility: "off" }] },
     { featureType: "poi.business", elementType: "labels.text", stylers: [{ visibility: "on" }] },
     { featureType: "poi.place_of_worship", stylers: [{ visibility: "off" }] },

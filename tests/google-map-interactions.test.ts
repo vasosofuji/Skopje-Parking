@@ -1,4 +1,5 @@
 import { googleBasemapStyle } from "../src/domain/basemap-style";
+import * as languageModule from "../src/domain/language";
 import * as zoneInteraction from "../src/domain/zone-interaction";
 import * as selectionCamera from "../src/domain/map-selection-camera";
 import test from "node:test";
@@ -33,8 +34,9 @@ function renderer() {
   const exports: { default?: (props: ParkingMapProps) => Node } = {};
   const source = ts.transpileModule(readFileSync("src/components/GoogleParkingMap.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText;
   vm.runInNewContext(source, { exports, require(name: string) {
-    if (name === "../domain/language") return { translate };
     if (name === "react") return { ...React, default: React, __esModule: true };
+    if (name === "../domain/language") return languageModule;
+    if (name === "../hooks/usePriceCheck") return { usePriceCheck: () => () => true };
     if (name === "react-native") return { AccessibilityInfo: { isReduceMotionEnabled: async () => false, addEventListener: (_name: string, callback: (value: boolean) => void) => { motionChanged = callback; return { remove() {} }; } }, StyleSheet: { create: (value: unknown) => value, absoluteFill: {} }, View: "View", Text: "Text" };
     if (name === "react-native-maps") return { __esModule: true, default: "MapView", Marker: "Marker", Polygon: "Polygon", Polyline: "Polyline", Circle: "Circle" };
     if (name.endsWith("basemap-style")) return { googleBasemapStyle };
@@ -109,7 +111,29 @@ test("native camera waits for readiness, focuses the tapped anchor once, and res
   assert.equal(immediate.length, 5, "entering drawing stops the flight without adding a new one");
 });
 
-test("POC native overlays stop taking taps after zoom without disabling pins or coordinate picking", () => {
+test("native Near me applies the fixed close region repeatedly after a wider manual camera", async () => {
+  const render = renderer(), targets: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number }[] = [];
+  const map = { animateToRegion: (target: typeof targets[number]) => targets.push(target), fitToCoordinates() {}, pointForCoordinate: async () => ({ x: 0, y: 0 }) };
+  let props: ParkingMapProps = { ...base, selectedId: null, selectedAnchor: null };
+  let tree = render(props, map);
+  (tree.props.onMapReady as () => void)(); tree = render(props, map);
+  await new Promise<void>(resolve => setImmediate(resolve));
+  const fresh = { latitude: 42.015, longitude: 21.435 };
+  props = { ...props, destination: fresh, cameraZoom: 18, cameraRevision: 1 };
+  tree = render(props, map);
+  assert.equal(targets.at(-1)?.latitude, fresh.latitude);
+  assert.equal(targets.at(-1)?.longitude, fresh.longitude);
+  assert.equal(targets.at(-1)?.latitudeDelta, 0.00275);
+  assert.equal(targets.at(-1)?.longitudeDelta, 0.00275);
+  (tree.props.onRegionChangeComplete as (region: object) => void)({ ...fresh, latitudeDelta: 0.08, longitudeDelta: 0.08 });
+  render({ ...props, cameraRevision: 2 }, map);
+  assert.equal(targets.length, 2);
+  assert.equal(targets.at(-1)?.latitudeDelta, 0.00275);
+  render({ ...props, cameraRevision: 2, now: props.now + 30_000 }, map);
+  assert.equal(targets.length, 2, "routine catalog updates do not replay Near me");
+});
+
+test("POC native overlays stay tappable after zoom alongside pins and coordinate picking", () => {
   const selected: string[] = [], picked: object[] = [];
   const sector = { id: "poc:zone:1:0", name: "POC sector", kind: "zone", operator: "poc", zoneCode: "POC 1", coordinate: SKOPJE, geometry: { type: "Polygon", coordinates: [[[21.43, 41.99], [21.44, 41.99], [21.44, 42], [21.43, 41.99]]] }, access: "public", verification: "official", tariff: null, capacity: null, openingHours: null, source: { label: "POC", url: "", retrievedAt: "" } } as ParkingMapProps["places"][number];
   const facility = { ...sector, id: "actual-parking", kind: "surface" as const };
@@ -122,11 +146,11 @@ test("POC native overlays stop taking taps after zoom without disabling pins or 
   const region = { ...SKOPJE, latitudeDelta: .011, longitudeDelta: .011 };
   (tree.props.onRegionChange as (value: object) => void)(region);
   (oldPolygon.props.onPress as (value: object) => void)({ nativeEvent: { coordinate: SKOPJE } });
-  assert.equal(selected.length, 0, "in-flight native zoom also guards old event handlers");
+  assert.equal(selected.length, 1, "tiny tariff areas remain selectable during zoom");
   (tree.props.onRegionChangeComplete as (value: object) => void)(region); tree = render(props, map);
-  assert.equal(all(tree).find(node => node.type === "Polygon" && node.props.key === sector.id)!.props.tappable, false);
+  assert.equal(all(tree).find(node => node.type === "Polygon" && node.props.key === sector.id)!.props.tappable, true);
   const pin = all(tree).find(node => node.type === "Marker" && node.props.key === facility.id)!;
-  (pin.props.onPress as () => void)(); assert.deepEqual(selected, [facility.id]);
+  (pin.props.onPress as () => void)(); assert.deepEqual(selected, [sector.id, facility.id]);
   tree = render({ ...props, picking: true }, map);
   const polygon = all(tree).find(node => node.type === "Polygon" && node.props.key === sector.id)!;
   assert.equal(polygon.props.tappable, true);

@@ -79,27 +79,22 @@ for (const backend of ["sqlite","postgres"] as const) test(`${backend}: detailed
 
     const zone=await write("/v1/contributions",{...contribution,requestId:"zone-fixture",kind:"zone",geometry});
     assert.equal(zone.statusCode,201,zone.body);
-    const upload=await write(`/v1/places/${zone.json().id}/signs`,image);
-    assert.equal(upload.statusCode,201,upload.body);assert.equal(upload.json().uploadedByMe,true);
-    const photoId=upload.json().id;
-    assert.equal((await write(`/v1/signs/${photoId}/confirm`,{...info,zoneCode:null,firstHour:null,nextHour:null,chargingHours:null,rawText:""})).statusCode,400,"empty signs do not earn rewards");
-    const other=(await store.createSession()).token;
-    await app.inject({method:"POST",url:"/v1/profile",headers:{authorization:`Bearer ${other}`},payload:{username:"otheruser",password:"contribution test password",accepted:true,termsVersion:TERMS_VERSION}});
-    const forbidden=await app.inject({method:"POST",url:`/v1/signs/${photoId}/confirm`,headers:{authorization:`Bearer ${other}`},payload:info});
-    assert.equal(forbidden.statusCode,403);
-    const confirmed=await write(`/v1/signs/${photoId}/confirm`,info);
-    assert.equal(confirmed.statusCode,200,confirmed.body);assert.ok(confirmed.json().confirmedAt);
+    const sign=(payload:unknown,auth=headers)=>app.inject({method:"POST",url:`/v1/places/${zone.json().id}/signs`,headers:auth,payload:payload as Record<string,unknown>});
+    assert.equal((await sign({info:{...info,zoneCode:null,firstHour:null,nextHour:null,chargingHours:null,rawText:""}})).statusCode,400,"empty signs do not earn rewards");
+    assert.equal((await sign({info,model:"ocr:mlkit-text-v2",base64:image.base64})).statusCode,400,"photos are never accepted");
+    const confirmed=await sign({info,model:"ocr:mlkit-text-v2"});
+    assert.equal(confirmed.statusCode,201,confirmed.body);assert.ok(confirmed.json().id);
     const score=(await app.inject({url:"/v1/profile",headers})).json().points;
-    await write(`/v1/signs/${photoId}/confirm`,info);
-    assert.equal((await app.inject({url:"/v1/profile",headers})).json().points,score);
+    await sign({info,model:"manual"});
+    assert.equal((await app.inject({url:"/v1/profile",headers})).json().points,score,"one sign award per place");
     places=(await app.inject("/v1/catalog")).json().places;
     assert.equal(places.find(p=>p.id===id)?.signInfo?.sourcePlaceId,zone.json().id);
     assert.equal(parkingPrice(places.find(p=>p.id===id)!)?.firstHour,40);
     assert.equal(parkingPrice(places.find(p=>p.id===detailId)!)?.firstHour,0,"site-specific human price wins over zone sign");
-    assert.equal((await write(`/v1/signs/${photoId}/confirm`,{...info,firstHour:-1})).statusCode,400);
-    // Duplicate photo uploads can be reviewed by their new uploader, without leaking owner IDs.
-    const duplicate=await app.inject({method:"POST",url:`/v1/places/${zone.json().id}/signs`,headers:{authorization:`Bearer ${other}`},payload:image});
-    assert.equal(duplicate.json().id,photoId);assert.equal(duplicate.json().uploadedByMe,true);assert.equal(duplicate.json().session_id,undefined);
+    assert.equal((await sign({info:{...info,firstHour:-1}})).statusCode,400);
+    const other=(await store.createSession()).token;
+    await app.inject({method:"POST",url:"/v1/profile",headers:{authorization:`Bearer ${other}`},payload:{username:"otheruser",password:"contribution test password",accepted:true,termsVersion:TERMS_VERSION}});
+    assert.equal((await sign({info},{authorization:`Bearer ${other}`})).statusCode,201,"any driver can add what a sign says");
     // Later contributions by another driver must never count as this creator's work.
     const retryToken=(await store.createSession()).token;
     const retryHeaders={authorization:`Bearer ${retryToken}`};
@@ -119,7 +114,7 @@ for (const backend of ["sqlite","postgres"] as const) test(`${backend}: detailed
 });
 
 test("upgraded cached catalogs never present old AI drafts as confirmed prices", () => {
-  const place: ParkingPlace = {id:"legacy",name:"Legacy",coordinate:point,kind:"surface",operator:null,zoneCode:"B2",zoneCodeEvidence:"sign",access:"public",tariff:null,capacity:null,openingHours:null,verification:"community",source:{label:"",url:"",retrievedAt:""},signInfo:{...info,photoId:"old",model:"ai",observedAt:new Date().toISOString()}};
+  const place: ParkingPlace = {id:"legacy",name:"Legacy",coordinate:point,kind:"surface",operator:null,zoneCode:"B2",zoneCodeEvidence:"sign",access:"public",tariff:null,capacity:null,openingHours:null,verification:"community",source:{label:"",url:"",retrievedAt:""},signInfo:{...info,readingId:"old",model:"ai",observedAt:new Date().toISOString()}};
   assert.equal(parkingPrice(place),null);
   const restored=confirmedSignCatalog({...catalog,places:[place]}).places[0];
   assert.equal(restored.signInfo,undefined);assert.equal(restored.zoneCode,null);

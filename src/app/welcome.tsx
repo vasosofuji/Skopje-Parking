@@ -51,6 +51,18 @@ export default function Welcome() {
     setError("");
     setIntent(next);
   }
+  async function signIn() {
+    if (accepting.current) return;
+    accepting.current = true;
+    Keyboard.dismiss();
+    setBusy(true); setError("");
+    try {
+      await completeOnboarding({ mode: "login", username, password }, false, account);
+      setPassword("");
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : t("Could not sign in. Try again.", "Неуспешна најава. Обидете се повторно."));
+    } finally { accepting.current = false; setBusy(false); }
+  }
   async function accept() {
     if (!intent || accepting.current) return;
     accepting.current = true;
@@ -107,7 +119,7 @@ export default function Welcome() {
       {step ? <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 16, maxWidth: 440, width: "100%", alignSelf: "center", borderTopWidth: 1, borderTopColor: colors.line }}>
         <StepActions
           onBack={step === "language" ? undefined : step === "theme" ? () => setStep("language") : mode === "choice" ? () => setStep("theme") : () => { setMode("choice"); setPassword(""); }}
-          onContinue={step === "language" ? () => setStep("theme") : step === "theme" ? finishPreferences : mode === "choice" ? () => showTerms({ mode: "guest" }) : () => showTerms({ mode, username, password })}
+          onContinue={step === "language" ? () => setStep("theme") : step === "theme" ? finishPreferences : mode === "choice" ? () => showTerms({ mode: "guest" }) : mode === "login" ? () => void signIn() : () => showTerms({ mode, username, password })}
           title={step === "account" && mode === "choice" ? t("Continue as guest", "Продолжи како гостин") : undefined}
           disabled={busy || (step === "account" && mode !== "choice" && (!validUsername(username) || (mode === "create" ? !validPassword(password) || availability === "taken" : !password)))}
           backDisabled={busy}

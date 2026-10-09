@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../services/api";
 import { credentials } from "../services/credentials";
 import { disableBackgroundArrival } from "../services/backgroundArrival";
+import { selectArrivalAccount } from "../services/arrivalStorage";
 import { deviceVehicle } from "../services/deviceVehicle";
 import type { Profile } from "../domain/account";
 const CACHE = "parkskopje-profile";
@@ -26,10 +27,13 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   const generation = useRef(0);
   const owner = useRef<string | null>(null);
   const save = useCallback(async (next: Profile | null) => {
+    const arrivalScope = owner.current && owner.current !== next?.id
+      ? Promise.all([disableBackgroundArrival(), selectArrivalAccount(next?.id ?? null)])
+      : selectArrivalAccount(next?.id ?? null);
     owner.current = next?.id ?? null;
     const vehicle = deviceVehicle.select(next?.id ?? null);
     setProfile(next);
-    await Promise.all([vehicle, next ? AsyncStorage.setItem(CACHE, JSON.stringify(next)) : AsyncStorage.removeItem(CACHE)]);
+    await Promise.all([arrivalScope, vehicle, next ? AsyncStorage.setItem(CACHE, JSON.stringify(next)) : AsyncStorage.removeItem(CACHE)]);
   }, []);
   const refresh = useCallback(async () => {
     const version = generation.current;
@@ -56,12 +60,14 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           const cached = await AsyncStorage.getItem(CACHE);
           if (cached && alive && generation.current === version) {
             const value = JSON.parse(cached) as Profile;
+            await selectArrivalAccount(value.id);
+            if (!alive || generation.current !== version) return;
             owner.current = value.id;
             setProfile({ ...value, secured: value.secured ?? false, points: value.points ?? 0 });
             setReady(true);
           }
           await refresh();
-        } else await Promise.all([disableBackgroundArrival(), deviceVehicle.select(null)]);
+        } else await Promise.all([disableBackgroundArrival().then(() => selectArrivalAccount(null)), deviceVehicle.select(null)]);
       } catch {
         // Keep the last known profile available when offline.
       } finally {
@@ -78,7 +84,8 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     const next = await api.register(username, accepted, password);
     if (version !== generation.current) return;
     const completed = ++generation.current;
-    await deviceVehicle.requestPrompt(next.id).catch(() => {});
+    // A guest saving their account keeps its identity and already answered the plate offer.
+    if (owner.current !== next.id) await deviceVehicle.requestPrompt(next.id).catch(() => {});
     if (completed !== generation.current) return;
     await save(next);
   }, [save]);
@@ -87,7 +94,8 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     const next = await api.guest(accepted);
     if (version !== generation.current) return;
     const completed = ++generation.current;
-    await deviceVehicle.requestPrompt(next.id).catch(() => {});
+    // Renewing consent for the current account must not re-offer the optional plate.
+    if (owner.current !== next.id) await deviceVehicle.requestPrompt(next.id).catch(() => {});
     if (completed !== generation.current) return;
     await save(next);
   }, [save]);

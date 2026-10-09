@@ -4,11 +4,11 @@
     "development": { "developmentClient": true, "distribution": "internal" },
     "preview": {
       "environment": "preview",
-      "env": { "EXPO_PUBLIC_OFFLINE_PREVIEW": "0", "EXPO_PUBLIC_API_URL": "https://parkino-api-vaso.vercel.app" },
+      "env": { "EXPO_PUBLIC_OFFLINE_PREVIEW": "0", "EXPO_PUBLIC_API_URL": "https://vkqxtqcuoobiijbnpxod.supabase.co/functions/v1/api" },
       "distribution": "internal",
       "android": { "buildType": "apk" }
     },
-    "production": { "environment": "production", "env": { "EXPO_PUBLIC_OFFLINE_PREVIEW": "0", "EXPO_PUBLIC_API_URL": "https://parkino-api-vaso.vercel.app" }, "autoIncrement": true }
+    "production": { "environment": "production", "env": { "EXPO_PUBLIC_OFFLINE_PREVIEW": "0", "EXPO_PUBLIC_API_URL": "https://vkqxtqcuoobiijbnpxod.supabase.co/functions/v1/api" }, "autoIncrement": true }
   },
   "submit": { "production": {} }
 }

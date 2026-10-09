@@ -1,4 +1,4 @@
-import { translate } from "../domain/language";
+import { translate, placeName } from "../domain/language";
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
@@ -9,7 +9,9 @@ import { parkingMarker, parkingMarkerHtml } from "../domain/marker-appearance";
 import type { ParkingMapProps } from "./mapTypes";
 import { mapHtml } from "./offlineMapHtml";
 import { dismissMapKeyboard } from "../../modules/parkino-map-keyboard";
-const SOURCE = { html: mapHtml };
+// The asset base lets the page read the bundled streets (file:///android_asset/offline-map/).
+const BASE_URL = "file:///android_asset/";
+const SOURCE = { html: mapHtml, baseUrl: BASE_URL };
 const ORIGINS = ["*"];
 export default function OpenStreetParkingMap(props: ParkingMapProps) {
   const web = useRef<WebView>(null);
@@ -21,12 +23,16 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
   const [zoom, setZoom] = useState(15);
   const liveZoom = useRef(15);
   const [failed, setFailed] = useState(false);
+  // Android may kill the WebView renderer (low memory, e.g. while navigating in another app).
+  // A new WebView repeats the ready handshake and receives the current map state again.
+  const [generation, setGeneration] = useState(0);
+  const restart = () => { setReady(false); setGeneration(value => value + 1); };
   const payload = useMemo(() => {
     const longitudeStep = zoom < 18 ? (120 * 360) / (256 * 2 ** zoom) : 0;
     const latitudeStep =
       longitudeStep * Math.cos((SKOPJE.latitude * Math.PI) / 180);
     const pins = groupParking(
-      props.drawing ? [] : props.places,
+      props.drawing ? [] : props.places.filter(p => props.showZones || p.kind !== "zone"),
       latitudeStep,
       longitudeStep,
       props.selectedId,
@@ -40,7 +46,7 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
         id: place.id,
         point: [place.coordinate.latitude, place.coordinate.longitude],
         title:
-          props.language !== "mk" ? (place.nameEn ?? place.name) : place.name,
+          placeName(place, props.language),
         html: parkingMarkerHtml(appearance),
         cluster,
         selected: place.id === props.selectedId,
@@ -64,8 +70,8 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
           ? props.places
               .filter(
                 (p) =>
-                  p.kind === "zone" &&
-                  (zoom >= 17 || p.id === props.selectedId),
+                  isPocSector(p) &&
+                  (zoom >= 14 || p.id === props.selectedId),
               )
               .map((p) => ({
                 id: p.id,
@@ -85,14 +91,14 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
                 props.destinationMarker.longitude,
               ]
             : null,
-      footprints: !props.drawing ? props.places.filter((p) => p.kind !== "zone" && p.geometry && (zoom >= 17 || p.id === props.selectedId)).map((p) => ({
+      footprints: !props.drawing ? props.places.filter((p) => !isPocSector(p) && (props.showZones || p.kind !== "zone") && p.geometry && (zoom >= 17 || p.id === props.selectedId)).map((p) => ({
         id: p.id, selected: p.id === props.selectedId,
         rings: p.geometry!.coordinates.map((ring) => ring.map(([lng, lat]) => [lat, lng])),
       })) : [],
       zones:
         props.showZones && !props.drawing
           ? props.places
-              .filter((p) => p.kind === "zone" && p.geometry)
+              .filter((p) => isPocSector(p) && p.geometry)
               .map((p) => ({
                 id: p.id,
                 pocSector: isPocSector(p),
@@ -103,6 +109,7 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
           : [],
       destination: [props.destination.latitude, props.destination.longitude],
       cameraRevision: props.cameraRevision,
+      cameraZoom: props.cameraZoom,
       selectedId: props.selectedId,
       selectedPocSector: props.places.some(place => place.id === props.selectedId && isPocSector(place)),
       selectedAnchor: props.selectedAnchor
@@ -127,6 +134,7 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
     props.showZones,
     props.destination,
     props.cameraRevision,
+    props.cameraZoom,
     props.picking,
     zoom,
   ]);
@@ -235,6 +243,7 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
   return (
     <View style={styles.container}>
       <WebView
+        key={generation}
         ref={web}
         style={styles.container}
         source={SOURCE}
@@ -244,11 +253,14 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
         domStorageEnabled
         scrollEnabled={false}
         applicationNameForUserAgent="ParkSkopje-local-preview/1.0"
+        allowFileAccessFromFileURLs
         onShouldStartLoadWithRequest={(request) =>
-          request.url === "about:blank" ||
+          request.url === "about:blank" || request.url === BASE_URL ||
           request.url.startsWith("data:text/html")
         }
         onError={() => setFailed(true)}
+        onRenderProcessGone={restart}
+        onContentProcessDidTerminate={restart}
       />
       {failed ? (
         <View style={styles.error}>

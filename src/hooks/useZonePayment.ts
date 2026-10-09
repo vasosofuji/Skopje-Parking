@@ -42,10 +42,15 @@ export function useZonePayment(input: Input) {
       return;
     }
     if (place && input.plate && unblocked === releaseToken && !input.blocked && detector.current.canPrompt(place, input.plate)) {
-      detector.current.prompted(place, input.plate);
       setOffered({ place, scope: input.scope });
     }
   }, [input.fix, input.places, input.plate, input.scope, input.focused, input.blocked, foreground, unblocked, releaseToken, tick, offered]);
-  const dismiss = useCallback(() => { offeredRef.current = null; setOffered(null); }, []);
+  const dismiss = useCallback((remember = true) => {
+    const current = latest.current, shown = offeredRef.current;
+    // A temporary competing sheet/background transition must not consume this offer.
+    // Only a deliberate close or completed SMS action starts its cooldown.
+    if (remember && shown && shown.scope === current.scope && current.plate) detector.current.prompted(shown.place, current.plate);
+    offeredRef.current = null; setOffered(null);
+  }, []);
   return { place: offered && offered.scope === input.scope ? input.places.find(place => place.id === offered.place.id) ?? null : null, validate, dismiss };
 }

@@ -1,4 +1,5 @@
 import test from "node:test";
+import * as languageModule from "../src/domain/language";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
@@ -21,14 +22,17 @@ function fixture() {
   };
   const context = { exports: {} as { default: (props: unknown) => Element }, require(name: string) {
     if (name === "react") return { ...react, default: react, __esModule: true };
+    if (name === "../domain/language") return languageModule;
+    if (name === "../hooks/usePriceCheck") return { usePriceCheck: () => () => true };
     if (name === "react-native") return { Platform: { OS: "android" }, Pressable: "Pressable", Text: "Text", View: "View", StyleSheet: { create: (styles: unknown) => styles } };
     if (name === "./ui") return { Sheet: "Sheet", RevealSection: "RevealSection", Button: "Button", Icon: "Icon", Note: "Note", useSheetReveal() { throw new Error("ParkingDetails cannot use the reveal hook before its Sheet provider exists"); } };
     if (name === "../domain/parking") return parking;
     if (name === "../domain/report-feedback") return feedback;
+    if (name === "../services/api") return { api: { flagSign: async () => ({ flagged: true }) } };
     if (name === "../state/ParkingContext") return { useParking: () => ({ catalog: { places: [place] }, language: "en", t: (en: string) => en, now }) };
     if (name === "../state/ThemeContext") return { useTheme: () => ({ colors: {} }) };
     if (name === "./PaymentScheduleFields") return { weekendLabel: () => "Weekends" };
-    if (["./SignPhotos", "./SignReviewSheet", "./DigitalParkingSign", "./ManualParkingWizard"].includes(name)) return { default: name, __esModule: true };
+    if (["./SignScanner", "./SignReviewSheet", "./DigitalParkingSign", "./ManualParkingWizard", "./RemoveParking"].includes(name)) return { default: name, __esModule: true };
     throw new Error(`Unexpected dependency ${name}`);
   } };
   const source = ts.transpileModule(readFileSync("src/components/ParkingDetails.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText;

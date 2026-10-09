@@ -7,6 +7,7 @@ import {
   distanceMeters,
   rankParking,
   normalizeZoneCode,
+  searchText,
   REPORT_TTL_MS,
   PRICE_REPORT_TTL_MS,
   parkingPrice,
@@ -374,6 +375,13 @@ test("cheapest uses fresh driver prices including free parking, with unknowns la
   assert.equal(rankParking([{ ...reported, tariff: { ...tariff, maxStayMinutes: 60 } }], point, 120, 1000, "cheapest", now)[0].cost, null);
 });
 
+test("a confirmed sign price ranks like other evidence; an unconfirmed reading does not", () => {
+  const sign = { isParkingSign: true, confidence: 0.9, zoneCode: "A1", operator: null, currency: "MKD", firstHour: 60, nextHour: 40, maxStayMinutes: null, chargingHours: null, paymentInstructions: null, restrictions: null, rawText: "A1 60" };
+  const confirmed = { ...place, tariff: null, signInfo: { ...sign, confirmedAt: "2026-10-01T10:00:00Z" } } as ParkingPlace;
+  assert.deepEqual(rankParking([confirmed], point, 120, 1000, "cheapest").map(r => [r.cost, r.costEvidence]), [[100, "sign"]]);
+  assert.equal(rankParking([{ ...confirmed, signInfo: { ...sign } } as ParkingPlace], point, 120, 1000, "cheapest")[0].cost, null);
+});
+
 test("invalid or expired cached reports fall back to published rates", () => {
   const now = Date.parse("2026-10-01T12:00:00Z");
   const report = { firstHour: 0, nextHour: 0, reports: 1, observedAt: new Date(now).toISOString() };
@@ -403,4 +411,15 @@ test("unknown and equal-price ordering is stable by straight-line distance then 
   assert.ok(rows[2].distance > 110 && rows[2].distance < 112);
   assert.deepEqual(rankParking([far, { ...near, tariff }], point, 60, 1000, "nearest").map(r => r.place.id), ["a", "far"]);
   assert.deepEqual(rankParking(input.map(p => ({ ...p, tariff })), point, 60, 1000, "cheapest").map(r => r.place.id), ["a", "b", "far"]);
+});
+
+test("search matches Macedonian names across Cyrillic, Latin, diacritics and digraphs", () => {
+  const finds = (name: string, query: string) => searchText(name).includes(searchText(query));
+  assert.ok(finds("Плоштад Македонија / Macedonia Square", "plostad"));
+  assert.ok(finds("Плоштад Македонија", "ploshtad makedonija"));
+  assert.ok(finds("СЕКТОР ДЕБАР МААЛО", "Debar Maalo"));
+  assert.ok(finds("Ѓорче Петров", "gjorce"));
+  assert.ok(finds("Чаир", "Çair"));
+  assert.ok(finds("Џон Кенеди", "dzon kenedi"));
+  assert.ok(!finds("Чаир", "centar"));
 });

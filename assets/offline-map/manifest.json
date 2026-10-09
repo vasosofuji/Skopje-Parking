@@ -1,0 +1,25 @@
+{
+  "source": "https://tiles.openfreemap.org/planet/20261004_113936_pt/{z}/{x}/{y}.pbf",
+  "downloadedAt": "2026-10-09T09:29:14.055Z",
+  "bbox": {
+    "west": 21.22,
+    "south": 41.86,
+    "east": 21.66,
+    "north": 42.13
+  },
+  "minzoom": 0,
+  "maxzoom": 14,
+  "fonts": [
+    "Noto Sans Regular",
+    "Noto Sans Bold",
+    "Noto Sans Italic"
+  ],
+  "ranges": [
+    "0-255",
+    "256-511",
+    "1024-1279",
+    "8192-8447"
+  ],
+  "attribution": "© OpenMapTiles © OpenStreetMap contributors",
+  "license": "Map data ODbL (OpenStreetMap); tiles via OpenFreeMap"
+}

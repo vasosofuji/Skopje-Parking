@@ -1,6 +1,10 @@
 import { accentColor } from "./cosmetics";
 import { currentAvailability, parkingPrice } from "./parking";
-import type { ParkingPlace } from "./types";
+import type { ParkingKind, ParkingPlace } from "./types";
+
+export const PARKING_TYPE_MARKS: Record<ParkingKind, string> = {
+  surface: "P", garage: "G", underground: "U", street: "S", zone: "Z",
+};
 
 export const MARKER_COLORS = {
   normal: "#392C25", needsInfo: "#65529A", free: "#087184",
@@ -37,7 +41,7 @@ export function parkingMarker(place: ParkingPlace, count = 1, now = Date.now()) 
     : freeOfCharge ? MARKER_COLORS.free : MARKER_COLORS.normal;
   return {
     fill, text: "#FFFFFF", border: accentColor(place.contributionAccent) ?? "#FFFFFF",
-    label: !review ? "?" : spaces ? "P ✓" : "P",
+    label: spaces && review ? `${PARKING_TYPE_MARKS[place.kind]} ✓` : PARKING_TYPE_MARKS[place.kind],
     badge: freeOfCharge ? "0" : null,
     stateBadge: !review && (spaces || full) ? full ? "×" : "✓" : null,
     stateColor: full ? MARKER_COLORS.full : spaces ? MARKER_COLORS.spaces : undefined,
@@ -49,5 +53,5 @@ export type MarkerAppearance = ReturnType<typeof parkingMarker>;
 
 // Values originate in parkingMarker: fixed colors/labels or a numeric cluster count.
 export function parkingMarkerHtml(marker: MarkerAppearance) {
-  return `<span class="parking-pin-face" style="background:${marker.fill};color:${marker.text};border-color:${marker.border}">${marker.label}${marker.badge ? '<b class="parking-free-badge">0</b>' : ""}${marker.stateBadge ? `<b class="parking-state-badge" style="background:${marker.stateColor}">${marker.stateBadge}</b>` : ""}</span>`;
+  return `<span class="parking-pin-face" style="background:${marker.fill};color:${marker.text};border-color:${marker.border}">${marker.label}${marker.needsInfo ? '<b class="parking-review-badge">?</b>' : ""}${marker.badge ? '<b class="parking-free-badge">0</b>' : ""}${marker.stateBadge ? `<b class="parking-state-badge" style="background:${marker.stateColor}">${marker.stateBadge}</b>` : ""}</span>`;
 }

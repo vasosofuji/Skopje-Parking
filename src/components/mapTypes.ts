@@ -13,6 +13,7 @@ export type ParkingMapProps = {
   selectionEnabled?: boolean;
   destination: Coordinate;
   cameraRevision?: number;
+  cameraZoom?: number;
   destinationMarker?: Coordinate | null;
   userLocation: Coordinate | null;
   userAccuracy?: number | null;

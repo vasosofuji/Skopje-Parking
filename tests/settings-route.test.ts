@@ -24,7 +24,7 @@ function route(bridged = false) {
   };
   const context = { exports: {} as { default: () => Element }, require(name: string) {
     if (name === "react") return { ...react, default: react, __esModule: true };
-    if (name === "expo-router") return { useIsFocused: () => focused, router: { canGoBack: () => canBack, back: () => calls.push("back"), replace: (path: string) => calls.push(`replace:${path}`) } };
+    if (name === "expo-router") return { useIsFocused: () => focused, useLocalSearchParams: () => ({}), router: { canGoBack: () => canBack, back: () => calls.push("back"), replace: (path: string) => calls.push(`replace:${path}`) } };
     if (name === "../components/SettingsSheet" || name === "../components/LocationHelp") return { default: name, __esModule: true };
     if (name === "../state/SettingsLocationContext") return { useSettingsLocation: () => bridged ? { locationStatus: "Map GPS ready", issue: null, onRefreshLocation: () => calls.push("map-refresh") } : null };
     if (name === "../state/ParkingContext") return { useParking: () => ({ t: (en: string) => en }) };

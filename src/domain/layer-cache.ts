@@ -1,5 +1,7 @@
 /** Reuse unchanged layers and keep a small detached LRU for nearby return visits. */
 export function createLayerCache<T>(add: (layer: T) => void, remove: (layer: T) => void, dispose: (layer: T) => void, limit = 1200) {
+  // Injected into the map WebView via toString(); Hermes keeps source only with this directive.
+  "show source";
   const entries = new Map<string, { signature: string; layer: T; attached: boolean }>();
   let seen = new Set<string>();
   return {

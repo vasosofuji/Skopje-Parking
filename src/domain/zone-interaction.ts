@@ -1,12 +1,13 @@
 import type { ParkingPlace } from "./types";
 
 export function isPocSector(place: Pick<ParkingPlace, "kind" | "id" | "operator" | "zoneCode">): boolean {
-  return place.kind === "zone" && (place.operator?.trim().toLowerCase() === "poc" || place.id.startsWith("poc:zone:") || /^POC\s/i.test(place.zoneCode ?? ""));
+  const code = place.zoneCode?.trim() ?? "";
+  return place.kind === "zone" && (place.id.startsWith("poc:zone:") || /^POC\s*(?:0|O|1|I|2|II|X)$/i.test(code) || place.operator?.trim().toLowerCase() === "poc" && (!code || /^(?:0|O|1|I|2|II|X)$/i.test(code)));
 }
 
-/** Sector boundaries remain useful context at street level without taking pin taps. */
-export function canInteractWithZone(place: Pick<ParkingPlace, "kind" | "id" | "operator" | "zoneCode">, zoom: number, picking = false): boolean {
-  return picking || !isPocSector(place) || zoom < 16;
+/** Tariff areas must remain selectable even when their tiny polygons need street zoom. */
+export function canInteractWithZone(_place: Pick<ParkingPlace, "kind" | "id" | "operator" | "zoneCode">, _zoom: number, _picking = false): boolean {
+  return true;
 }
 
 /** Native overview framing uses .022 latitude degrees for the same zoom-15 view. */

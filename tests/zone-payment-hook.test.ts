@@ -38,27 +38,45 @@ test("payment queues behind availability/followups and waits for their dismissal
   const view = harness(); view.render();
   for (const offset of [5000, 10000, 15000]) assert.equal(view.advance(offset).place, null);
   assert.equal(view.change({ blocked: false }).place, null);
-  const offer = view.advance(15400, false); assert.equal(offer.place?.id, "zone");
-  assert.equal(offer.validate("zone")?.id, "zone");
+  const offer = view.advance(15400, false); assert.equal(offer.place?.id, "gradski:zone:D8");
+  assert.equal(offer.validate("gradski:zone:D8")?.id, "gradski:zone:D8");
   view.change({ fix: { ...paymentFix(15500), latitude: 43 } });
-  assert.equal(offer.validate("zone"), null, "a stale button cannot open SMS after leaving");
+  assert.equal(offer.validate("gradski:zone:D8"), null, "a stale button cannot open SMS after leaving");
 });
 
 test("known-price paths still prompt after dwell, X dismiss has cooldown, and account/Android blur invalidate immediately", () => {
   const view = harness(); view.change({ blocked: false }); view.advance(400, false);
   for (const offset of [5000, 10000, 15000]) view.advance(offset);
-  const offer = view.render(); assert.equal(offer.place?.id, "zone");
-  view.blur(); assert.equal(offer.validate("zone"), null, "Android notification drawer keeps AppState active but must invalidate SMS");
+  const offer = view.render(); assert.equal(offer.place?.id, "gradski:zone:D8");
+  view.blur(); assert.equal(offer.validate("gradski:zone:D8"), null, "Android notification drawer keeps AppState active but must invalidate SMS");
   const second = harness(); second.change({ blocked: false }); second.advance(400, false);
   for (const offset of [5000, 10000, 15000]) second.advance(offset);
-  const opened = second.render(); opened.dismiss(); assert.equal(opened.validate("zone"), null);
+  const opened = second.render(); opened.dismiss(); assert.equal(opened.validate("gradski:zone:D8"), null);
   assert.equal(second.advance(16000).place, null, "X does not immediately repeat");
-  second.change({ scope: "different-account" }); assert.equal(opened.validate("zone"), null);
+  second.change({ scope: "different-account" }); assert.equal(opened.validate("gradski:zone:D8"), null);
 });
 
 test("an offered payment disappears on background and cannot survive expired evidence", () => {
   const view = harness(); view.change({ blocked: false }); view.advance(400, false);
   for (const offset of [5000, 10000, 15000]) view.advance(offset);
-  const offer = view.render(); view.background(); assert.equal(offer.validate("zone"), null);
+  const offer = view.render(); view.background(); assert.equal(offer.validate("gradski:zone:D8"), null);
   assert.equal(view.render().place, null);
+});
+
+test("an offer interrupted by availability or refreshed evidence is not consumed as a dismissal", () => {
+  const view = harness(); view.change({ blocked: false }); view.advance(400, false);
+  for (const offset of [5000, 10000, 15000]) view.advance(offset);
+  assert.equal(view.render().place?.id, "gradski:zone:D8");
+  assert.equal(view.change({ blocked: true }).place, null);
+  view.advance(16000); view.change({ blocked: false });
+  const resumed = view.advance(16400, false);
+  assert.equal(resumed.place?.id, "gradski:zone:D8", "availability must release the pending SMS instead of starting an hour cooldown");
+  (resumed.dismiss as (remember?: boolean) => void)(false);
+  assert.equal(view.advance(17000).place?.id, "gradski:zone:D8", "automatic invalidation can recheck current proof");
+});
+
+test("normal ten-second GPS updates can complete stationary payment dwell", () => {
+  const view = harness(); view.change({ blocked: false }); view.advance(400, false);
+  view.advance(10000);
+  assert.equal(view.advance(20000).place?.id, "gradski:zone:D8");
 });

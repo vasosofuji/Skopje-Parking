@@ -119,3 +119,12 @@ test('authenticated requests do not follow redirects or attach browser cookies',
   }) as typeof fetch});
   await request('/report',{method:'POST',headers:{Authorization:'Bearer test-only-token'}});
 });
+
+test('no network gives up after a few probes instead of the 75-second wake-up budget', async () => {
+  let now = 0, probes = 0;
+  const fetcher = (async () => { probes++; throw new TypeError('Failed to fetch'); }) as typeof fetch;
+  const request = createTransport('https://test.example', {fetcher, clock:()=>now, pause:async ms=>{now+=ms;}});
+  await assert.rejects(request('/report', {method:'POST'}), /Could not connect/);
+  assert.equal(probes, 3);
+  assert.ok(now <= 6000);
+});

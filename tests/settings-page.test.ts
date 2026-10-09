@@ -53,6 +53,7 @@ function sheet() {
     if (name === "../domain/form-reveal") return { formRevealOffset };
     if (name === "../state/ContributionFeedback") return { ContributionNotice: "ContributionNotice" };
     if (name === "./ModalBackdrop") return { __esModule: true, default: "ModalBackdrop" };
+    if (name === "../state/ParkingContext") return { useTranslate: () => (en: string) => en };
     throw new Error(`Unexpected Sheet dependency: ${name}`);
   } });
   return { render(props: Record<string, unknown>) { runtime.start(); const tree = exports.Sheet({ visible: true, title: "Settings", children: null, ...props }); runtime.finish(); return tree; }, icon: exports.IconButton };
@@ -67,16 +68,18 @@ function settings(guest = false, platform = "android") {
   const refresh = async () => { refreshes++; };
   vm.runInNewContext(transpile("src/components/SettingsSheet.tsx"), { exports, require(name: string) {
     if (name === "react") return { ...runtime.react, default: runtime.react, __esModule: true };
-    if (name === "react-native") return { Pressable: "Pressable", Text: "Text", View: "View", Platform: { OS: platform }, Linking: { openSettings: async () => {} }, StyleSheet: { create: (value: unknown) => value } };
+    if (name === "react-native") return { Pressable: "Pressable", Text: "Text", View: "View", Platform: { OS: platform }, Linking: { openSettings: async () => {}, openURL: async () => {} }, TextInput: "TextInput", StyleSheet: { create: (value: unknown) => value } };
     if (name === "expo-router") return { usePathname: () => pathname, router: { push(path: string) { pathname = path; routeEvents.push(path); } } };
     if (name === "../state/ThemeContext") return { useTheme: () => ({ colors: palette, mode, setMode(value: string) { preferenceCalls.push(["theme", value]); mode = value; } }) };
     if (name === "../state/ParkingContext") return { useParking: () => ({ language, t: (en: string, mk: string) => translate(language as Language, en, mk), setLanguage(value: string) { preferenceCalls.push(["language", value]); language = value; } }) };
     if (name === "../state/AccountContext") return { useAccount: () => ({ profile: { id: "profile-one", username: "driver", points: 125, guest, secured: true }, refresh }) };
     if (name === "../state/LicensePlateContext") return { useLicensePlate: () => ({ savedPlate: null, ready: true }) };
     if (name === "./LicensePlateEditor") return { default: "LicensePlateEditor", __esModule: true };
+    if (name === "../services/signReader") return { useSignReader: () => null, readingFailure: () => null, noteReadingFailure() {}, rememberSignImage() {}, readSignOnDevice: async () => { throw new Error("no key"); }, signImage: async () => ({ base64: "", mimeType: "image/jpeg" }), signReaderState: { current: async () => null, save: async () => {} }, guessProvider: () => null, validSignReader: () => false, testSignReader: async () => "ok", SIGN_READER_KEY_PAGES: { gemini: "", groq: "" } };
     if (name === "./ui") return { Button: "Button", Icon: "Icon", Sheet: "Sheet", RevealSection: "RevealSection" };
     if (name === "./SettingsFrame") return { __esModule: true, default: "SettingsFrame" };
     if (name === "./BackgroundArrivalSettings") return { __esModule: true, default: "BackgroundArrivalSettings" };
+    if (name === "../services/backgroundArrival") return { backgroundLocationBuild: true };
     if (name === "../domain/language") return { LANGUAGES };
     if (name === "./LanguagePicker") {
       const picker = { default: undefined as unknown as Component };

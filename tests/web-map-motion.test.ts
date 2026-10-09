@@ -1,4 +1,5 @@
 import * as zoneInteraction from "../src/domain/zone-interaction";
+import * as languageModule from "../src/domain/language";
 import * as selectionCamera from "../src/domain/map-selection-camera";
 import { createLayerCache } from "../src/domain/layer-cache";
 import test from "node:test";
@@ -12,13 +13,15 @@ import { SKOPJE } from "../src/domain/parking";
 
 test("web camera transitions run once per intent, hide moving projections, cancel for drawing and honor reduced motion", () => {
   const slots: unknown[] = [], effects: (() => void)[] = [], calls: string[] = [], positions: unknown[] = [];
+  const cameraTargets: { point: number[]; zoom: number }[] = [];
   const events = new Map<string, () => void>();
   let cursor = 0, drawingZoom = true;
   let motionChanged: ((event: { matches: boolean }) => void) | undefined;
   const motion = { matches: false, addEventListener(_name: string, callback: typeof motionChanged) { motionChanged = callback; }, removeEventListener() {} };
   const layer = () => ({ addTo() { return this; }, getLayers: () => [], clearLayers() {}, setLatLngs() {}, off() {}, on() { return this; } });
   const map = {
-    setView() { calls.push("immediate"); return this; }, flyTo() { calls.push("flight"); events.get("movestart")?.(); return this; }, stop() { calls.push("stop"); return this; },
+    createPane() { return { style: {} }; },
+    setView(point: number[], zoom: number) { cameraTargets.push({ point, zoom }); calls.push("immediate"); return this; }, flyTo(point: number[], zoom: number) { cameraTargets.push({ point, zoom }); calls.push("flight"); events.get("movestart")?.(); return this; }, stop() { calls.push("stop"); return this; },
     doubleClickZoom: { enable: () => { drawingZoom = true; }, disable: () => { drawingZoom = false; } },
     on(name: string, fn: () => void) { events.set(name, fn); return this; }, getZoom: () => 16, getCenter: () => ({ lat: 42, lng: 21 }),
     getBounds: () => ({ pad() { return this; }, contains: () => true }), latLngToContainerPoint: () => ({ x: 100, y: 200 }), invalidateSize() {}, remove() {},
@@ -32,8 +35,9 @@ test("web camera transitions run once per intent, hide moving projections, cance
   const exports: { default?: (props: ParkingMapProps) => { props: { ref: { current: object | null } } } } = {};
   const source = ts.transpileModule(readFileSync("src/components/ParkingMap.web.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText;
   vm.runInNewContext(source, { exports, process: { env: {} }, window: { matchMedia: () => motion }, ResizeObserver: class { observe() {} disconnect() {} }, require(name: string) {
-    if (name === "../domain/language") return { translate };
     if (name === "react") return { ...react, default: react, __esModule: true };
+    if (name === "../domain/language") return languageModule;
+    if (name === "../hooks/usePriceCheck") return { usePriceCheck: () => () => true };
     if (name === "leaflet") return { __esModule: true, default: { map: () => map, tileLayer: layer, layerGroup: layer, polyline: layer, polygon: layer } };
     if (name.endsWith(".css")) return {};
     if (name.endsWith("parking")) return { SKOPJE };
@@ -59,4 +63,13 @@ test("web camera transitions run once per intent, hide moving projections, cance
   motion.matches = true; motionChanged?.({ matches: true });
   render({ ...props, selectedId: "three" });
   assert.equal(calls.at(-1), "immediate"); assert.equal(drawingZoom, true);
+  props = { ...props, selectedId: null, selectedAnchor: null, destination: { latitude: 42.015, longitude: 21.435 }, cameraZoom: 18, cameraRevision: 1 };
+  render(props);
+  assert.equal(cameraTargets.at(-1)?.zoom, 18);
+  assert.deepEqual(Array.from(cameraTargets.at(-1)!.point), [42.015, 21.435]);
+  const count = cameraTargets.length;
+  render({ ...props, now: 45_000 }); assert.equal(cameraTargets.length, count);
+  render({ ...props, cameraRevision: 2 });
+  assert.equal(cameraTargets.length, count + 1);
+  assert.equal(cameraTargets.at(-1)?.zoom, 18, "repeated Near me intent is absolute, regardless of current zoom");
 });

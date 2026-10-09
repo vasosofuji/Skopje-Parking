@@ -7,10 +7,28 @@ import { paymentFix, paymentNow, paymentZone, verified } from "./fixtures/zone-p
 test("payment needs 15 consecutive seconds, precise stationary fixes and a saved compact plate", () => {
   const detector = new ZonePaymentDwell();
   for (const offset of [0, 5000, 10000]) assert.equal(detector.update(paymentFix(offset), [paymentZone], "SK1234FF", true, paymentNow + offset), null);
-  assert.equal(detector.update(paymentFix(15000), [paymentZone], "SK1234FF", true, paymentNow + 15000)?.id, "zone");
-  assert.equal(detector.update(paymentFix(15000), [paymentZone], "SK1234FF", true, paymentNow + 15500)?.id, "zone");
-  for (const fix of [{ ...paymentFix(), accuracy: 21 }, { ...paymentFix(), speed: 1 }, { ...paymentFix(), speed: -1 }, { ...paymentFix(), timestamp: paymentNow - 10001 }]) assert.equal(eligibleSmsZone(fix, [paymentZone], "SK1234FF", paymentNow), null);
-  for (const plate of [null, "", "SK 1234 FF"]) assert.equal(eligibleSmsZone(paymentFix(), [paymentZone], plate, paymentNow), null);
+  assert.equal(detector.update(paymentFix(15000), [paymentZone], "SK1234FF", true, paymentNow + 15000)?.id, "gradski:zone:D8");
+  assert.equal(detector.update(paymentFix(15000), [paymentZone], "SK1234FF", true, paymentNow + 15500)?.id, "gradski:zone:D8");
+  for (const fix of [{ ...paymentFix(), accuracy: 21 }, { ...paymentFix(), speed: 1 }, { ...paymentFix(), speed: -1 }, { ...paymentFix(), timestamp: paymentNow - 20001 }]) assert.equal(eligibleSmsZone(fix, [paymentZone], "SK1234FF", paymentNow), null);
+  for (const plate of [null, "", "SK 1234 FF", "SK12FF", "SK12345FF", "1234SKFF", "SK1234F"]) assert.equal(eligibleSmsZone(paymentFix(), [paymentZone], plate, paymentNow), null);
+});
+
+test("verified SMS on an individual parking footprint is eligible after availability", () => {
+  const facility = { ...paymentZone, id: "community:lot", kind: "surface" as const };
+  assert.equal(eligibleSmsZone(paymentFix(), [facility], "SK1234FF", paymentNow)?.id, facility.id);
+  assert.equal(eligibleSmsZone(paymentFix(), [facility, { ...facility, id: "community:other" }], "SK1234FF", paymentNow), null);
+  assert.equal(eligibleSmsZone(paymentFix(), [facility, { ...facility, id: "private", access: "restricted", smsPayment: undefined }], "SK1234FF", paymentNow), null);
+});
+
+test("community outlines allow a 20m bleed while official edges and nearby conflicts stay conservative", () => {
+  const community = { ...paymentZone, id: "community:drawn", verification: "community" as const };
+  const degreesPerMeter = 1 / (111195 * Math.cos(42 * Math.PI / 180));
+  const outside = { ...paymentFix(), longitude: 21.001 + 10 * degreesPerMeter };
+  assert.equal(safelyInsideZone(outside, community), true);
+  assert.equal(eligibleSmsZone(outside, [community], "SK1234FF", paymentNow)?.id, community.id);
+  assert.equal(safelyInsideZone({ ...outside, longitude: 21.001 + 18 * degreesPerMeter }, community), false);
+  assert.equal(safelyInsideZone(outside, paymentZone), false);
+  assert.equal(eligibleSmsZone(outside, [community, { ...community, id: "community:neighbor" }], "SK1234FF", paymentNow), null);
 });
 
 test("unknown boundaries, uncertain edges, overlapping zones and unverified SMS never choose a payment", () => {
@@ -57,7 +75,7 @@ test("official or current community zero rates suppress an otherwise verified SM
 });
 
 test("confirmed charging schedule respects Skopje weekends, overnight intervals and unreadable hours", () => {
-  const sign = { isParkingSign: true, confidence: 1, zoneCode: "D8", operator: null, currency: "MKD", firstHour: 25, nextHour: 25, maxStayMinutes: null, chargingHours: "Mon–Sat 07:00–23:00", restrictions: null, paymentInstructions: null, rawText: "", photoId: "photo", model: "model", observedAt: "", confirmedAt: "2026-10-01T00:00:00Z", freeWeekends: "sunday" as const };
+  const sign = { isParkingSign: true, confidence: 1, zoneCode: "D8", operator: null, currency: "MKD", firstHour: 25, nextHour: 25, maxStayMinutes: null, chargingHours: "Mon–Sat 07:00–23:00", restrictions: null, paymentInstructions: null, rawText: "", readingId: "photo", model: "model", observedAt: "", confirmedAt: "2026-10-01T00:00:00Z", freeWeekends: "sunday" as const };
   assert.equal(knownFreeTime({ ...paymentZone, signInfo: sign }, Date.parse("2026-10-04T10:00:00Z")), true);
   assert.equal(knownFreeTime({ ...paymentZone, signInfo: sign }, paymentNow), false);
   assert.equal(knownFreeTime({ ...paymentZone, signInfo: sign }, Date.parse("2026-10-05T22:00:00Z")), true);

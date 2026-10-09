@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { router, useIsFocused } from "expo-router";
+import { router, useIsFocused, useLocalSearchParams } from "expo-router";
 import SettingsSheet from "../components/SettingsSheet";
 import LocationHelp from "../components/LocationHelp";
 import { useSettingsLocation } from "../state/SettingsLocationContext";
@@ -10,6 +10,7 @@ import type { LocationIssue } from "../domain/locationWatch";
 export default function SettingsRoute() {
   const controls = useSettingsLocation(), { t } = useParking();
   const focused = useIsFocused();
+  const { section } = useLocalSearchParams<{ section?: string }>();
   const [permissions, setPermissions] = useState(false);
   const [directStatus, setDirectStatus] = useState<string | null>(null);
   const [directIssue, setDirectIssue] = useState<LocationIssue | null>(null);
@@ -38,7 +39,7 @@ export default function SettingsRoute() {
     });
   }
   return <>
-    <SettingsSheet visible onClose={() => router.canGoBack() ? router.back() : router.replace("/")} locationStatus={controls?.locationStatus ?? directStatus ?? t("Location", "Локација")} onRefreshLocation={refreshLocation} onPermissions={() => setPermissions(true)} />
+    <SettingsSheet visible initialSection={section === "reader" ? "reader" : undefined} onClose={() => router.canGoBack() ? router.back() : router.replace("/")} locationStatus={controls?.locationStatus ?? directStatus ?? t("Location", "Локација")} onRefreshLocation={refreshLocation} onPermissions={() => setPermissions(true)} />
     <LocationHelp visible={permissions && focused} permissions issue={controls ? controls.issue : directIssue} onClose={() => setPermissions(false)} onRetry={refreshLocation} />
   </>;
 }

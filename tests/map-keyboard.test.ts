@@ -1,4 +1,5 @@
 import * as zoneInteraction from "../src/domain/zone-interaction";
+import * as languageModule from "../src/domain/language";
 import * as selectionCamera from "../src/domain/map-selection-camera";
 import { createLayerCache } from "../src/domain/layer-cache";
 import test from "node:test";
@@ -45,8 +46,9 @@ test("current Leaflet taps wait for native acceptance but pan intent is immediat
   };
   const exports: { default?: (props: ParkingMapProps) => Element } = {};
   vm.runInNewContext(compile("src/components/OpenStreetParkingMap.tsx"), { exports, require(name: string) {
-    if (name === "../domain/language") return { translate };
     if (name === "react") return { ...react, default: react, __esModule: true };
+    if (name === "../domain/language") return languageModule;
+    if (name === "../hooks/usePriceCheck") return { usePriceCheck: () => () => true };
     if (name === "react-native") return { StyleSheet: { create: (value: unknown) => value }, View: "View", Text: "Text" };
     if (name === "react-native-webview") return { WebView: "WebView" };
     if (name.endsWith("parking")) return { SKOPJE };
@@ -89,7 +91,7 @@ test("current Leaflet taps wait for native acceptance but pan intent is immediat
   send({ type: "zoom", zoom: 15 }); send({ type: "select", id: "poc:zone:1:0" });
   send({ type: "zoom", zoom: 16 }); pending.shift()!(true);
   await new Promise<void>(resolve => setImmediate(resolve));
-  assert.deepEqual(calls, ["dismiss"], "zone selection queued before zoom cannot reopen a POC sector after native guard returns");
+  assert.deepEqual(calls, ["dismiss", "select"], "tiny tariff areas remain selectable after zoom and native guard acceptance");
 });
 
 test("Android module is scoped to the bundled map on the UI queue, before any keyboard mutation", () => {

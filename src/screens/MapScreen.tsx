@@ -1,12 +1,15 @@
 import { matchesParkingFilter, matchesParkingFilters, toggleParkingFilter, filteredParkingRows, type ActiveParkingFilter } from "../domain/parking-filters";
+import { placeName } from "../domain/language";
 import React, {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import {
+  BackHandler,
   Keyboard,
   Platform,
   Pressable,
@@ -26,16 +29,18 @@ import { router, useIsFocused } from "expo-router";
 import { useMapSettingsLocation } from "../state/SettingsLocationContext";
 import { useLicensePlate } from "../state/LicensePlateContext";
 import { useZonePayment } from "../hooks/useZonePayment";
-import ZonePaymentSheet, { ParkingSmsStopSheet } from "../components/ZonePaymentSheet";
+import { usePriceCheck } from "../hooks/usePriceCheck";
+import ZonePaymentSheet, { ParkingSmsStopSheet, PayParkingChooser } from "../components/ZonePaymentSheet";
 import { useTheme, type ThemeColors } from "../state/ThemeContext";
 import { zoneGeometry, validZone, MAX_BOUNDARY_VERTICES } from "../domain/geometry";
-import { containsParkingFix } from "../domain/arrival";
-import { canAddAtLocation, nearbyOrigin } from "../domain/location";
+import { containsParkingFix, distanceToParkingBoundary, insidePolygon } from "../domain/arrival";
+import { canAddAtLocation, nearbyOrigin, usableFix } from "../domain/location";
 import ParkingRow from "../components/ParkingRow";
 import ParkingDetails from "../components/ParkingDetails";
 import ProposalSheet from "../components/ProposalSheet";
 import { Button, Icon, IconButton, Note, RevealSection, Sheet } from "../components/ui";
 import {
+  distanceMeters,
   normalizeZoneCode,
   rankParking,
   searchText,
@@ -50,10 +55,17 @@ import type {
 } from "../domain/types";
 import { useParking } from "../state/ParkingContext";
 import { useArrival } from "../hooks/useArrival";
+import { useMapNavigationState } from "../hooks/useMapNavigationState";
+import { locationIssueTitle } from "../domain/locationIssue";
 import { api } from "../services/api";
 import { MARKER_COLORS } from "../domain/marker-appearance";
 import { arrivalQuestion } from "../domain/report-feedback";
 import { useContributionFeedback } from "../state/ContributionFeedback";
+import { usePocCards } from "../hooks/usePocCards";
+import { eligibleSmsZone, payableZones } from "../domain/zone-payment";
+import { isVerifiedSmsPayment, smsZoneMatches } from "../domain/sms-payment";
+import { CURRENT_LOCATION_ZOOM } from "../domain/map-selection-camera";
+import PocCardSuggestion from "../components/PocCardSuggestion";
 
 type NewParking = {
   coordinate: Coordinate;
@@ -62,21 +74,31 @@ type NewParking = {
   zoneCode?: string;
   kind?: ParkingKind;
 };
+function payablePlace(id: string, places: ParkingPlace[]) {
+  const place = places.find(value => value.id === id);
+  return place?.smsPayment && place.access !== "restricted" && isVerifiedSmsPayment(place.smsPayment) && smsZoneMatches(place.zoneCode, place.smsPayment.zoneCode) ? place : null;
+}
 export default function MapScreen() {
   const { colors, dark } = useTheme(),
     s = styles(colors);
   const { catalog, connected, language, t, refresh, now } = useParking();
   const { thankYou } = useContributionFeedback();
-  const gps = useArrival(catalog.places);
   const focused = useIsFocused();
   const licensePlate = useLicensePlate();
+  const gps = useArrival(catalog.places, licensePlate.accountId);
+  const pocCards = usePocCards(licensePlate.accountId, catalog.places, gps.location, focused);
   const [stopSms, setStopSms] = useState(false);
-  const [sort, setSort] = useState<"nearest" | "cheapest">("nearest");
-  const [destination, setDestination] = useState<Destination | null>(null);
-  const [center, setCenter] = useState<Coordinate>(SKOPJE);
+  const checkPrice = usePriceCheck(t);
+  const [payChooser, setPayChooser] = useState<Coordinate | null>(null), [manualPayId, setManualPayId] = useState<string | null>(null);
+  const navigationState = useMapNavigationState(licensePlate.accountId);
+  const { sort, setSort, destination, setDestination, center, setCenter, selected: savedSelected, setSelected, anchor, setAnchor, parkingFilters, setParkingFilters, rememberViewport } = navigationState;
+  const selected = catalog.places.some(place => place.id === savedSelected) ? savedSelected : null;
   const [cameraRevision, setCameraRevision] = useState(0);
+  const [cameraZoom, setCameraZoom] = useState(15);
+  const pendingNearMe = useRef(false);
   const viewport = useRef<Coordinate>(SKOPJE),
     cameraMoved = useRef(false);
+  const cameraSession = useRef({ accountId: licensePlate.accountId, hydrated: false });
   const [draft, setDraft] = useState<Coordinate[]>([]);
   const [editingBoundary, setEditingBoundary] = useState<string | null>(null);
   const editingPerimeter = Boolean(editingBoundary && catalog.places.find((p) => p.id === editingBoundary)?.kind !== "zone");
@@ -86,8 +108,6 @@ export default function MapScreen() {
   const latestSearchFocus = useRef(0);
   const [remote, setRemote] = useState<Destination[]>([]),
     searchVersion = useRef(0);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [anchor, setAnchor] = useState<Coordinate | null>(null);
   const [selectedPoint, setSelectedPoint] = useState<{
     x: number;
     y: number;
@@ -96,7 +116,6 @@ export default function MapScreen() {
   const [detailsGeometry, setDetailsGeometry] = useState<{ id: string; geometry: Geometry } | null>(null);
   const [detailsEditing, setDetailsEditing] = useState(false);
   const [locationHelp, setLocationHelp] = useState(false);
-  const [parkingFilters, setParkingFilters] = useState<ActiveParkingFilter[]>([]);
   const [parkingTypesExpanded, setParkingTypesExpanded] = useState(false);
   const hasFilters = parkingFilters.length > 0;
   const [visibleMatches, setVisibleMatches] = useState(30);
@@ -130,10 +149,10 @@ export default function MapScreen() {
     { id: "spaces", color: MARKER_COLORS.spaces, symbol: "✓", label: t("Spaces recently reported", "Неодамна пријавени слободни места") },
     { id: "full", color: MARKER_COLORS.full, symbol: "×", label: t("Recently reported full", "Неодамна пријавен полн паркинг") },
     { id: "surface", color: MARKER_COLORS.normal, symbol: "P", label: t("Surface parking", "Отворен паркинг") },
-    { id: "garage", color: MARKER_COLORS.normal, symbol: "P", label: t("Garages", "Катни гаражи") },
-    { id: "underground", color: MARKER_COLORS.normal, symbol: "P", label: t("Underground parking", "Подземен паркинг") },
-    { id: "street", color: MARKER_COLORS.normal, symbol: "P", label: t("Street parking", "Уличен паркинг") },
-    { id: "zone", color: MARKER_COLORS.normal, symbol: "P", label: t("Parking zones", "Паркинг зони") },
+    { id: "garage", color: MARKER_COLORS.normal, symbol: "G", label: t("Garages", "Катни гаражи") },
+    { id: "underground", color: MARKER_COLORS.normal, symbol: "U", label: t("Underground parking", "Подземен паркинг") },
+    { id: "street", color: MARKER_COLORS.normal, symbol: "S", label: t("Street parking", "Уличен паркинг") },
+    { id: "zone", color: MARKER_COLORS.normal, symbol: "Z", label: t("Parking zones", "Паркинг зони") },
   ];
   const filteredPlaces = useMemo(() => catalog.places.filter(place => matchesParkingFilters(place, parkingFilters, now)), [catalog.places, parkingFilters, now]);
   const filterCounts = useMemo(() => Object.fromEntries((["all", "free", "reviewed", "unreviewed", "spaces", "full", "surface", "garage", "underground", "street", "zone"] as const).map(filter => [filter, catalog.places.filter(place => matchesParkingFilter(place, filter, now)).length])), [catalog.places, now]);
@@ -143,6 +162,17 @@ export default function MapScreen() {
     [catalog.places, filteredPlaces, hasFilters, target, center, sort, now],
   );
   const selectedPlace = catalog.places.find((place) => place.id === selected);
+  // Drivers who find a lot full usually leave before the 10-second arrival prompt, so a
+  // precise fix at the parking also allows a direct report from its popup.
+  const fix = gps.location;
+  // GPS fades underground and inside garages just as drivers arrive, so there a precise fix
+  // from the last 10 minutes still places them at the parking.
+  const reportFix = fix && fix.accuracy !== null && fix.accuracy <= 50 ? fix
+    : (selectedPlace?.kind === "underground" || selectedPlace?.kind === "garage") && gps.lastPrecise && now - gps.lastPrecise.timestamp <= 10 * 60_000 ? gps.lastPrecise : null;
+  const atSelected = Boolean(selectedPlace && reportFix && selectedPlace.kind !== "zone" && selectedPlace.access !== "restricted" &&
+    selectedPlace.capacity !== 0 &&
+    (selectedPlace.geometry ? insidePolygon(reportFix, selectedPlace.geometry) || distanceToParkingBoundary(reportFix, selectedPlace.geometry) <= 150
+      : distanceMeters(reportFix, selectedPlace.coordinate) <= 150));
   const followupPlace = catalog.places.find((place) => place.id === followupId);
   // GPS may hold a snapshot from before the driver or someone else added a tariff.
   const arrivalPlace = followupPlace ?? (gps.arrival ? catalog.places.find(place => place.id === gps.arrival!.id) ?? gps.arrival : null);
@@ -150,15 +180,24 @@ export default function MapScreen() {
   const notificationPriority = gps.arrivalFromNotification || followupFromNotification;
   const suspendSheets = !focused || licensePlate.offerPlate || notificationPriority || notificationClosing;
   const arrivalVisible = focused && !licensePlate.offerPlate && Boolean(question) && (notificationPriority || (!selected && !detailsId && !legend && !proposal && !picking && !locationHelp));
-  const paymentBlocked = !licensePlate.ready || licensePlate.offerPlate || Boolean(arrivalPlace) || notificationClosing || notificationPriority || sending || Boolean(selected || detailsId || legend || proposal || picking || locationHelp || stopSms || licensePlate.pendingStop);
+  const paymentBlocked = !licensePlate.ready || licensePlate.offerPlate || Boolean(arrivalPlace) || notificationClosing || notificationPriority || sending || Boolean(selected || detailsId || legend || proposal || picking || locationHelp || stopSms || licensePlate.pendingStop || payChooser || manualPayId);
   const payment = useZonePayment({ places: catalog.places, fix: gps.location, plate: licensePlate.savedPlate, scope: licensePlate.accountId, focused, blocked: paymentBlocked });
-  const mapBlockedBySheet = suspendSheets || arrivalVisible || Boolean(payment.place) || stopSms || legend || locationHelp || (!picking && Boolean(detailsId || proposal));
+  const mapBlockedBySheet = suspendSheets || arrivalVisible || Boolean(payment.place || payChooser || manualPayId) || stopSms || legend || locationHelp || (!picking && Boolean(detailsId || proposal));
+  // The driver picks the zone from the sign, so manual payment needs no GPS dwell; the
+  // protocol must still be verified and unchanged at send time.
+  const latestPlaces = useRef(catalog.places);
+  useLayoutEffect(() => { latestPlaces.current = catalog.places; });
+  const manualValidate = useCallback((id: string, places?: ParkingPlace[]) => payablePlace(id, places ?? latestPlaces.current), []);
+  // The context clock ticks slowly; a fix newer than it is still fresh.
+  const payOrigin = fix && usableFix(fix, Math.max(now, fix.timestamp)) && fix.accuracy! <= 100 ? fix : center;
+  const payNearby = useMemo(() => payableZones(catalog.places, payOrigin, now, 1, 1500).length > 0, [catalog.places, payOrigin, now]);
   const clearSelection = useCallback(() => {
     setSelected(null);
     setAnchor(null);
     setSelectedPoint(null);
-  }, []);
+  }, [setSelected, setAnchor]);
   const select = useCallback((place: ParkingPlace, coordinate?: Coordinate) => {
+    pendingNearMe.current = false;
     cameraMoved.current = true;
     searchInput.current?.blur();
     Keyboard.dismiss();
@@ -168,7 +207,7 @@ export default function MapScreen() {
     if (place.id !== selected || anchor?.latitude !== nextAnchor.latitude || anchor?.longitude !== nextAnchor.longitude) setSelectedPoint(null);
     setSelected(place.id);
     setAnchor(nextAnchor);
-  }, [selected, anchor]);
+  }, [selected, anchor, setSelected, setAnchor]);
   function blankMap() {
     searchInput.current?.blur();
     Keyboard.dismiss();
@@ -185,16 +224,49 @@ export default function MapScreen() {
   );
   const centerChanged = useCallback((point: Coordinate) => {
     viewport.current = point;
-  }, []);
+    if (cameraMoved.current) rememberViewport(point);
+  }, [rememberViewport]);
   const pan = useCallback(() => {
+    pendingNearMe.current = false;
     cameraMoved.current = true;
   }, []);
   useEffect(() => {
-    if (gps.initialLocation && !cameraMoved.current) {
+    if (cameraSession.current.accountId !== licensePlate.accountId) {
+      cameraSession.current = { accountId: licensePlate.accountId, hydrated: false };
+      cameraMoved.current = false;
+      pendingNearMe.current = false;
+      setCameraZoom(15);
+      viewport.current = SKOPJE;
+    }
+    if (navigationState.ready && !cameraSession.current.hydrated) {
+      cameraSession.current.hydrated = true;
+      if (navigationState.restored) {
+        cameraMoved.current = true;
+        viewport.current = navigationState.viewport;
+      }
+    }
+  }, [licensePlate.accountId, navigationState.ready, navigationState.restored, navigationState.viewport]);
+  useEffect(() => {
+    if (navigationState.ready && gps.initialLocation && !cameraMoved.current) {
       setCenter(gps.initialLocation);
       viewport.current = gps.initialLocation;
     }
-  }, [gps.initialLocation]);
+  }, [gps.initialLocation, navigationState.ready, setCenter]);
+  useEffect(() => {
+    if (!pendingNearMe.current || !navigationState.ready) return;
+    const point = nearbyOrigin(null, gps.location);
+    if (!point) return;
+    const timer = setTimeout(() => {
+      if (!pendingNearMe.current) return;
+      pendingNearMe.current = false;
+      cameraMoved.current = true;
+      setCameraZoom(CURRENT_LOCATION_ZOOM);
+      setCameraRevision(value => value + 1);
+      setCenter({ latitude: point.latitude, longitude: point.longitude });
+      viewport.current = point;
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [gps.location, navigationState.ready, setCenter]);
 
   const locationStatus =
     gps.status === "loading"
@@ -205,15 +277,11 @@ export default function MapScreen() {
           Math.ceil(gps.accuracy ?? 0) +
           " m"
         : gps.status === "approximate"
-          ? t("Location is approximate", "Локацијата е приближна") +
+          ? (gps.approximatePermission ? t("Precise location is off", "Прецизната локација е исклучена") : t("Location is approximate", "Локацијата е приближна")) +
             " · ±" +
             Math.ceil(gps.accuracy ?? 0) +
             " m"
-          : gps.status === "denied"
-            ? t("Location access is off", "Пристапот до локација е исклучен")
-            : gps.issue?.code === "services-off"
-              ? t("Turn on Location / GPS", "Вклучете Локација / GPS")
-              : t("Location needs attention", "Проверете ја локацијата");
+          : locationIssueTitle(gps.issue, t);
   const locationWarning =
     (locationRequest &&
     (!canAddAtLocation(gps.location) || !inSkopje(gps.location!))
@@ -232,17 +300,21 @@ export default function MapScreen() {
     setDestination(null);
     clearSearch();
     clearSelection();
+    cameraMoved.current = true;
     const point = nearbyOrigin(null, gps.location);
     if (point) {
-      cameraMoved.current = true;
+      pendingNearMe.current = false;
+      setCameraZoom(CURRENT_LOCATION_ZOOM);
       setCameraRevision((value) => value + 1);
       setCenter({ latitude: point.latitude, longitude: point.longitude });
+      viewport.current = point;
     } else {
-      cameraMoved.current = false;
+      pendingNearMe.current = true;
       retryLocation();
     }
   }
   function addParking() {
+    pendingNearMe.current = false;
     clearSearch();
     clearSelection();
     setLocationDismissed(null);
@@ -290,6 +362,7 @@ export default function MapScreen() {
     setSearching(false);
   }
   function startDestination() {
+    pendingNearMe.current = false;
     Keyboard.dismiss();
     clearSearch();
     clearSelection();
@@ -298,11 +371,13 @@ export default function MapScreen() {
     setPicking("destination");
   }
   function choose(value: Destination, move = true) {
+    pendingNearMe.current = false;
     clearSearch();
     clearSelection();
     cameraMoved.current = true;
     setDestination(value);
     if (move) {
+      setCameraZoom(15);
       setCameraRevision((value) => value + 1);
       setCenter(value.coordinate);
       viewport.current = value.coordinate;
@@ -327,7 +402,7 @@ export default function MapScreen() {
           id: place.id,
           name:
             (place.zoneCode ? place.zoneCode + " · " : "") +
-            (language !== "mk" ? (place.nameEn ?? place.name) : place.name),
+            placeName(place, language),
           coordinate: place.coordinate,
         })),
     ].filter(
@@ -382,13 +457,22 @@ export default function MapScreen() {
       ),
     );
   }, []);
-  function cancelPicking() {
+  const cancelPicking = useCallback(() => {
     setPicking(null);
     setDraft([]);
     setEditingBoundary(null);
     setMessage("");
     setDrawerHeight(94);
-  }
+  }, []);
+  // Android Back leaves drawing mode or closes the parking popup before leaving the app.
+  useEffect(() => {
+    if (!focused || (!picking && !selected)) return;
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (picking) cancelPicking(); else clearSelection();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [focused, picking, selected, cancelPicking, clearSelection]);
   async function finishZone() {
     const shape = zoneGeometry(draft);
     if (!validZone(shape)) {
@@ -401,7 +485,9 @@ export default function MapScreen() {
       return;
     }
     if (!editingBoundary) {
-      setProposal(previous => previous ? { ...previous, geometry: shape } : { geometry: shape, coordinate: draft[0], kind: "zone" });
+      // A drawn zone's pin belongs inside it, not on the first corner tapped.
+      const middle = { latitude: draft.reduce((sum, p) => sum + p.latitude, 0) / draft.length, longitude: draft.reduce((sum, p) => sum + p.longitude, 0) / draft.length };
+      setProposal(previous => previous ? { ...previous, geometry: shape } : { geometry: shape, coordinate: middle, kind: "zone" });
       setPicking(null);
       return;
     }
@@ -435,9 +521,11 @@ export default function MapScreen() {
     if ((!free && !arrivalPrice.trim()) || !Number.isFinite(amount) || amount < 0 || amount > 10000) {
       setMessage(t("Enter a price from 0 to 10,000 MKD.", "Внесете цена од 0 до 10.000 денари.")); return;
     }
+    if (!checkPrice([amount], setMessage)) return;
     setSending(true); setMessage("");
     try {
       await api.price(arrivalPlace.id, amount, amount);
+      await gps.reported(arrivalPlace.id).catch(() => {});
       await refresh();
       dismissArrival();
       thankYou();
@@ -451,8 +539,11 @@ export default function MapScreen() {
     setMessage("");
     try {
       await api.report(place.id, status);
+      await gps.reported(place.id).catch(() => {});
+      if (status === "spaces") pocCards.record(place);
       await refresh();
-      const needsPrice = arrivalQuestion(place, true, now) === "price";
+      const smsZone = status === "spaces" ? eligibleSmsZone(gps.location, catalog.places, licensePlate.savedPlate, Date.now()) : null;
+      const needsPrice = !smsZone && arrivalQuestion(place, true, now) === "price";
       if (needsPrice) setFollowupFromNotification(gps.arrivalFromNotification);
       else if (gps.arrivalFromNotification && Platform.OS === "ios") setNotificationClosing(true);
       gps.dismiss();
@@ -465,6 +556,23 @@ export default function MapScreen() {
       setMessage(
         t("Could not send. Try again.", "Не е испратено. Обидете се повторно."),
       );
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function reportHere(place: ParkingPlace, status: "spaces" | "full") {
+    if (sending) return;
+    setSending(true);
+    setMessage("");
+    try {
+      await api.report(place.id, status);
+      await gps.reported(place.id).catch(() => {});
+      await refresh();
+      if (status === "full") { setDetailsEditing(false); setDetailsId(place.id); }
+      thankYou();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : t("Could not send. Try again.", "Не е испратено. Обидете се повторно."));
     } finally {
       setSending(false);
     }
@@ -506,6 +614,7 @@ export default function MapScreen() {
         <ParkingMap
           now={now}
           cameraRevision={cameraRevision}
+          cameraZoom={cameraZoom}
           places={filteredPlaces}
           filtered={hasFilters}
           selectedId={selected}
@@ -680,8 +789,14 @@ export default function MapScreen() {
                 drawerHeight={drawerHeight}
                 onClose={clearSelection}
                 onUpdate={() => { setDetailsEditing(false); setDetailsId(selectedPlace.id); }}
+                onReport={atSelected && connected ? (status) => void reportHere(selectedPlace, status) : undefined}
+                reporting={sending}
+                onPay={payablePlace(selectedPlace.id, catalog.places) ? () => { clearSelection(); setManualPayId(selectedPlace.id); } : undefined}
               />
             ) : null}
+            {drawerHeight <= 100 && payNearby && !selectedPlace && !picking ? <View style={[s.pay, { bottom: drawerHeight + 14 }]}>
+              <Button icon="message-square" title={t("Pay parking", "Плати паркинг")} variant="secondary" onPress={() => { Keyboard.dismiss(); setPayChooser(payOrigin); }} />
+            </View> : null}
             {drawerHeight <= 100 ? <View style={[s.locate, { bottom: drawerHeight + 14 }]}>
               <IconButton name="info" label={t("Map legend", "Легенда на мапата")} onPress={() => { Keyboard.dismiss(); setLegend(true); }} />
               <IconButton
@@ -697,6 +812,7 @@ export default function MapScreen() {
               onDestination={startDestination}
               onAdd={addParking}
               onDraw={() => {
+                pendingNearMe.current = false;
                 Keyboard.dismiss();
                 clearSearch();
                 clearSelection();
@@ -867,7 +983,7 @@ export default function MapScreen() {
             ) : null}
           </>
         )}
-        <MapCredit />
+        <MapCredit active={focused} />
       </View>
       <ParkingDetails
         key={detailsId ?? "none"}
@@ -877,8 +993,9 @@ export default function MapScreen() {
         initialEditing={detailsEditing}
         minutes={60}
         onClose={() => { setDetailsId(null); setDetailsGeometry(null); }}
-        onSelectAlternative={(place) => { setDetailsEditing(false); select(place); setDetailsId(place.id); setCenter(place.coordinate); setCameraRevision(value => value + 1); }}
+        onSelectAlternative={(place) => { setDetailsEditing(false); select(place); setDetailsId(place.id); setCameraZoom(15); setCenter(place.coordinate); setCameraRevision(value => value + 1); }}
         onEditBoundary={(place, geometry) => {
+          pendingNearMe.current = false;
           clearSelection();
           setEditingBoundary(place.id);
           clearSearch();
@@ -894,7 +1011,7 @@ export default function MapScreen() {
       />
       <LocationHelp
         visible={locationHelp && !suspendSheets}
-        issue={gps.issue}
+        issue={gps.issue ?? (gps.approximatePermission ? { code: "approximate" } : null)}
         onClose={() => setLocationHelp(false)}
         onRetry={retryLocation}
       />
@@ -909,12 +1026,14 @@ export default function MapScreen() {
             kind: proposal.kind,
           }}
           onDrawBoundary={(geometry) => {
+            pendingNearMe.current = false;
             Keyboard.dismiss();
             clearSearch();
             clearSelection();
             setEditingBoundary(null);
             setDraft((geometry ?? proposal.geometry)?.coordinates[0].slice(0, -1).map(([longitude, latitude]) => ({ latitude, longitude })) ?? []);
             cameraMoved.current = true;
+            setCameraZoom(15);
             setCenter(proposal.coordinate);
             setCameraRevision(value => value + 1);
             setMessage("");
@@ -932,7 +1051,11 @@ export default function MapScreen() {
           }}
         />
       ) : null}
-      <ZonePaymentSheet key={payment.place?.id ?? "no-payment"} place={!paymentBlocked ? payment.place : null} validate={payment.validate} onClose={payment.dismiss} />
+      <ZonePaymentSheet key={payment.place?.id ?? "no-payment"} place={!paymentBlocked ? payment.place : null} validate={payment.validate} onClose={payment.dismiss} onInvalidated={() => { payment.dismiss(false); void refresh(); }} />
+      <PayParkingChooser visible={Boolean(payChooser) && !suspendSheets} places={catalog.places} origin={payChooser} onClose={() => setPayChooser(null)} onPick={place => { setPayChooser(null); setManualPayId(place.id); }} />
+      <ZonePaymentSheet key={`manual:${manualPayId}`} manual place={!suspendSheets && manualPayId ? catalog.places.find(place => place.id === manualPayId) ?? null : null} validate={manualValidate} onClose={() => setManualPayId(null)}
+        onInvalidated={() => { setManualPayId(null); setMessage(t("Payment details changed. Check the sign and try again.", "Податоците за плаќање се сменети. Проверете го знакот и обидете се повторно.")); void refresh(); }} />
+      {pocCards.zone ? <PocCardSuggestion zone={pocCards.zone} visible={focused && !suspendSheets && !mapBlockedBySheet && !arrivalPlace && !licensePlate.offerPlate && !selected && !payment.place && !stopSms} onClose={pocCards.dismiss} /> : null}
       <ParkingSmsStopSheet visible={stopSms && !suspendSheets && !arrivalVisible && !detailsId && !legend && !proposal && !picking && !locationHelp} onClose={() => setStopSms(false)} />
       <Sheet visible={legend && !suspendSheets} title={t("Map legend", "Легенда на мапата")} onClose={() => setLegend(false)}>
         {filterOptions.slice(0, 5).map(renderFilter)}
@@ -953,9 +1076,7 @@ export default function MapScreen() {
         onDismiss={() => setNotificationClosing(false)}
       >
         <Text style={s.title}>
-          {language !== "mk"
-            ? (arrivalPlace?.nameEn ?? arrivalPlace?.name)
-            : arrivalPlace?.name}
+          {arrivalPlace ? placeName(arrivalPlace, language) : null}
         </Text>
         {question === "availability" ? (
           <View style={s.answers}>
@@ -1084,6 +1205,7 @@ const styles = (colors: ThemeColors) =>
       fontWeight: "600",
     },
     locate: { position: "absolute", zIndex: 1000, left: 14, gap: 12 },
+    pay: { position: "absolute", zIndex: 1000, right: 14 },
     pickTop: {
       position: "absolute",
       top: 12,

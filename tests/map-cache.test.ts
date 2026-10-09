@@ -27,7 +27,7 @@ test("layer cache reuses unchanged visible and recently detached layers and evic
 test("catalog cache is bounded, rejects corrupt and obsolete records, and preserves report expiry", () => {
   const now = Date.now(), catalog = structuredClone(seed) as Catalog;
   catalog.places[0].availability = { status: "spaces", observedAt: new Date(now).toISOString(), expiresAt: new Date(now + 1000).toISOString(), source: "community", reports: 1 };
-  const encoded = encodeCatalogCache(catalog, [], now)!;
+  const encoded = encodeCatalogCache(catalog, [], now, 7)!;
   const restored = decodeCatalogCache(encoded, seed.generatedAt, now + 2000)!;
   assert.equal(restored.catalog.places.length, catalog.places.length);
   assert.notEqual(currentAvailability(restored.catalog.places[0].availability, now + 2000).status, "spaces");

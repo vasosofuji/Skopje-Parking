@@ -1,4 +1,5 @@
 import test from "node:test";
+import * as languageModule from "../src/domain/language";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
@@ -12,6 +13,8 @@ function form(initial: PaymentSchedule) {
   const react = { createElement: (type: unknown, props: Record<string, any>, ...children: unknown[]): Element => ({ type, props: props ?? {}, children }), useState(initial: unknown) { const index = cursor++; if (!(index in state)) state[index] = typeof initial === "function" ? (initial as () => unknown)() : initial; return [state[index], (next: unknown) => { state[index] = next; }]; } };
   const context = { exports: {} as { default: (props: unknown) => Element }, require(name: string) {
     if (name === "react") return { ...react, default: react, __esModule: true };
+    if (name === "../domain/language") return languageModule;
+    if (name === "../hooks/usePriceCheck") return { usePriceCheck: () => () => true };
     if (name === "react-native") return { View: "View", Text: "Text", TextInput: "TextInput", Pressable: "Pressable", StyleSheet: { create: (styles: unknown) => styles } };
     if (name === "../domain/payment-hours") return hours;
     if (name === "../state/ParkingContext") return { useParking: () => ({ t: (en: string) => en }) };

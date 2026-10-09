@@ -1,6 +1,6 @@
 import { maplibreScript, maplibreStyles } from "../vendor/maplibre";
-import { BASEMAP_ATTRIBUTION, createBasemapStyle } from "../domain/basemap-style";
-import { guardVectorLayerRemoval, installBasemap } from "../domain/basemap-lifecycle";
+import { BASEMAP_ATTRIBUTION, createBasemapStyle, OFFLINE_BASEMAP } from "../domain/basemap-style";
+import { guardVectorLayerRemoval, installBasemap, registerOfflineBasemap } from "../domain/basemap-lifecycle";
 import { createLayerCache } from "../domain/layer-cache";
 import { parkingSelectionZoom } from "../domain/map-selection-camera";
 import { leafletScript, leafletStyles } from "../vendor/leaflet";
@@ -11,7 +11,7 @@ export const mapHtml = `<!doctype html><html><head>
 <title>Parkino parking map</title>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>${maplibreStyles}</style>
-<style>${leafletStyles}html,body,#map{height:100%;width:100%;margin:0}.leaflet-container{touch-action:none}.leaflet-bottom{bottom:2px}.leaflet-control-attribution{font-size:10px!important;background:rgba(255,255,255,.85)!important}.dark .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.72) saturate(.65)}.dark.leaflet-container{background:#281f1b}</style>
+<style>${leafletStyles}html,body,#map{height:100%;width:100%;margin:0}.leaflet-container{touch-action:none}.leaflet-bottom{bottom:2px}.leaflet-control-attribution{font-size:10px!important;background:rgba(255,255,255,.85)!important}.dark .leaflet-tile-pane{filter:invert(.88) hue-rotate(180deg) brightness(1.15) contrast(.8) saturate(.35)}.dark.leaflet-container{background:#42484b}</style>
 <style>
 .parking-pin{display:flex;align-items:center;justify-content:center;background:transparent;border:0}
 .parking-pin-face{position:relative;box-sizing:border-box;display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 5px;border:2px solid #fff;border-radius:16px;color:#fff;font:800 12px system-ui;box-shadow:0 2px 5px #173d3a35}
@@ -19,6 +19,8 @@ export const mapHtml = `<!doctype html><html><head>
 .parking-pin.spaces .parking-pin-face{width:36px;min-width:36px;height:36px;padding:0;flex-shrink:0;border-radius:50%;box-shadow:0 0 0 3px #26c77930}
 .parking-free-badge,.parking-state-badge{position:absolute;right:-7px;top:-8px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:17px;height:17px;border:1px solid #087184;border-radius:9px;background:#fff;color:#07596A;font:800 10px system-ui}
 .parking-state-badge{left:-7px;right:auto;top:auto;bottom:-8px;color:#fff;border-color:#fff}
+.zone-label{display:flex;align-items:center;justify-content:center}
+.parking-review-badge{position:absolute;right:-7px;top:-8px;width:17px;height:17px;box-sizing:border-box;text-align:center;border:1px solid #65529A;border-radius:9px;background:#fff;color:#65529A;font:800 10px/15px system-ui}
 .zone-vertex{display:flex;align-items:center;justify-content:center}.zone-vertex span{width:18px;height:18px;border:3px solid #fff;border-radius:50%;background:#962e2b;box-shadow:0 1px 5px #392c2570}
 .destination-pin span{display:block;width:28px;height:28px;border:3px solid #fff;border-radius:50% 50% 50% 0;background:#ce383e;transform:rotate(-45deg);box-shadow:-2px 2px 7px #50202050}.destination-pin span::after{content:'';display:block;width:9px;height:9px;border-radius:50%;background:#fff;margin:9px}
 .destination-label{border:none;border-radius:8px;color:#8e1822;padding:6px 10px;max-width:210px;overflow:hidden;text-overflow:ellipsis;font:700 12px system-ui;box-shadow:0 2px 8px #50202025}
@@ -28,19 +30,25 @@ ${maplibreScript}</script><script>
 (function(){
 const send = (message) => window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({...message,sentAt:Date.now()}));
 const map = L.map('map',{zoomControl:false,attributionControl:false,minZoom:3,zoomSnap:.5}).setView([41.9961,21.4316],15);
+map.createPane('tariff-regions').style.zIndex='390';
 const parkingSelectionZoom = ${parkingSelectionZoom.toString()};
-const disposeBasemap=(${installBasemap.toString()})({
+// The streets ship inside the app (Android assets); without them the map uses OpenFreeMap online.
+const basemapStyle=${JSON.stringify(createBasemapStyle())};
+let disposeBasemap=()=>{};
+const startBasemap=offline=>{if(offline)Object.assign(basemapStyle,${JSON.stringify(OFFLINE_BASEMAP)});disposeBasemap=(${installBasemap.toString()})({
   addRaster:()=>L.tileLayer(${JSON.stringify(tileUrl)},{maxZoom:19,keepBuffer:4,updateWhenIdle:true,updateWhenZooming:false,attribution:${JSON.stringify(BASEMAP_ATTRIBUTION)}}).addTo(map),
   supported:()=>typeof maplibregl!=='undefined' && typeof WebGL2RenderingContext!=='undefined',
   addVector:()=>{
-    const layer=L.maplibreGL({style:${JSON.stringify(createBasemapStyle())},attributionControl:false,interactive:false,maxZoom:20,fadeDuration:180});
+    const layer=L.maplibreGL({style:basemapStyle,attributionControl:false,interactive:false,maxZoom:20,fadeDuration:180});
     (${guardVectorLayerRemoval.toString()})(layer);
     try{layer.addTo(map);}catch(error){try{layer.remove();}catch{layer.getContainer()?.remove();}throw error;}
     const container=layer.getContainer(),gl=layer.getMaplibreMap();container.style.opacity='0';container.style.pointerEvents='none';
     return {remove:()=>layer.remove(),show:()=>{container.style.opacity='1';},onReady:callback=>gl.once('load',callback),onError:callback=>{gl.on('error',()=>callback());gl.getCanvas().addEventListener('webglcontextlost',()=>callback(true));}};
   }
-},${Boolean(process.env.EXPO_PUBLIC_TILE_URL)});
-window.addEventListener('pagehide',disposeBasemap);
+},${Boolean(process.env.EXPO_PUBLIC_TILE_URL)},15000,${Boolean(process.env.EXPO_PUBLIC_TILE_URL)});};
+if(typeof maplibregl!=='undefined')(${registerOfflineBasemap.toString()})(maplibregl,'file:///android_asset/offline-map/',XMLHttpRequest,startBasemap);
+else startBasemap(false);
+window.addEventListener('pagehide',()=>disposeBasemap());
 const group = L.layerGroup().addTo(map);
 const layerCache = (${createLayerCache.toString()})(layer=>layer.addTo(group),layer=>group.removeLayer(layer),layer=>layer.off());
 let userDot = null, userAccuracy = null;
@@ -73,7 +81,7 @@ function position(){if(current && current.selectedId && current.selectedAnchor){
 map.on('moveend',()=>{cameraMoving=false;const p=map.getCenter();send({type:'center',latitude:p.lat,longitude:p.lng});position();});
 map.on('zoomend',()=>send({type:'zoom',zoom:map.getZoom()}));
 map.on('click',event=>{if(current && current.picking)send({type:'pick',latitude:event.latlng.lat,longitude:event.latlng.lng});else send({type:'blank'});});
-function zoneInteractive(zone) { return current.picking || !zone.pocSector || map.getZoom()<16; }
+function zoneInteractive() { return true; }
 function select(id,latlng) {
   const zone=current.zones?.find(zone=>zone.id===id)||current.zoneLabels?.find(zone=>zone.id===id);
   if(zone&&!zoneInteractive(zone))return;
@@ -97,7 +105,7 @@ window.renderParking = function(next) {
   });
   next.zones.forEach(zone=>{
     const interactive=zoneInteractive(zone);
-    retain('zone:'+zone.id,[zone,interactive],()=> { const polygon = L.polygon(zone.rings,{interactive,color:'#527FBA',weight:1,dashArray:'5 5',fillOpacity:0.035});
+    retain('zone:'+zone.id,[zone,interactive],()=> { const polygon = L.polygon(zone.rings,{pane:'tariff-regions',interactive,color:'#527FBA',weight:1,dashArray:'5 5',fillOpacity:0.035});
     polygon.on('click',event=>{if(!zoneInteractive(zone))return;L.DomEvent.stopPropagation(event);select(zone.id,event.latlng);});
     return polygon; });
   });
@@ -105,7 +113,7 @@ window.renderParking = function(next) {
     const label=document.createElement('span');label.textContent=zone.label;
     label.style.cssText='background:#fff;color:#392c25;border:1px '+(zone.approximate?'dashed':'solid')+' #527FBA;border-radius:6px;padding:3px 6px;font:600 12px system-ui;white-space:nowrap';
     const interactive=zoneInteractive(zone);
-    retain('zone-label:'+zone.id,[zone,interactive],()=>L.marker(zone.point,{interactive,keyboard:interactive,autoPanOnFocus:false,icon:L.divIcon({className:'zone-label',html:label,iconSize:[50,26]}),title:zone.title}).on('click',()=>select(zone.id,{lat:zone.point[0],lng:zone.point[1]})));
+    retain('zone-label:'+zone.id,[zone,interactive],()=>L.marker(zone.point,{interactive,keyboard:interactive,autoPanOnFocus:false,zIndexOffset:-500,icon:L.divIcon({className:'zone-label',html:label,iconSize:[60,44],iconAnchor:[30,22]}),title:zone.title}).on('click',()=>select(zone.id,{lat:zone.point[0],lng:zone.point[1]})));
   });
   next.pins.forEach(pin=>{
     retain('pin:'+pin.id,pin,()=> { const icon=L.divIcon({className:'parking-pin'+(pin.selected?' selected':'')+(pin.cluster?' cluster':'')+(pin.spaces?' spaces':''),html:pin.html,iconSize:[60,48],iconAnchor:[30,24]});
@@ -137,9 +145,9 @@ window.renderParking = function(next) {
   }
   layerCache.end();
   if(userDot)userDot.bringToFront();
-  const key=next.destination.join(',')+':'+(next.cameraRevision||0);
+  const key=next.destination.join(',')+':'+(next.cameraRevision||0)+':'+(next.cameraZoom??15);
   const selected=next.selectedId&&next.selectedAnchor?next.selectedId+':'+next.selectedAnchor.join(','):'';
-  if(key!==destinationKey){const initial=!destinationKey;destinationKey=key;moveCamera(next.destination,15,!initial&&!next.drawing);}
+  if(key!==destinationKey){const initial=!destinationKey;destinationKey=key;moveCamera(next.destination,next.cameraZoom??15,!initial&&!next.drawing);}
   else if(selected && selected!==selectionKey && !next.drawing && !next.picking)moveCamera(next.selectedAnchor,parkingSelectionZoom(map.getZoom(),Boolean(next.selectedPocSector)),false);
   selectionKey=selected;
   position();

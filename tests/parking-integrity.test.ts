@@ -29,7 +29,6 @@ const sign: SignInfo = {
   nextHour: 99, maxStayMinutes: null, chargingHours: "07:00–23:00", paymentInstructions: null,
   restrictions: null, rawText: "C2 · 99 MKD",
 };
-const image = { mimeType: "image/png", base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jGqkAAAAASUVORK5CYII=" };
 
 async function createStore(backend: "sqlite" | "postgres") {
   if (backend === "sqlite") return new ParkingStore(":memory:", catalog, Date.now, true);
@@ -78,10 +77,8 @@ for (const backend of ["sqlite", "postgres"] as const) {
     const app = await buildApp(catalog, store);
     const headers = { authorization: `Bearer ${(await store.createSession()).token}` };
     try {
-      const upload = await app.inject({ method: "POST", url: "/v1/places/zone/signs", headers, payload: image });
-      assert.equal(upload.statusCode, 201);
-      const url = `/v1/signs/${upload.json().id}/confirm`;
-      assert.equal((await app.inject({ method: "POST", url, headers, payload: sign })).statusCode, 200);
+      const url = "/v1/places/zone/signs";
+      assert.equal((await app.inject({ method: "POST", url, headers, payload: { info: sign } })).statusCode, 201);
       let places = (await app.inject("/v1/catalog")).json().places as ParkingPlace[];
       assert.equal(places.find(place => place.id === "zone")?.signInfo?.zoneCode, "C2", "keep conflicting evidence on its source for correction");
       for (const id of ["lot", "unlabelled"]) {
@@ -89,7 +86,7 @@ for (const backend of ["sqlite", "postgres"] as const) {
         assert.equal(place.signInfo, undefined);
         assert.equal(parkingPrice(place), null);
       }
-      assert.equal((await app.inject({ method: "POST", url, headers, payload: { ...sign, zoneCode: "Б2", firstHour: 40, nextHour: 40 } })).statusCode, 200);
+      assert.equal((await app.inject({ method: "POST", url, headers, payload: { info: { ...sign, zoneCode: "Б2", firstHour: 40, nextHour: 40 } } })).statusCode, 201);
       places = (await app.inject("/v1/catalog")).json().places;
       for (const id of ["lot", "unlabelled"])
         assert.equal(parkingPrice(places.find(place => place.id === id)!)?.firstHour, 40, "a normalized matching correction can propagate");
@@ -108,7 +105,7 @@ test("offline recommendations reject stale available status at zero capacity", (
 });
 
 test("legacy draft cleanup removes copied hours and keeps independent or confirmed hours", () => {
-  const draft: ParkingPlace = { ...base, openingHours: sign.chargingHours, signInfo: { ...sign, photoId: "legacy", model: "AI", observedAt: new Date().toISOString() } };
+  const draft: ParkingPlace = { ...base, openingHours: sign.chargingHours, signInfo: { ...sign, readingId: "legacy", model: "AI", observedAt: new Date().toISOString() } };
   const confirmed: ParkingPlace = { ...draft, id: "confirmed", signInfo: { ...draft.signInfo!, confirmedAt: new Date().toISOString() } };
   const independent: ParkingPlace = { ...draft, id: "independent", openingHours: "24/7" };
   const cleaned = confirmedSignCatalog({ ...catalog, places: [draft, independent, confirmed] }).places;

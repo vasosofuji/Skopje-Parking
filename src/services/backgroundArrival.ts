@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { isRunningInExpoGo, requireOptionalNativeModule } from "expo";
+import Constants from "expo-constants";
 import * as Location from "expo-location";
 import { AppState, Platform } from "react-native";
 import type * as NotificationTypes from "expo-notifications";
@@ -7,11 +8,13 @@ import type * as TaskManagerTypes from "expo-task-manager";
 import type { Fix } from "../domain/arrival";
 import {
   advanceArrival,
+  acknowledgeArrivalReport,
   ARRIVAL_REMINDER_KIND,
   freshPendingArrival,
   openArrivalNotification,
 } from "../domain/backgroundArrival";
 import type { ParkingPlace } from "../domain/types";
+import { isLanguage, translate, placeName } from "../domain/language";
 import { startArrivalInForeground } from "./foregroundArrivalStart";
 import {
   arrivalTransaction,
@@ -26,7 +29,9 @@ import {
 const TASK = "parkskopje-arrival-location-v1";
 const CHANNEL = "parking-arrivals";
 // Older installed builds must keep working until the new native build is installed.
-const nativeAvailable = Platform.OS !== "web" && !isRunningInExpoGo() &&
+// Store builds omit background location unless it was enabled for a Play-approved release.
+export const backgroundLocationBuild = Platform.OS === "web" || Constants.expoConfig?.extra?.backgroundLocation === true;
+const nativeAvailable = Platform.OS !== "web" && backgroundLocationBuild && !isRunningInExpoGo() &&
   Boolean(requireOptionalNativeModule("ExpoTaskManager")) &&
   Boolean(requireOptionalNativeModule("ExpoNotificationScheduler"));
 // Synchronous imports are deliberate: defineTask must run before a headless task is delivered.
@@ -47,8 +52,8 @@ async function dismissReminder(notificationId: string) {
 }
 
 if (Notifications) Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: AppState.currentState !== "active",
+  handleNotification: async (notification) => ({
+    shouldShowBanner: notification.request.content.data?.kind === "parking-destination-full" || AppState.currentState !== "active",
     shouldShowList: true,
     shouldPlaySound: false,
     shouldSetBadge: false,
@@ -69,13 +74,14 @@ if (Tasks && !Tasks.isTaskDefined(TASK)) {
         await dismissReminder(before.pending.notificationId);
       if (!result.place || !result.state.pending || !await backgroundArrivalEnabled()) return;
       const pending = result.state.pending;
-      const language = await AsyncStorage.getItem("parkskopje-language");
+      const saved = await AsyncStorage.getItem("parkskopje-language");
+      const language = isLanguage(saved) ? saved : "mk";
       try {
         await Notifications.scheduleNotificationAsync({
           identifier: pending.notificationId,
           content: {
-            title: language === "en" ? "Hey, is there parking here?" : "Еј, има ли слободно место тука?",
-            body: language === "en" ? `${result.place.nameEn ?? result.place.name} · One quick answer helps other drivers.` : `${result.place.name} · Еден краток одговор им помага на возачите.`,
+            title: translate(language, "Hey, is there parking here?", "Еј, има ли слободно место тука?"),
+            body: `${placeName(result.place, language)} · ${translate(language, "One quick answer helps other drivers.", "Еден краток одговор им помага на возачите.")}`,
             data: { kind: ARRIVAL_REMINDER_KIND, placeId: pending.placeId, createdAt: pending.createdAt },
           },
           trigger: Platform.OS === "android" ? { channelId: CHANNEL } : null,
@@ -209,31 +215,31 @@ export async function disableBackgroundArrival() {
   settingsListeners.forEach((listener) => listener());
 }
 
-export async function recordForegroundArrival(fix: Fix, places: ParkingPlace[]) {
+export async function recordForegroundArrival(fix: Fix, places: ParkingPlace[], accountId?: string | null) {
   return arrivalTransaction(async () => {
-    const before = await readArrivalState();
+    const before = await readArrivalState(accountId);
     const result = advanceArrival(before, [fix], places, false);
-    await saveArrivalState(result.state);
+    await saveArrivalState(result.state, accountId);
     if (before.pending && !result.state.pending) await dismissReminder(before.pending.notificationId);
     return result.place;
   });
 }
 
-export async function resetArrivalCandidate() {
+export async function resetArrivalCandidate(accountId?: string | null) {
   return arrivalTransaction(async () => {
-    const state = await readArrivalState();
-    await saveArrivalState({ ...state, detector: { ...state.detector, candidate: null } });
+    const state = await readArrivalState(accountId);
+    await saveArrivalState({ ...state, detector: { ...state.detector, candidate: null } }, accountId);
   });
 }
 
-export async function consumePendingArrival(places: ParkingPlace[]) {
+export async function consumePendingArrival(places: ParkingPlace[], accountId?: string | null) {
   return arrivalTransaction(async () => {
-    const state = await readArrivalState();
+    const state = await readArrivalState(accountId);
     const pending = freshPendingArrival(state.pending);
     if (!pending?.opened) return null;
     const place = places.find((item) => item.id === pending.placeId) ?? (await readArrivalCatalog()).find((item) => item.id === pending.placeId);
     if (!place) return null;
-    await saveArrivalState({ ...state, pending: null });
+    await saveArrivalState({ ...state, pending: null }, accountId);
     await dismissReminder(pending.notificationId);
     return place;
   });
@@ -261,4 +267,12 @@ export function listenForArrivalNotifications(onOpen: () => void) {
   if (response) respond(response);
   const subscription = Notifications.addNotificationResponseReceivedListener(respond);
   return () => { active = false; subscription.remove(); };
+}
+
+export async function markArrivalReported(placeId: string, accountId: string | null) {
+  if (!accountId) return;
+  await arrivalTransaction(async () => {
+    const before = await readArrivalState(accountId);
+    await saveArrivalState(acknowledgeArrivalReport(before, placeId), accountId);
+  });
 }

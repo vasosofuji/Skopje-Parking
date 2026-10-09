@@ -31,6 +31,7 @@ export function createTransport(base: string, options: {
     if (clock() < readyUntil) return;
     if (!warming) warming = (async () => {
       const deadline = clock() + 75000;
+      let unanswered = 0;
       while (clock() < deadline) {
         try {
           const probe = await timed(Math.max(1, Math.min(15000, deadline - clock())), async signal => {
@@ -52,7 +53,9 @@ export function createTransport(base: string, options: {
           }
         } catch (error) {
           if (error instanceof ParkingRequestError) throw error;
-          /* Retry only the read-only readiness probe. */
+          // Retry only the read-only readiness probe. A waking server still answers; no answer
+          // at all means no network, so stop early and let the app show it is offline.
+          if (++unanswered >= 3) break;
         }
         if (clock() < deadline) await pause(Math.min(2000, deadline - clock()));
       }

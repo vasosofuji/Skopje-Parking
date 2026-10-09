@@ -1,7 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { readFileSync } from "node:fs";
 import { Pool, type PoolClient, type QueryResult, types } from "pg";
-import { attachDatabasePool } from "@vercel/functions";
 
 // Millisecond timestamps and counters are within JavaScript's safe integer range.
 types.setTypeParser(20, (value) => {
@@ -37,26 +36,23 @@ export class PgDatabase {
   private local = new AsyncLocalStorage<PoolClient>();
   private initialized = new WeakSet<PoolClient>();
   private transactionPool: boolean;
-  constructor(url: string, poolMode = process.env.DATABASE_POOL_MODE ?? "session") {
+  constructor(url: string, poolMode = process.env.DATABASE_POOL_MODE ?? "session", max = 8) {
     this.transactionPool = poolMode === "transaction";
     const connection = new URL(url);
+    // Plain connections only for a database on this computer (local tests).
+    const local = connection.searchParams.get("sslmode") === "disable" && ["localhost", "127.0.0.1"].includes(connection.hostname);
     // Keep TLS verification enabled; do not let URL sslmode silently override it.
     for (const key of ["sslmode", "sslcert", "sslkey", "sslrootcert"])
       connection.searchParams.delete(key);
+    const ca = process.env.DATABASE_CA ?? (process.env.DATABASE_CA_FILE ? readFileSync(process.env.DATABASE_CA_FILE, "utf8") : undefined);
     this.pool = new Pool({
       connectionString: connection.toString(),
-      max: process.env.VERCEL ? 3 : 8,
+      max,
       statement_timeout: 10000,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
-      ssl: {
-        rejectUnauthorized: true,
-        ...(process.env.DATABASE_CA_FILE
-          ? { ca: readFileSync(process.env.DATABASE_CA_FILE, "utf8") }
-          : {}),
-      },
+      ssl: local ? false : { rejectUnauthorized: true, ...(ca ? { ca } : {}) },
     });
-    if (process.env.VERCEL) attachDatabasePool(this.pool);
     // pg emits idle connection failures outside a query promise. Without a
     // listener, a transient pooler/network outage terminates the Node process.
     this.pool.on("error", () => {

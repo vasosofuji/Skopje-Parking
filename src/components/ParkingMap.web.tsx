@@ -1,4 +1,4 @@
-import { translate } from "../domain/language";
+import { translate, placeName } from "../domain/language";
 import React, { useEffect, useRef, useState } from "react";
 import { parkingSelectionZoom } from "../domain/map-selection-camera";
 import L from "leaflet";
@@ -41,6 +41,9 @@ export default function ParkingMap(props: ParkingMapProps) {
       minZoom: 3,
       zoomSnap: 0.5,
     }).setView([SKOPJE.latitude, SKOPJE.longitude], 15);
+    // Keep broad tariff regions below actual parking footprints, including
+    // when the layer cache recreates a changed region after the footprints.
+    instance.createPane("tariff-regions").style.zIndex = "390";
     const raster = L.tileLayer(
       process.env.EXPO_PUBLIC_TILE_URL ??
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -124,7 +127,7 @@ export default function ParkingMap(props: ParkingMapProps) {
         callbacks.current.onSelect(place, point);
     };
     if (!props.drawing && props.showZones) {
-      for (const place of props.places.filter((p) => p.kind === "zone")) {
+      for (const place of props.places.filter((p) => isPocSector(p))) {
         const selected = place.id === props.selectedId;
         const interactive = canInteractWithZone(place, zoom, props.picking);
         if (place.geometry) {
@@ -133,6 +136,7 @@ export default function ParkingMap(props: ParkingMapProps) {
               ring.map(([lon, lat]) => [lat, lon] as L.LatLngTuple),
             ),
             {
+              pane: "tariff-regions",
               interactive,
               color: selected ? "#962e2b" : "#527FBA",
               weight: selected ? 2.5 : 1,
@@ -150,7 +154,7 @@ export default function ParkingMap(props: ParkingMapProps) {
             })
             );
         }
-        if (zoom >= 17 || selected) {
+        if (zoom >= 14 || selected) {
           const label = document.createElement("span");
           label.textContent = place.zoneCode ?? place.name;
           retain(`zone-label:${place.id}`, [place, selected, interactive], () => L.marker([place.coordinate.latitude, place.coordinate.longitude], {
@@ -159,10 +163,11 @@ export default function ParkingMap(props: ParkingMapProps) {
             icon: L.divIcon({
               className: "zone-label" + (!place.geometry ? " approximate" : ""),
               html: label,
-              iconSize: [44, 24],
+              iconSize: [60, 44],
+              iconAnchor: [30, 22],
             }),
             title: place.name,
-            zIndexOffset: selected ? 1100 : 0,
+            zIndexOffset: selected ? 1100 : -500,
           })
             .on("click", () => select(place))
             );
@@ -177,7 +182,7 @@ export default function ParkingMap(props: ParkingMapProps) {
       bounds.contains([place.coordinate.latitude, place.coordinate.longitude]),
     );
     if (!props.drawing) {
-      for (const place of visible.filter((p) => p.kind !== "zone" && p.geometry && (zoom >= 17 || p.id === props.selectedId))) {
+      for (const place of visible.filter((p) => !isPocSector(p) && (props.showZones || p.kind !== "zone") && p.geometry && (zoom >= 17 || p.id === props.selectedId))) {
         const selected = place.id === props.selectedId;
         retain(`footprint:${place.id}`, [place, selected], () => L.polygon(place.geometry!.coordinates.map((ring) => ring.map(([lon, lat]) => [lat, lon] as L.LatLngTuple)), {
           color: "#962E2B", weight: selected ? 2.5 : 1.5, fillOpacity: selected ? 0.12 : 0.045,
@@ -188,7 +193,7 @@ export default function ParkingMap(props: ParkingMapProps) {
       }
     }
     for (const members of groupParking(
-      props.drawing ? [] : visible,
+      props.drawing ? [] : visible.filter(p => props.showZones || p.kind !== "zone"),
       latitudeStep,
       longitudeStep,
       props.selectedId,
@@ -212,9 +217,7 @@ export default function ParkingMap(props: ParkingMapProps) {
       const title = cluster
         ? members.length +
           (translate(props.language, " parking places", " паркинг локации"))
-        : props.language !== "mk"
-          ? (place.nameEn ?? place.name)
-          : place.name;
+        : placeName(place, props.language);
       retain(`pin:${place.id}`, [place, selected, members.map(member => member.id), appearance], () => L.marker([place.coordinate.latitude, place.coordinate.longitude], {
         autoPanOnFocus: false,
         icon,
@@ -391,12 +394,12 @@ export default function ParkingMap(props: ParkingMapProps) {
   useEffect(() => {
     const instance = map.current;
     if (!instance) return;
-    const key = `${props.destination.latitude},${props.destination.longitude}:${props.cameraRevision ?? 0}`;
+    const key = `${props.destination.latitude},${props.destination.longitude}:${props.cameraRevision ?? 0}:${props.cameraZoom ?? 15}`;
     const selected = props.selectedId && props.selectedAnchor ? `${props.selectedId}:${props.selectedAnchor.latitude},${props.selectedAnchor.longitude}` : "";
     if (key !== destinationKey.current) {
       const initial = !destinationKey.current;
       destinationKey.current = key;
-      moveCamera(instance, [props.destination.latitude, props.destination.longitude], 15, !initial && !props.drawing);
+      moveCamera(instance, [props.destination.latitude, props.destination.longitude], props.cameraZoom ?? 15, !initial && !props.drawing);
     } else if (selected && selected !== selectionKey.current && !props.picking && !props.drawing) {
       const place = props.places.find(place => place.id === props.selectedId);
       moveCamera(instance, [props.selectedAnchor!.latitude, props.selectedAnchor!.longitude], parkingSelectionZoom(instance.getZoom(), Boolean(place && isPocSector(place))), false);
@@ -406,6 +409,7 @@ export default function ParkingMap(props: ParkingMapProps) {
     props.destination.latitude,
     props.destination.longitude,
     props.cameraRevision,
+    props.cameraZoom,
     props.selectedId,
     props.selectedAnchor,
     props.places,

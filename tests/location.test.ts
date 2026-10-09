@@ -310,4 +310,23 @@ test("location rejects stale/invalid readings and prefers a precise fix over rec
   assert.equal(preferFix(fix, { ...fix, accuracy: 5000, timestamp: now + 5000 }), true, "coarse fallback is shown as approximate after at most five seconds");
   assert.equal(preferFix(fix, fix), false, "duplicate cached/watch events do not rerender the marker");
   assert.equal(preferFix(fix, { ...fix, accuracy: 5 }), true, "accuracy improvements with the same timestamp are accepted");
+  // ~1.1 km in 2 s with tight accuracy circles is a multipath jump, not a car.
+  assert.equal(preferFix(fix, { ...fix, latitude: 42.0, accuracy: 10, timestamp: now + 2000 }), false);
+  assert.equal(preferFix(fix, { ...fix, latitude: 42.0, accuracy: 10, timestamp: now + 10000 }), true, "after a gap (tunnel, garage) any fix is accepted");
+  assert.equal(preferFix(fix, { ...fix, latitude: 41.9909, accuracy: 10, speed: 22, timestamp: now + 2000 }), true, "100 m in 2 s at 80 km/h is real driving");
+});
+
+test("Android approximate-only permission is reported so the driver can switch to precise", async () => {
+  const precision: boolean[] = [];
+  const stop = startNativeLocation(nativeAdapter({ permission: async () => ({ granted: true, canAskAgain: true, android: { accuracy: "coarse" } }) }),
+    { onFix: () => {}, onIssue: e => assert.fail(e.code), onPrecision: value => precision.push(value) });
+  await flush();
+  assert.deepEqual(precision, [false]);
+  stop();
+  const precise: boolean[] = [];
+  const again = startNativeLocation(nativeAdapter({ permission: async () => ({ granted: true, canAskAgain: true, android: { accuracy: "fine" } }) }),
+    { onFix: () => {}, onIssue: e => assert.fail(e.code), onPrecision: value => precise.push(value) });
+  await flush();
+  assert.deepEqual(precise, [true]);
+  again();
 });

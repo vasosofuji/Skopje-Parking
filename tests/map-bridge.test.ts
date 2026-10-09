@@ -9,6 +9,7 @@ function bridge(reducedMotion = false) {
   const mapEvents = new Map<string, Callback>(), windowEvents = new Map<string, Callback>();
   const markers: { options: Record<string, unknown>; events: Map<string, Callback> }[] = [];
   const polygons: { options: Record<string, unknown>; events: Map<string, Callback> }[] = [];
+  const panes = new Map<string, { style: { zIndex: string } }>();
   const invalidations: unknown[] = [];
   const transitions: { kind: string; point: number[]; zoom: number; options?: Record<string, unknown> }[] = [];
   let center = [42, 21], zoom = 15, stops = 0;
@@ -26,6 +27,7 @@ function bridge(reducedMotion = false) {
     return { events, on(name: string, fn: Callback) { events.set(name, fn); return this; }, off() {}, addTo() { return this; }, remove() {}, bringToFront() {}, setLatLng() { moves++; return this; }, setRadius() { return this; }, setLatLngs() {}, bindTooltip() { return this; } };
   };
   const map = {
+    createPane(name: string) { const pane = { style: { zIndex: "" } }; panes.set(name, pane); return pane; },
     doubleClickZoom, on(name: string, fn: Callback) { mapEvents.set(name, fn); return this; },
     stop() { stops++; const moving = Boolean(flight); flight = null; if (moving) mapEvents.get("moveend")?.(); return this; },
     setView(point: number[], nextZoom: number, options?: Record<string, unknown>) { transitions.push({ kind: "setView", point, zoom: nextZoom, options }); mapEvents.get("movestart")?.(); center = point; zoom = nextZoom; mapEvents.get("moveend")?.(); return this; },
@@ -41,7 +43,7 @@ function bridge(reducedMotion = false) {
   const document = { getElementById: () => ({ classList: { toggle() {} } }), createElement: () => ({ textContent: "", style: { cssText: "" } }) };
   const script = mapHtml.split("</script><script>")[1].split("</script>")[0];
   vm.runInNewContext(script, { window, document, L });
-  return { window, messages, markers, polygons, mapEvents, windowEvents, invalidations, doubleClickZoom, transitions,
+  return { window, messages, markers, polygons, panes, mapEvents, windowEvents, invalidations, doubleClickZoom, transitions,
     setZoom(value: number) { zoom = value; mapEvents.get("zoomend")?.(); },
     finishFlight() { assert.ok(flight); center = flight.point; zoom = flight.zoom; flight = null; mapEvents.get("moveend")?.(); },
     motion(value: boolean) { motion.matches = value; motionChanged?.({ matches: value }); },
@@ -128,6 +130,25 @@ test("POC bridge selection centers with a slight zoom and does not replay on ref
   assert.equal(view.transitions.at(-1)?.zoom, 18);
 });
 
+test("Near me bridge uses absolute street zoom on every request and restores it after manual zoom", () => {
+  const view = bridge();
+  const nearby = { ...payload, selectedId: null, selectedAnchor: null, destination: [42.015, 21.435], cameraZoom: 18, cameraRevision: 1 };
+  view.window.renderParking(nearby);
+  assert.equal(view.transitions.at(-1)?.zoom, 18);
+  assert.deepEqual(view.transitions.at(-1)?.point, nearby.destination);
+  view.setZoom(12);
+  view.window.renderParking({ ...nearby, cameraRevision: 2 });
+  assert.equal(view.transitions.at(-1)?.zoom, 18);
+  view.finishFlight();
+  view.setZoom(19);
+  view.window.renderParking({ ...nearby, cameraRevision: 3 });
+  assert.equal(view.transitions.at(-1)?.zoom, 18);
+  const count = view.transitions.length;
+  view.window.renderParking({ ...nearby, cameraRevision: 3, dark: true });
+  view.window.updateUserLocation([42.016, 21.436], 5);
+  assert.equal(view.transitions.length, count, "routine GPS and appearance updates do not repeat the close-up");
+});
+
 test("reduced motion uses immediate camera movement and entering drawing cancels a pending flight", () => {
   const view = bridge();
   view.window.renderParking({ ...payload, selectedId: null, selectedAnchor: null });
@@ -176,7 +197,7 @@ test("native map reuses unchanged marker instances while current interaction fla
   assert.equal(view.markers.length, count + 1, "report expiry/appearance changes replace only that marker");
 });
 
-test("POC bridge boundaries and labels keep visible but lose taps at zoom16, including stale handlers", () => {
+test("POC bridge boundaries and 44px labels stay tappable at street zoom", () => {
   const view = bridge();
   const sector = { id: "poc:zone:1:0", pocSector: true, rings: [[[42, 21], [42, 21.1], [42.1, 21]]], point: [42, 21], title: "POC", label: "POC 1" };
   const next = { ...payload, selectedId: null, selectedAnchor: null, zones: [sector], zoneLabels: [sector] };
@@ -185,14 +206,28 @@ test("POC bridge boundaries and labels keep visible but lose taps at zoom16, inc
   assert.equal(oldPolygon.options.interactive, true);
   view.setZoom(16);
   oldPolygon.events.get("click")?.({ latlng: { lat: 42, lng: 21 } }); oldLabel.events.get("click")?.();
-  assert.equal(view.messages.filter(message => message.type === "select").length, 0, "live zoom blocks retained handlers before React returns its payload");
+  assert.equal(view.messages.filter(message => message.type === "select").length, 2, "tiny tariff areas remain selectable at street zoom");
   view.window.renderParking(next);
-  assert.equal(view.polygons.at(-1)!.options.interactive, false);
-  assert.equal(view.markers.filter(marker => marker.options.title === "POC").at(-1)!.options.interactive, false);
+  assert.equal(view.polygons.at(-1)!.options.interactive, true);
+  assert.equal(view.markers.filter(marker => marker.options.title === "POC").at(-1)!.options.interactive, true);
   view.markers.find(marker => marker.options.title === "Parking")!.events.get("click")?.();
-  assert.equal(view.messages.filter(message => message.type === "select").length, 1, "actual parking pins still work");
+  assert.equal(view.messages.filter(message => message.type === "select").length, 3, "actual parking pins still work");
   view.window.renderParking({ ...next, picking: true });
   assert.equal(view.polygons.at(-1)!.options.interactive, true);
   view.polygons.at(-1)!.events.get("click")?.({ latlng: { lat: 42, lng: 21 } });
   assert.equal(view.messages.at(-1)!.type, "pick");
+});
+
+
+test("tariff region redraws cannot cover parking footprint tap targets", () => {
+  const view = bridge();
+  const area = { id: "parking", rings: [[[42,21],[42,21.1],[42.1,21]]] };
+  const zone = { ...area, id: "tariff", pocSector: true };
+  const next = { ...payload, footprints: [area], zones: [zone] };
+  view.window.renderParking(next);
+  view.window.renderParking({ ...next, zones: [{ ...zone, rings: [[[42,21],[42,21.2],[42.2,21]]] }] });
+  const footprint = view.polygons[0], tariffs = view.polygons.slice(1);
+  assert.equal(footprint.options.pane, undefined, "footprints retain Leaflet's default overlay pane at z-index400");
+  assert.ok(tariffs.every(polygon => polygon.options.pane === "tariff-regions"));
+  assert.equal(view.panes.get("tariff-regions")?.style.zIndex, "390", "tariffs remain below footprints regardless of redraw order");
 });

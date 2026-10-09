@@ -14,16 +14,19 @@ import type { Coordinate, Geometry, ParkingKind, ParkingPlace, PaymentSchedule }
 import { createEntryDraftStore, entryDraftKey, readEntryDraft, type EntryDraft, type EntryOperation, type EntryStep } from "../services/entryDrafts";
 import { api } from "../services/api";
 import { useContributionFeedback } from "../state/ContributionFeedback";
+import { usePriceCheck } from "../hooks/usePriceCheck";
 
 type Props = {
-  place?: ParkingPlace; existingPlaceId?: string; coordinate: Coordinate; geometry?: Geometry; returnedGeometry?: Geometry; initialZone?: string; kind?: ParkingKind;
+  place?: ParkingPlace; existingPlaceId?: string; coordinate: Coordinate;
+  /** Stable draft identity for a new parking, so creating it mid-entry does not restart the wizard. */
+  entryKey?: string; geometry?: Geometry; returnedGeometry?: Geometry; initialZone?: string; kind?: ParkingKind;
   initialStep?: "spaces";
   onSaved?: (id: string) => void; onDone: () => void; onDrawBoundary?: (geometry?: Geometry) => void; onBack?: () => void;
 };
 export default function ManualParkingWizard(props: Props) {
   const { profile } = useAccount(), { t } = useParking();
   const accountId = profile?.id ?? "signed-out";
-  const target = props.place?.id ?? props.existingPlaceId ?? `${props.kind ?? "surface"}:${props.coordinate.latitude.toFixed(6)}:${props.coordinate.longitude.toFixed(6)}`;
+  const target = props.entryKey ?? props.place?.id ?? props.existingPlaceId ?? `${props.kind ?? "surface"}:${props.coordinate.latitude.toFixed(6)}:${props.coordinate.longitude.toFixed(6)}`;
   const draftKey = entryDraftKey(accountId, target);
   const [loaded, setLoaded] = useState<{ key: string; value: EntryDraft | null } | null>(null);
   useEffect(() => { let active = true; void readEntryDraft(draftKey).then(value => { if (active) setLoaded({ key: draftKey, value }); }); return () => { active = false; }; }, [draftKey]);
@@ -33,6 +36,7 @@ export default function ManualParkingWizard(props: Props) {
 function WizardBody({ place, existingPlaceId, coordinate, geometry, returnedGeometry, initialZone, kind = "surface", initialStep, onSaved, onDone, onDrawBoundary, onBack, restored, draftKey, accountId }: Props & { restored: EntryDraft | null; draftKey: string; accountId: string }) {
   const { t, refresh } = useParking(), { colors } = useTheme(), s = styles(colors);
   const { thankYou } = useContributionFeedback();
+  const checkPrice = usePriceCheck(t);
   const initialPrice = place ? parkingPrice(place) : null;
   const [step, setStep] = useState<EntryStep>(restored?.detailed && restored.step !== "choose" ? "details" : restored?.step ?? (initialStep ? "details" : "choose")), [detailed, setDetailed] = useState(restored?.detailed ?? Boolean(initialStep));
   const [expanded, setExpanded] = useState<EntryStep | null>(null);
@@ -121,6 +125,7 @@ function WizardBody({ place, existingPlaceId, coordinate, geometry, returnedGeom
       if (normalized) operations.push({ type: "label", code: normalized });
       section = "price";
       const price = priceInput(first, next);
+      if (price && !checkPrice([price.first, price.next], (warning: string) => { setExpanded("price"); setMessage(warning); })) return;
       if (price) operations.push({ type: "price", ...price });
       section = "schedule";
       const chargingHours = schedule.chargingHours?.trim() || null;
@@ -169,7 +174,7 @@ function WizardBody({ place, existingPlaceId, coordinate, geometry, returnedGeom
     } else if (step === "price") {
       try {
         const value = manualPriceInput(first, next);
-        void save({ type: "price", ...value }, detailed ? "schedule" : "done");
+        if (checkPrice([value.first, value.next], setMessage)) void save({ type: "price", ...value }, detailed ? "schedule" : "done");
       } catch { setMessage(t("Enter a first-hour price from 0 to 10,000 MKD, or choose It's free.", "Внесете цена за прв час од 0 до 10.000 денари или изберете Бесплатно е.")); }
     } else if (step === "schedule") {
       void save({ type: "schedule", value: { ...schedule, chargingHours: schedule.chargingHours?.trim() || null } }, kind === "zone" ? "perimeter" : "spaces");

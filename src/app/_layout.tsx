@@ -62,6 +62,7 @@ function Navigator() {
         </Stack.Protected>
         <Stack.Screen name="terms" />
         <Stack.Screen name="privacy" />
+        <Stack.Screen name="delete-account" />
       </Stack>
       <LicensePlatePrompt />
       </LicensePlateProvider>

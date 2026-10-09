@@ -16,7 +16,8 @@ test("a label from OSM or an availability report alone cannot erase the needs-re
   for (const place of [parking, { ...parking, zoneCode: "A1" }, { ...parking, zoneCode: "", zoneCodeEvidence: "community" as const }, { ...parking, availability: available }]) {
     const marker = parkingMarker(place, 1, now);
     assert.equal(marker.fill, MARKER_COLORS.needsInfo);
-    assert.equal(marker.label, "?");
+    assert.equal(marker.label, "P");
+    assert.match(parkingMarkerHtml(marker), /parking-review-badge/);
     assert.equal(marker.needsInfo, true);
   }
   const spaces = parkingMarker({ ...parking, availability: available }, 1, now);
@@ -59,7 +60,7 @@ test("free pricing remains separate from free spaces, full reports and cosmetic 
 
 test("a confirmed MKD sign can show free parking; an extraction draft cannot", () => {
   const info: SignInfo = { isParkingSign: true, confidence: 1, zoneCode: null, operator: null, currency: "MKD", firstHour: 0, nextHour: 0, maxStayMinutes: null, chargingHours: null, paymentInstructions: null, restrictions: null, rawText: "Бесплатно" };
-  const signInfo = { ...info, photoId: "one", model: "manual", observedAt: new Date(now).toISOString() };
+  const signInfo = { ...info, readingId: "one", model: "manual", observedAt: new Date(now).toISOString() };
   assert.equal(parkingMarker({ ...parking, signInfo }, 1, now).freeOfCharge, false);
   const marker = parkingMarker({ ...parking, signInfo: { ...signInfo, confirmedAt: new Date(now).toISOString() } }, 1, now);
   assert.equal(marker.freeOfCharge, true); assert.equal(marker.needsInfo, false);
@@ -97,4 +98,23 @@ test("polygon presses do not become blank taps on Android or Apple Maps, while l
   taps.record(point); clock += 401; assert.equal(taps.consume(undefined, point), false);
   taps.record(point); assert.equal(taps.consume(undefined, { ...point, latitude: 42.01 }), false);
   assert.equal(taps.consume("marker-press", point), true);
+});
+
+test("type marks remain identifiable even when unreviewed, full, free or available", () => {
+  for (const [kind, label] of Object.entries({surface: "P", garage: "G", underground: "U", street: "S", zone: "Z"})) {
+    const place = { ...parking, kind: kind as ParkingPlace["kind"] };
+    assert.equal(parkingMarker(place, 1, now).label, label);
+    assert.equal(parkingMarker({ ...place, verification: "official" }, 1, now).label, label);
+    assert.equal(parkingMarker({ ...place, verification: "official", availability: { ...available, status: "full" } }, 1, now).label, label);
+  }
+});
+test("named local zones join regular parking clusters from overview zoom", () => {
+  const named = { ...parking, id: "poc:parking:C2", kind: "zone" as const, zoneCode: "C2", operator: "poc", verification: "official" as const };
+  const tariff = { ...named, id: "poc:zone:1:0", zoneCode: "POC 1" };
+  for (const filtered of [false, true]) {
+    const groups = groupParking([named, parking, tariff], 1, 1, null, now, filtered);
+    assert.equal(groups.flat().length, 2);
+    assert.ok(groups.flat().some(place => place.id === named.id));
+    assert.equal(groupParking([named, parking], 1, 1, named.id, now, filtered).length, 2);
+  }
 });

@@ -1,4 +1,5 @@
 import { useTheme, type ThemeColors } from "../state/ThemeContext";
+import { placeName } from "../domain/language";
 import React, { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { ParkingPlace } from "../domain/types";
@@ -35,7 +36,7 @@ export default function ParkingRow({
   }[available.status] + (reportedAt ? ` · ${t("Reported at", "Пријавено во")} ${reportedAt}` : "");
   const handlePress = useCallback(() => onPress(place), [onPress, place]);
   const displayCost = cost;
-  const name = language !== "mk" ? (place.nameEn ?? place.name) : place.name;
+  const name = placeName(place, language);
   return (
     <Pressable
       accessibilityRole="button"

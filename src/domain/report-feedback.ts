@@ -1,11 +1,13 @@
 import type { Availability, ParkingPlace, SignInfo } from "./types";
 import { currentAvailability, parkingPrice } from "./parking";
 import type { Language } from "./language";
+import { isPocSector } from "./zone-interaction";
 
-/** A zero tariff is known pricing, just like a paid tariff or confirmed report. */
+/** A zero tariff is known pricing, just like a paid tariff or confirmed report.
+ * Tariff zones never take availability reports (the API rejects them), only a missing price. */
 export function arrivalQuestion(place: ParkingPlace | null | undefined, followup = false, now = Date.now()): "availability" | "price" | null {
   if (!place) return null;
-  if (followup || place.kind === "zone") return parkingPrice(place, now) ? null : "price";
+  if (followup || place.kind === "zone" || isPocSector(place)) return parkingPrice(place, now) ? null : "price";
   return "availability";
 }
 

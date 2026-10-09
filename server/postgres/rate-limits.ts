@@ -15,6 +15,14 @@ export class SharedRequestBudget {
       RETURNING count,expires
     `).get(tokenHash(`${scope}:${identity}`), now + windowMs, now, now) as { count: number; expires: number };
   }
+  /** The current count without adding to it. */
+  async peek(scope: string, identity: string) {
+    const row = await this.db.prepare("SELECT count FROM request_limits WHERE key=? AND expires>?").get(tokenHash(`${scope}:${identity}`), Date.now()) as { count: number } | undefined;
+    return row?.count ?? 0;
+  }
+  async reset(scope: string, identity: string) {
+    await this.db.prepare("DELETE FROM request_limits WHERE key=?").run(tokenHash(`${scope}:${identity}`));
+  }
   async consume(scope: string, identity: string, maximum: number, windowMs: number) {
     if ((await this.increment(scope, identity, windowMs)).count > maximum)
       throw accountError("Too many requests. Please try again later.", 429);

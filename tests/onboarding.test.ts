@@ -24,15 +24,22 @@ test("cached profiles with stale Terms cannot enter the app before renewing cons
   assert.equal(hasCurrentTerms({ termsVersion: TERMS_VERSION }), true);
 });
 
-test("no guest, registration, or login request occurs before explicit Terms acceptance", async () => {
+test("guest and registration require explicit Terms acceptance", async () => {
   const actions = accountActions();
   const choices: OnboardingIntent[] = [
     { mode: "guest" },
     { mode: "create", username: "driver", password: "Safe sample 123" },
-    { mode: "login", username: "driver", password: "Safe sample 123" },
   ];
   for (const choice of choices) await assert.rejects(completeOnboarding(choice, false, actions), /Terms/);
   assert.deepEqual(actions.calls, []);
+});
+
+test("returning users sign in without repeating or silently renewing consent", async () => {
+  const actions = accountActions();
+  await completeOnboarding({ mode: "login", username: "driver", password: "Safe sample 123" }, false, actions);
+  assert.deepEqual(actions.calls, [["login", "driver", "Safe sample 123", false]]);
+  assert.equal(hasCurrentTerms({ termsVersion: TERMS_VERSION }), true);
+  assert.equal(hasCurrentTerms({ termsVersion: "old" }), false);
 });
 
 test("guest entry needs no invented username or password", async () => {

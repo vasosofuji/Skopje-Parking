@@ -1,9 +1,13 @@
 {
   "repository": "https://github.com/vasosofuji/Parkino",
-  "apiUrl": "https://parkino-api.onrender.com",
-  "renderServiceId": "srv-dav6pvh42hec73d7lpj0",
-  "region": "frankfurt",
-  "plan": "free",
+  "apiUrl": "https://parkino-api-vaso.vercel.app",
+  "appUrl": "https://parking.vasojevich.com/",
+  "hosting": "vercel",
+  "vercelProjectId": "prj_e94oeOx2TD2GL0lk8w6C0RMuhMjb",
+  "vercelTeamId": "team_tWqarWdMCwnPUxNed3wlemjG",
+  "region": "fra1",
+  "plan": "hobby",
+  "legacyApiUrl": "https://parkino-api.onrender.com",
   "expoProjectId": "1db9c740-4542-43bb-8c08-b919e51febdf",
   "apkBuildUrl": "https://expo.dev/accounts/parkino/projects/parkskopje/builds/8e654116-b593-40cd-9ec0-0d8ceba82fda"
 }

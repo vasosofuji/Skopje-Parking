@@ -97,8 +97,9 @@ export function rankParking(
     .filter(p => sort !== "cheapest" || p.access === "public")
     .map(place => {
       const price = parkingPrice(place, now);
-      // Undated legacy tariffs and AI readings are not comparable evidence.
-      const comparable = price?.evidence === "official" ||
+      // Undated legacy tariffs and unconfirmed AI readings are not comparable evidence;
+      // a sign price only exists once its uploader confirmed the reading.
+      const comparable = price?.evidence === "official" || price?.evidence === "sign" ||
         (price?.evidence === "community" && "observedAt" in price);
       const cost = comparable && price ? estimateCost({
         ...price,
@@ -138,6 +139,17 @@ export function normalizeZoneCode(value: string) {
     .replace(/[АВБСЦД]/g, (c) => letters[c])
     .replace(/\s+/g, "");
 }
+// Drivers type Macedonian in Cyrillic or Latin, with or without diacritics or digraphs
+// ("Плоштад", "Ploštad", "ploshtad", "plostad"). Compare everything as a loose Latin skeleton.
+const CYRILLIC: Record<string, string> = {
+  а: "a", б: "b", в: "v", г: "g", д: "d", ѓ: "g", е: "e", ж: "z", з: "z", ѕ: "z", и: "i", ј: "j", к: "k",
+  л: "l", љ: "l", м: "m", н: "n", њ: "n", о: "o", п: "p", р: "r", с: "s", т: "t", ќ: "k", у: "u", ф: "f",
+  х: "h", ц: "c", ч: "c", џ: "z", ш: "s",
+};
 export function searchText(value: string) {
-  return value.toLocaleLowerCase().normalize("NFKD").replace(/\p{M}/gu, "");
+  return value.toLocaleLowerCase()
+    .replace(/[а-шѓѕјљњќџ]/g, (c) => CYRILLIC[c] ?? c)
+    .normalize("NFKD").replace(/\p{M}/gu, "")
+    .replace(/ı/g, "i").replace(/đ/g, "dj")
+    .replace(/dz|dj|zh/g, "z").replace(/sh/g, "s").replace(/ch|tsh/g, "c").replace(/([gkln])j/g, "$1");
 }

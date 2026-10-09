@@ -6,17 +6,24 @@ export const AUTH_SESSION_MS = 90 * 24 * 60 * 60 * 1000;
 export function accountError(message: string, statusCode = 400) {
   return Object.assign(new Error(message), { statusCode });
 }
-// Reject excess work before it can queue unbounded memory-heavy scrypt jobs.
+// Run a few memory-heavy scrypt jobs at once. A short bounded queue absorbs sign-up bursts;
+// waiting jobs hold no scrypt memory, and work beyond the queue is rejected.
 export class PasswordWorkLimiter {
   private active = 0;
-  constructor(private maximum = 4) {}
+  private waiting: (() => void)[] = [];
+  constructor(private maximum = 4, private queueLimit = 0) {}
   async run<T>(work: () => Promise<T>): Promise<T> {
-    if (this.active >= this.maximum) throw accountError("Authentication is busy. Try again shortly.", 429);
-    this.active++;
-    try { return await work(); } finally { this.active--; }
+    if (this.active < this.maximum) this.active++;
+    else if (this.waiting.length < this.queueLimit) await new Promise<void>(resolve => this.waiting.push(resolve));
+    else throw accountError("Authentication is busy. Try again shortly.", 429);
+    try { return await work(); } finally {
+      // Hand the slot straight to the next waiter so a new arrival cannot overtake it.
+      const next = this.waiting.shift();
+      if (next) next(); else this.active--;
+    }
   }
 }
-const passwordWork = new PasswordWorkLimiter();
+const passwordWork = new PasswordWorkLimiter(4, 64);
 
 // Process-local protection. Multiple API processes require a shared limiter store.
 export class RequestBudget {

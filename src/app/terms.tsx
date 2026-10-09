@@ -22,7 +22,7 @@ export default function Terms() {
         }}
       >
         <Text style={{ color: colors.muted }}>
-          {t("Demo terms", "Услови за демо")} · {TERMS_VERSION}
+          {t("Version", "Верзија")} · {TERMS_VERSION}
         </Text>
         {paragraphs.map((p, i) => (
           <Text

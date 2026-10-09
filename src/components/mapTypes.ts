@@ -1,14 +1,19 @@
 import type { Coordinate, ParkingPlace } from "../domain/types";
+import type { Language } from "../domain/language";
 export type ParkingMapProps = {
+  now: number;
   places: ParkingPlace[];
+  filtered?: boolean;
   selectedId: string | null;
   selectedAnchor?: Coordinate | null;
   onSelectedPosition?: (point: { x: number; y: number } | null) => void;
   onCenterChange?: (coordinate: Coordinate) => void;
   onBlankPress?: () => void;
+  isInteractionCurrent?: (sentAt: number) => boolean;
   selectionEnabled?: boolean;
   destination: Coordinate;
   cameraRevision?: number;
+  cameraZoom?: number;
   destinationMarker?: Coordinate | null;
   userLocation: Coordinate | null;
   userAccuracy?: number | null;
@@ -20,7 +25,7 @@ export type ParkingMapProps = {
   showZones: boolean;
   onSelect: (place: ParkingPlace, coordinate?: Coordinate) => void;
   onPick: (coordinate: Coordinate) => void;
-  language: "mk" | "en";
+  language: Language;
   dark?: boolean;
   draftCoordinates?: Coordinate[];
 };

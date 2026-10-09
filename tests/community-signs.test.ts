@@ -6,11 +6,6 @@ import { join } from "node:path";
 import { ParkingStore } from "../server/store";
 import { CommunityStore } from "../server/community";
 import { buildApp } from "../server/app";
-import {
-  DEFAULT_GEMINI_MODELS,
-  SignExtractor,
-  SignWorker,
-} from "../server/sign-ai";
 import { parkingPrice } from "../src/domain/parking";
 import { validZone, zoneGeometry } from "../src/domain/geometry";
 import type { Catalog, Contribution, SignInfo } from "../src/domain/types";
@@ -56,7 +51,7 @@ const info: SignInfo = {
   restrictions: null,
   rawText: "B2 40 ден/час",
 };
-test("drawn zones, free prices, labels, photos and queued jobs survive database restart", async () => {
+test("drawn zones, free prices, labels and confirmed sign details survive database restart", async () => {
   const directory = mkdtempSync(join(tmpdir(), "parking-db-")),
     file = join(directory, "parking.sqlite");
   let store = new ParkingStore(file, catalog),
@@ -100,60 +95,29 @@ test("drawn zones, free prices, labels, photos and queued jobs survive database 
       ).statusCode,
       200,
     );
-    const upload = await app.inject({
-      method: "POST",
-      url: `/v1/places/${id}/signs`,
-      headers,
-      payload: photo,
-    });
-    assert.equal(upload.statusCode, 201, upload.body);
-    const signId = upload.json().id;
-    assert.equal(
-      (
-        await app.inject({
-          method: "POST",
-          url: `/v1/places/${id}/signs`,
-          headers,
-          payload: photo,
-        })
-      ).json().id,
-      signId,
-    );
+    const sign = await app.inject({ method: "POST", url: `/v1/places/${id}/signs`, headers, payload: { info, model: "ocr:mlkit-text-v2" } });
+    assert.equal(sign.statusCode, 201, sign.body);
     await app.close();
     store = new ParkingStore(file, catalog);
     app = await buildApp(catalog, store);
     const saved = (await app.inject("/v1/catalog")).json().places[0];
     assert.equal(saved.zoneCode, "D42");
     assert.equal(saved.communityPrice.firstHour, 0);
-    assert.equal(saved.photoCount, 1);
+    assert.equal(saved.signReadingCount, 1);
     assert.deepEqual(saved.geometry, moved, "another user's boundary edit survives restart and is public");
-    const image = await app.inject(`/v1/signs/${signId}/image`);
-    assert.equal(image.headers["content-type"], "image/png");
-    assert.deepEqual(image.rawPayload, Buffer.from(photo.base64, "base64"));
-    const community = new CommunityStore(store),
-      job = community.claim();
-    assert.equal(job?.id, signId);
-    assert.equal(community.claim(), undefined);
-    community.finish(signId, info, "gemini-3.8-flash");
-    assert.equal(community.enrich(store.places())[0].signInfo, undefined, "AI output stays a draft until confirmed");
-    community.confirmSign(signId, token, info);
-    const updated = community.enrich(store.places())[0];
-    assert.equal(updated.signInfo?.chargingHours, info.chargingHours);
-    assert.equal(updated.zoneCode, "D42");
-    assert.equal(
-      parkingPrice(updated)?.firstHour,
-      0,
-      "human price takes precedence",
-    );
+    assert.equal(saved.signInfo?.chargingHours, info.chargingHours, "confirmed details are the public sign at once");
+    assert.equal(parkingPrice(saved)?.firstHour, 0, "human price takes precedence");
+    assert.equal((await app.inject(`/v1/signs/${sign.json().id}/image`)).statusCode, 404, "no photo is stored or served");
     await app.inject({ method: "DELETE", url: "/v1/sessions/me", headers });
-    assert.equal(community.photos(id).length, 0);
-    assert.equal(community.enrich(store.places())[0].zoneCode, "B2");
+    const after = (await new CommunityStore(store).enrich(store.places()))[0];
+    assert.equal(after.signInfo, undefined, "deleting the account deletes its sign details");
+    assert.equal(after.zoneCode, "B2");
   } finally {
     await app.close();
     rmSync(directory, { recursive: true, force: true });
   }
 });
-test("contributions reject bad geometry, unauthenticated writes and invalid photos", async () => {
+test("contributions reject bad geometry, unauthenticated writes and any uploaded photo", async () => {
   const store = new ParkingStore(":memory:", catalog),
     app = await buildApp(catalog, store),
     token = store.createSession().token,
@@ -212,94 +176,18 @@ test("contributions reject bad geometry, unauthenticated writes and invalid phot
           method: "POST",
           url: `/v1/places/${id}/signs`,
           headers,
-          payload: {
-            ...photo,
-            base64: Buffer.from("not a real photo".repeat(10)).toString(
-              "base64",
-            ),
-          },
+          payload: { info, base64: photo.base64 },
         })
       ).statusCode,
       400,
+      "sign photos are never uploaded",
     );
-    assert.equal(
-      (
-        await app.inject({
-          method: "POST",
-          url: `/v1/places/${id}/signs`,
-          payload: photo,
-        })
-      ).statusCode,
-      401,
-    );
-    assert.equal(
-      (
-        await app.inject({
-          method: "POST",
-          url: `/v1/places/${id}/signs`,
-          headers,
-          payload: { ...photo, base64: "a".repeat(3 * 1024 * 1024) },
-        })
-      ).statusCode,
-      413,
-    );
+    assert.equal((await app.inject({ method: "POST", url: `/v1/places/${id}/signs`, payload: { info } })).statusCode, 401);
+    assert.equal((await app.inject({ method: "POST", url: `/v1/places/${id}/signs`, headers, payload: { info: { ...info, rawText: "x".repeat(70000) } } })).statusCode, 413);
   } finally {
     await app.close();
   }
 });
-test("Gemini fallback preserves exact model order, validates JSON and stops on success", async () => {
-  const calls: string[] = [];
-  const fetcher: typeof fetch = async (url, init) => {
-    assert.equal(String(url), "https://generativelanguage.googleapis.com/v1beta/interactions");
-    const body = JSON.parse(String(init?.body));
-    calls.push(body.model);
-    assert.equal(body.store, false);
-    assert.ok(init?.signal);
-    assert.ok(!String(url).includes("secret"));
-    if (calls.length === 1) return new Response("", { status: 503 });
-    if (calls.length === 2)
-      return new Response("", {
-        status: 429,
-        headers: { "Retry-After": "60" },
-      });
-    if (calls.length === 3) return Response.json({ output_text: "not json" });
-    return Response.json({
-      status: "completed",
-      steps: [
-        {
-          type: "model_output",
-          content: [{ type: "text", text: JSON.stringify(info) }],
-        },
-      ],
-    });
-  };
-  const extractor = new SignExtractor({
-    geminiKey: "secret",
-    fetcher,
-  });
-  const result = await extractor.extract(
-    Buffer.from(photo.base64, "base64"),
-    photo.mimeType,
-  );
-  assert.deepEqual(calls, DEFAULT_GEMINI_MODELS);
-  assert.deepEqual(result.info, info);
-  await extractor.extract(Buffer.from(photo.base64, "base64"), photo.mimeType);
-  assert.equal(calls.length, 5, "failed models are skipped during cooldown");
-});
-
-test("exhausted Gemini models fail cleanly without contacting another provider", async () => {
-  const calls: string[] = [];
-  const extractor = new SignExtractor({ geminiKey: "key", fetcher: async (url, init) => {
-    assert.equal(new URL(String(url)).hostname, "generativelanguage.googleapis.com");
-    calls.push(JSON.parse(String(init?.body)).model);
-    return Response.json({ output_text: JSON.stringify({ ...info, firstHour: -1 }) });
-  } });
-  await assert.rejects(extractor.extract(new Uint8Array(), "image/png"));
-  assert.deepEqual(calls, DEFAULT_GEMINI_MODELS);
-  await assert.rejects(extractor.extract(new Uint8Array(), "image/png"));
-  assert.equal(calls.length, 4, "cooldown prevents repeated failed requests");
-});
-
 test("demo trusts a new contributor immediately; the latest human reports become public", async () => {
   let now = Date.now();
   const store = new ParkingStore(":memory:", catalog, () => now, true);
@@ -322,93 +210,6 @@ test("demo trusts a new contributor immediately; the latest human reports become
     assert.equal((await app.inject("/v1/catalog")).json().places.length, 1);
   } finally { await app.close(); }
 });
-test("successful Gemini extraction stops fallback and timeouts advance without waiting indefinitely", async () => {
-  const calls: string[] = [];
-  const extractor = new SignExtractor({
-    geminiKey: "key",
-    timeoutMs: 20,
-    fetcher: async (_url, init) => {
-      calls.push(JSON.parse(String(init?.body)).model);
-      if (calls.length === 1)
-        await new Promise((_resolve, reject) => {
-          init!.signal!.addEventListener("abort", () =>
-            reject(new Error("timeout")),
-          );
-        });
-      return Response.json({
-        status: "completed",
-        steps: [
-          {
-            type: "model_output",
-            content: [{ type: "text", text: JSON.stringify(info) }],
-          },
-        ],
-      });
-    },
-  });
-  // Keep node alive while AbortSignal's unreferenced timer fires.
-  const keepAlive = setTimeout(() => {}, 1000);
-  try {
-    const result = await extractor.extract(new Uint8Array(), "image/png");
-    assert.equal(result.model, "gemini-3.7-flash");
-    assert.deepEqual(calls, DEFAULT_GEMINI_MODELS.slice(0, 2));
-  } finally {
-    clearTimeout(keepAlive);
-  }
-});
-test("invalid Gemini key skips its remaining models; missing keys defer durable jobs", async () => {
-  const calls: string[] = [];
-  const extractor = new SignExtractor({
-    geminiKey: "bad",
-    fetcher: async (url, init) => {
-      calls.push(JSON.parse(String(init?.body)).model);
-      return String(url).includes("googleapis")
-        ? new Response("", { status: 401 })
-        : Response.json({ output_text: JSON.stringify(info) });
-    },
-  });
-  await assert.rejects(extractor.extract(new Uint8Array(), "image/png"));
-  await assert.rejects(extractor.extract(new Uint8Array(), "image/png"));
-  assert.deepEqual(calls, ["gemini-3.8-flash"]);
-  const store = new ParkingStore(":memory:", catalog),
-    community = new CommunityStore(store),
-    token = store.createSession().token;
-  const place = community.contribute(
-      { ...contribution, firstHour: null, nextHour: null },
-      token,
-    ),
-    uploaded = community.upload(place.id, token, photo),
-    worker = new SignWorker(community, new SignExtractor());
-  worker.start();
-  await worker.stop();
-  assert.equal(community.photo(uploaded.id).status, "waiting");
-  assert.equal(community.claim(), undefined);
-  community.finish(
-    uploaded.id,
-    { ...info, confidence: 0.5 },
-    "gemini-3.8-flash",
-  );
-  assert.equal(community.photo(uploaded.id).status, "review");
-  assert.equal(community.enrich(store.places())[0].signInfo, undefined);
-  community.finish(uploaded.id, info, "gemini-3.8-flash");
-  assert.equal(parkingPrice(community.enrich(store.places())[0]), null);
-  community.confirmSign(uploaded.id, token, info);
-  assert.equal(
-    parkingPrice(community.enrich(store.places())[0])?.firstHour,
-    40,
-  );
-  community.finish(
-    uploaded.id,
-    { ...info, currency: "EUR" },
-    "gemini-3.8-flash",
-  );
-  assert.equal(parkingPrice(community.enrich(store.places())[0])?.firstHour, 40, "late AI cannot overwrite human confirmation");
-  community.confirmSign(uploaded.id, token, {...info,currency:"EUR"});
-  assert.equal(parkingPrice(community.enrich(store.places())[0]), null);
-  store.close();
-});
-
-
 test("parking perimeters support detailed outlines while rejecting excessive vertices", () => {
   const outline = (count: number) => zoneGeometry(Array.from({ length: count }, (_, i) => ({
     latitude: 41.996 + 0.001 * Math.sin(i * Math.PI * 2 / count),
@@ -418,3 +219,4 @@ test("parking perimeters support detailed outlines while rejecting excessive ver
   assert.equal(validZone(outline(256)), true);
   assert.equal(validZone(outline(257)), false);
 });
+

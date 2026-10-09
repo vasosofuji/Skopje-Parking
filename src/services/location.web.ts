@@ -14,3 +14,6 @@ export async function watchLocation(
     typeof window === "undefined" || window.isSecureContext,
   );
 }
+
+/** Browsers have no approximate-only permission to upgrade. */
+export const requestPreciseLocation = async () => true;

@@ -112,6 +112,15 @@ export default function Coverage() {
               onPress={() => router.push("/privacy")}
             />
             <Text style={s.sectionTitle}>
+              {t("SMS payment rules", "Правила за SMS плаќање")}
+            </Text>
+            <Note>
+              {t(
+                "Parkino is an independent community app, not affiliated with the City of Skopje, JP Gradski Parking or JP Parkinzi na Opshtina Centar. SMS numbers and messages follow the operators’ published instructions, checked on 8 October 2026: Gradski Parking zones 144144 with “ZONE PLATE”, ended with S; POC zones 141414 with “zone PLATE hours”. Paying hours follow Gradski Parking’s published timetables; Sundays and public holidays are free except at Sredno Vodno. The sign at your car always takes priority.",
+                "Parkino е независна апликација на заедницата, не е поврзана со Град Скопје, ЈП Градски паркинг или ЈП Паркинзи на Општина Центар. SMS броевите и пораките ги следат објавените упатства на операторите, проверени на 8 октомври 2026: зоните на Градски паркинг 144144 со „ЗОНА ТАБЛИЧКА“, крај со S; зоните на ПОЦ 141414 со „зона ТАБЛИЧКА часови“. Часовите за плаќање ги следат објавените распореди на Градски паркинг; неделите и државните празници се бесплатни, освен на Средно Водно. Знакот покрај возилото секогаш има предност.",
+              )}
+            </Note>
+            <Text style={s.sectionTitle}>
               {t("Published sign-code inventory", "Објавен список на кодови")}
             </Text>
             <Note>

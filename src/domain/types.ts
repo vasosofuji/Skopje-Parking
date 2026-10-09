@@ -1,4 +1,6 @@
 import type { ContributionAccent } from "./cosmetics";
+import type { VerifiedSmsPayment } from "./sms-payment";
+export type { SmsPaymentCandidate, VerifiedSmsPayment } from "./sms-payment";
 export type Coordinate = { latitude: number; longitude: number };
 export type Geometry = { type: "Polygon"; coordinates: number[][][] };
 export type ParkingKind =
@@ -29,12 +31,16 @@ export type Availability = {
   reports: number;
   freeSpaces?: number;
 };
+export type PaymentSchedule = { chargingHours: string | null; freeWeekends: "both" | "sunday" | "neither" | null };
 export type ParkingPlace = {
+  smsPayment?: VerifiedSmsPayment;
+  paymentSchedule?: PaymentSchedule;
   id: string;
   name: string;
   nameEn?: string;
   coordinate: Coordinate;
   geometry?: Geometry;
+  boundaryEvidence?: "community";
   kind: ParkingKind;
   operator: string | null;
   zoneCode: string | null;
@@ -54,11 +60,12 @@ export type ParkingPlace = {
   locationReports?: { yes: number; no: number };
   locationPrecision?: "area";
   zoneCodeEvidence?: "community" | "sign";
-  signInfo?: SignInfo & { photoId: string; model: string; observedAt: string; confirmedAt?: string; sourcePlaceId?: string; sourcePlaceName?: string };
-  photoCount?: number;
+  signInfo?: SignInfo & { readingId: string; model: string; observedAt: string; confirmedAt?: string; sourcePlaceId?: string; sourcePlaceName?: string };
+  signReadingCount?: number;
   contributionAccent?: Exclude<ContributionAccent, "default">;
 };
 export type SignInfo = {
+  freeWeekends?: PaymentSchedule["freeWeekends"];
   isParkingSign: boolean;
   confidence: number;
   zoneCode: string | null;
@@ -72,17 +79,8 @@ export type SignInfo = {
   restrictions: string | null;
   rawText: string;
 };
-export type SignPhoto = {
-  id: string;
-  placeId: string;
-  createdAt: string;
-  status: "queued" | "processing" | "ready" | "review" | "waiting" | "failed";
-  info: SignInfo | null;
-  model: string | null;
-  confirmedAt?: string | null;
-  confirmedByMe?: boolean;
-  uploadedByMe?: boolean;
-};
+/** A confirmed sign reading. Only the details are stored; the photo stays on the phone. */
+export type SignReading = { id: string; placeId: string; createdAt: string };
 export type PhotoUpload = {
   base64: string;
   mimeType: "image/jpeg" | "image/png";

@@ -1,45 +1,56 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { translate, placeName } from "../domain/language";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
-import { currentAvailability, SKOPJE } from "../domain/parking";
+import { SKOPJE } from "../domain/parking";
+import { canInteractWithZone, isPocSector } from "../domain/zone-interaction";
 import { groupParking } from "../domain/clusters";
-import { accentColor } from "../domain/cosmetics";
+import { parkingMarker, parkingMarkerHtml } from "../domain/marker-appearance";
 import type { ParkingMapProps } from "./mapTypes";
 import { mapHtml } from "./offlineMapHtml";
-const SOURCE = { html: mapHtml };
+import { dismissMapKeyboard } from "../../modules/parkino-map-keyboard";
+// The asset base lets the page read the bundled streets (file:///android_asset/offline-map/).
+const BASE_URL = "file:///android_asset/";
+const SOURCE = { html: mapHtml, baseUrl: BASE_URL };
 const ORIGINS = ["*"];
 export default function OpenStreetParkingMap(props: ParkingMapProps) {
   const web = useRef<WebView>(null);
+  const callbacks = useRef(props);
+  const mounted = useRef(false);
+  useLayoutEffect(() => { callbacks.current = props; });
+  useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const [ready, setReady] = useState(false);
   const [zoom, setZoom] = useState(15);
+  const liveZoom = useRef(15);
   const [failed, setFailed] = useState(false);
+  // Android may kill the WebView renderer (low memory, e.g. while navigating in another app).
+  // A new WebView repeats the ready handshake and receives the current map state again.
+  const [generation, setGeneration] = useState(0);
+  const restart = () => { setReady(false); setGeneration(value => value + 1); };
   const payload = useMemo(() => {
     const longitudeStep = zoom < 18 ? (120 * 360) / (256 * 2 ** zoom) : 0;
     const latitudeStep =
       longitudeStep * Math.cos((SKOPJE.latitude * Math.PI) / 180);
     const pins = groupParking(
-      props.drawing ? [] : props.places,
+      props.drawing ? [] : props.places.filter(p => props.showZones || p.kind !== "zone"),
       latitudeStep,
       longitudeStep,
       props.selectedId,
+      props.now,
+      props.filtered,
     ).map((members) => {
       const place = members[0];
-      const availability = currentAvailability(place.availability);
       const cluster = members.length > 1;
-      let color = place.access === "restricted" ? "#88948D" : "#392c25";
-      if (!cluster && availability.status === "spaces") color = "#087958";
-      if (!cluster && availability.status === "full") color = "#B83A36";
+      const appearance = parkingMarker(place, members.length, props.now);
       return {
         id: place.id,
         point: [place.coordinate.latitude, place.coordinate.longitude],
         title:
-          props.language === "en" ? (place.nameEn ?? place.name) : place.name,
-        label: String(cluster ? members.length : "P"),
-        color,
-        accent: cluster ? undefined : accentColor(place.contributionAccent),
+          placeName(place, props.language),
+        html: parkingMarkerHtml(appearance),
         cluster,
         selected: place.id === props.selectedId,
-        spaces: !cluster && availability.status === "spaces",
+        spaces: appearance.spaces,
       };
     });
     return {
@@ -48,8 +59,8 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
       drawing: props.drawing,
       destinationName:
         props.destinationName ??
-        (props.language === "mk" ? "Дестинација" : "Destination"),
-      cornerLabel: props.language === "mk" ? "Агол " : "Corner ",
+        (translate(props.language, "Destination", "Дестинација")),
+      cornerLabel: translate(props.language, "Corner ", "Агол "),
       draft: (props.draftCoordinates ?? []).map((p) => [
         p.latitude,
         p.longitude,
@@ -59,11 +70,12 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
           ? props.places
               .filter(
                 (p) =>
-                  p.kind === "zone" &&
-                  (zoom >= 17 || p.id === props.selectedId),
+                  isPocSector(p) &&
+                  (zoom >= 14 || p.id === props.selectedId),
               )
               .map((p) => ({
                 id: p.id,
+                pocSector: isPocSector(p),
                 point: [p.coordinate.latitude, p.coordinate.longitude],
                 label: p.zoneCode ?? p.name,
                 title: p.name,
@@ -79,16 +91,17 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
                 props.destinationMarker.longitude,
               ]
             : null,
-      footprints: !props.drawing ? props.places.filter((p) => p.kind !== "zone" && p.geometry && (zoom >= 17 || p.id === props.selectedId)).map((p) => ({
+      footprints: !props.drawing ? props.places.filter((p) => !isPocSector(p) && (props.showZones || p.kind !== "zone") && p.geometry && (zoom >= 17 || p.id === props.selectedId)).map((p) => ({
         id: p.id, selected: p.id === props.selectedId,
         rings: p.geometry!.coordinates.map((ring) => ring.map(([lng, lat]) => [lat, lng])),
       })) : [],
       zones:
         props.showZones && !props.drawing
           ? props.places
-              .filter((p) => p.kind === "zone" && p.geometry)
+              .filter((p) => isPocSector(p) && p.geometry)
               .map((p) => ({
                 id: p.id,
+                pocSector: isPocSector(p),
                 rings: p.geometry!.coordinates.map((ring) =>
                   ring.map(([lng, lat]) => [lat, lng]),
                 ),
@@ -96,7 +109,9 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
           : [],
       destination: [props.destination.latitude, props.destination.longitude],
       cameraRevision: props.cameraRevision,
+      cameraZoom: props.cameraZoom,
       selectedId: props.selectedId,
+      selectedPocSector: props.places.some(place => place.id === props.selectedId && isPocSector(place)),
       selectedAnchor: props.selectedAnchor
         ? [props.selectedAnchor.latitude, props.selectedAnchor.longitude]
         : null,
@@ -105,11 +120,13 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
     };
   }, [
     props.dark,
+    props.now,
     props.drawing,
     props.destinationName,
     props.draftCoordinates,
     props.destinationMarker,
     props.places,
+    props.filtered,
     props.selectedId,
     props.selectedAnchor,
     props.selectionEnabled,
@@ -117,6 +134,7 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
     props.showZones,
     props.destination,
     props.cameraRevision,
+    props.cameraZoom,
     props.picking,
     zoom,
   ]);
@@ -140,17 +158,34 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
       return;
     }
     if (!message || typeof message !== "object") return;
+    const sentAt = message.sentAt;
+    const isCurrent = () => mounted.current && Number.isFinite(sentAt) && callbacks.current.isInteractionCurrent?.(sentAt) !== false;
+    const interact = (action: (current: ParkingMapProps) => void) => {
+      if (!isCurrent()) return;
+      void dismissMapKeyboard().then(accepted => {
+        // Search can regain focus while the native guard is in flight. Keep its
+        // text/keyboard intact instead of forwarding an obsolete blank tap.
+        if (accepted && isCurrent()) action(callbacks.current);
+      });
+    };
     if (message.type === "ready") setReady(true);
     if (
       message.type === "zoom" &&
       Number.isFinite(message.zoom) &&
       message.zoom >= 3 &&
       message.zoom <= 19
-    )
+    ) {
+      liveZoom.current = message.zoom;
       setZoom(message.zoom);
-    if (message.type === "pan") props.onPan?.();
-    if (message.type === "blank") props.onBlankPress?.();
+    }
+    // Dragging can retain RN search focus. Record camera intent immediately so
+    // a late initial GPS fix cannot recenter; a drag need not dismiss that IME.
+    if (message.type === "pan" && isCurrent()) callbacks.current.onPan?.();
+    if (message.type === "blank") interact(current => current.onBlankPress?.());
+    if (message.type === "interaction") interact(() => {});
     if (message.type === "position") {
+      if (message.selectionId !== props.selectedId) return;
+      if (props.selectedAnchor && (message.anchor?.[0] !== props.selectedAnchor.latitude || message.anchor?.[1] !== props.selectedAnchor.longitude)) return;
       if (message.point === null) props.onSelectedPosition?.(null);
       else if (
         Number.isFinite(message.point?.x) &&
@@ -169,14 +204,19 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
       });
     if (message.type === "select") {
       const place = props.places.find((p) => p.id === message.id);
-      if (place && props.selectionEnabled !== false)
-        props.onSelect(
-          place,
-          Number.isFinite(message.latitude) &&
-            Number.isFinite(message.longitude)
-            ? { latitude: message.latitude, longitude: message.longitude }
-            : place.coordinate,
-        );
+      if (place && props.selectionEnabled !== false) {
+        interact(current => {
+          if (current.selectionEnabled === false) return;
+          const latest = current.places.find(p => p.id === place.id);
+          if (!latest || !canInteractWithZone(latest, liveZoom.current, current.picking)) return;
+          current.onSelect(
+            latest,
+            Number.isFinite(message.latitude) && Number.isFinite(message.longitude)
+              ? { latitude: message.latitude, longitude: message.longitude }
+              : latest.coordinate,
+          );
+        });
+      }
     }
     if (
       (message.type === "pick" || message.type === "vertex") &&
@@ -190,19 +230,20 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
         latitude: message.latitude,
         longitude: message.longitude,
       };
-      if (message.type === "pick") props.onPick(point);
+      if (message.type === "pick") interact(current => { if (current.picking) current.onPick(point); });
       else if (
         props.drawing &&
         Number.isInteger(message.index) &&
         message.index >= 0 &&
         message.index < (props.draftCoordinates?.length ?? 0)
       )
-        props.onMoveVertex?.(message.index, point);
+        interact(current => { if (current.picking && current.drawing && message.index < (current.draftCoordinates?.length ?? 0)) current.onMoveVertex?.(message.index, point); });
     }
   }
   return (
     <View style={styles.container}>
       <WebView
+        key={generation}
         ref={web}
         style={styles.container}
         source={SOURCE}
@@ -212,18 +253,19 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
         domStorageEnabled
         scrollEnabled={false}
         applicationNameForUserAgent="ParkSkopje-local-preview/1.0"
+        allowFileAccessFromFileURLs
         onShouldStartLoadWithRequest={(request) =>
-          request.url === "about:blank" ||
+          request.url === "about:blank" || request.url === BASE_URL ||
           request.url.startsWith("data:text/html")
         }
         onError={() => setFailed(true)}
+        onRenderProcessGone={restart}
+        onContentProcessDidTerminate={restart}
       />
       {failed ? (
         <View style={styles.error}>
           <Text>
-            {props.language === "mk"
-              ? "Мапата не може да се отвори. Проверете ја врската."
-              : "The map could not load. Check your connection."}
+            {translate(props.language, "The map could not load. Check your connection.", "Мапата не може да се отвори. Проверете ја врската.")}
           </Text>
         </View>
       ) : null}

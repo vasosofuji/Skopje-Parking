@@ -4,17 +4,24 @@ import { StatusBar } from "expo-status-bar";
 import { ParkingProvider } from "../state/ParkingContext";
 import { ThemeProvider, useTheme } from "../state/ThemeContext";
 import { AccountProvider, useAccount } from "../state/AccountContext";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
+import LoadingIndicator from "../components/LoadingIndicator";
+import { useNavigationReady } from "../services/navigation";
 import { ModalBackgroundProvider } from "../components/ModalBackdrop";
 import AppStyles from "../components/AppStyles";
 import { useArrivalNotifications } from "../hooks/useArrivalNotifications";
 import { hasCurrentTerms } from "../domain/onboarding";
+import { ContributionFeedbackProvider } from "../state/ContributionFeedback";
+import { SettingsLocationProvider } from "../state/SettingsLocationContext";
+import { LicensePlateProvider } from "../state/LicensePlateContext";
+import LicensePlatePrompt from "../components/LicensePlatePrompt";
 function Navigator() {
+  const navigationReady = useNavigationReady();
   const { dark, colors } = useTheme();
   const { profile, ready } = useAccount();
   const accepted = hasCurrentTerms(profile);
-  useArrivalNotifications(ready && accepted);
-  if (!ready)
+  useArrivalNotifications(ready && navigationReady && accepted);
+  if (!ready || !navigationReady)
     return (
       <View
         style={{
@@ -24,11 +31,14 @@ function Navigator() {
           backgroundColor: colors.paper,
         }}
       >
-        <ActivityIndicator color={colors.accentText} />
+        <LoadingIndicator size="large" label="Parkino" />
       </View>
     );
   return (
     <ParkingProvider>
+      <ContributionFeedbackProvider>
+      <SettingsLocationProvider>
+      <LicensePlateProvider>
       <StatusBar style={dark ? "light" : "dark"} />
       <Stack
         screenOptions={{
@@ -38,6 +48,7 @@ function Navigator() {
       >
         <Stack.Protected guard={accepted}>
           <Stack.Screen name="index" />
+          <Stack.Screen name="settings" />
           <Stack.Screen name="coverage" />
           <Stack.Screen name="community" />
           <Stack.Screen name="account" />
@@ -51,7 +62,12 @@ function Navigator() {
         </Stack.Protected>
         <Stack.Screen name="terms" />
         <Stack.Screen name="privacy" />
+        <Stack.Screen name="delete-account" />
       </Stack>
+      <LicensePlatePrompt />
+      </LicensePlateProvider>
+      </SettingsLocationProvider>
+      </ContributionFeedbackProvider>
     </ParkingProvider>
   );
 }

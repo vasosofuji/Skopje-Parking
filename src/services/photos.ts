@@ -41,5 +41,7 @@ export async function chooseSignPhoto(
   } finally {
     rendered?.release();
     context.release();
+    // The picker's own copy in the app cache is not needed once the reduced copy exists.
+    if (asset.uri.startsWith("file://") && asset.uri.includes("/cache/")) void import("./signScan").then(scan => scan.discardSignPhoto(asset.uri));
   }
 }

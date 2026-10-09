@@ -4,6 +4,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../services/api";
 import { credentials } from "../services/credentials";
 import { disableBackgroundArrival } from "../services/backgroundArrival";
+import { selectArrivalAccount } from "../services/arrivalStorage";
+import { deviceVehicle } from "../services/deviceVehicle";
 import type { Profile } from "../domain/account";
 const CACHE = "parkskopje-profile";
 type Account = {
@@ -16,16 +18,22 @@ type Account = {
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
   clear: () => Promise<void>;
+  captureClear: () => () => Promise<void>;
 };
 const Context = createContext<Account | null>(null);
 export function AccountProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ready, setReady] = useState(false);
   const generation = useRef(0);
+  const owner = useRef<string | null>(null);
   const save = useCallback(async (next: Profile | null) => {
+    const arrivalScope = owner.current && owner.current !== next?.id
+      ? Promise.all([disableBackgroundArrival(), selectArrivalAccount(next?.id ?? null)])
+      : selectArrivalAccount(next?.id ?? null);
+    owner.current = next?.id ?? null;
+    const vehicle = deviceVehicle.select(next?.id ?? null);
     setProfile(next);
-    if (next) await AsyncStorage.setItem(CACHE, JSON.stringify(next));
-    else await AsyncStorage.removeItem(CACHE);
+    await Promise.all([arrivalScope, vehicle, next ? AsyncStorage.setItem(CACHE, JSON.stringify(next)) : AsyncStorage.removeItem(CACHE)]);
   }, []);
   const refresh = useCallback(async () => {
     const version = generation.current;
@@ -52,11 +60,14 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           const cached = await AsyncStorage.getItem(CACHE);
           if (cached && alive && generation.current === version) {
             const value = JSON.parse(cached) as Profile;
+            await selectArrivalAccount(value.id);
+            if (!alive || generation.current !== version) return;
+            owner.current = value.id;
             setProfile({ ...value, secured: value.secured ?? false, points: value.points ?? 0 });
             setReady(true);
           }
           await refresh();
-        } else await disableBackgroundArrival();
+        } else await Promise.all([disableBackgroundArrival().then(() => selectArrivalAccount(null)), deviceVehicle.select(null)]);
       } catch {
         // Keep the last known profile available when offline.
       } finally {
@@ -72,14 +83,20 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     const version = ++generation.current;
     const next = await api.register(username, accepted, password);
     if (version !== generation.current) return;
-    generation.current++;
+    const completed = ++generation.current;
+    // A guest saving their account keeps its identity and already answered the plate offer.
+    if (owner.current !== next.id) await deviceVehicle.requestPrompt(next.id).catch(() => {});
+    if (completed !== generation.current) return;
     await save(next);
   }, [save]);
   const guest = useCallback(async (accepted: boolean) => {
     const version = ++generation.current;
     const next = await api.guest(accepted);
     if (version !== generation.current) return;
-    generation.current++;
+    const completed = ++generation.current;
+    // Renewing consent for the current account must not re-offer the optional plate.
+    if (owner.current !== next.id) await deviceVehicle.requestPrompt(next.id).catch(() => {});
+    if (completed !== generation.current) return;
     await save(next);
   }, [save]);
   const login = useCallback(async (username: string, password: string, accepted: boolean) => {
@@ -96,19 +113,28 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     generation.current++;
     await save(next);
   }, [save]);
-  const clear = useCallback(async () => {
+  const captureClear = useCallback(() => {
+    const captured = generation.current, accountId = owner.current;
+    return async () => {
+      if (captured !== generation.current || accountId !== owner.current) return;
+      const version = ++generation.current;
+      try { await disableBackgroundArrival(); }
+      finally { if (version === generation.current && accountId === owner.current) await save(null); }
+    };
+  }, [save]);
+  const clear = useCallback(() => captureClear()(), [captureClear]);
+  const logout = useCallback(async () => {
     const version = ++generation.current;
+    try { await api.logout(); }
+    catch (error) {
+      if (version !== generation.current) return;
+      if (!(error instanceof Error) || error.message !== "A valid session is required.") throw error;
+    }
+    if (version !== generation.current) return;
     try { await disableBackgroundArrival(); }
     finally { if (version === generation.current) await save(null); }
   }, [save]);
-  const logout = useCallback(async () => {
-    try { await api.logout(); }
-    catch (error) {
-      if (!(error instanceof Error) || error.message !== "A valid session is required.") throw error;
-    }
-    await clear();
-  }, [clear]);
-  return <Context.Provider value={{ profile, ready, register, guest, login, secure, refresh, logout, clear }}>{children}</Context.Provider>;
+  return <Context.Provider value={{ profile, ready, register, guest, login, secure, refresh, logout, clear, captureClear }}>{children}</Context.Provider>;
 }
 export function useAccount() {
   const value = useContext(Context);

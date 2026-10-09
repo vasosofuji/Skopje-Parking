@@ -1,11 +1,12 @@
-import type { Geometry } from "./types";
+import type { Geometry, PaymentSchedule } from "./types";
 import type { EntrySnapshot } from "./progressive-entry";
 
-export type EntryStep = "choose" | "zone" | "price" | "spaces" | "perimeter" | "done";
-export type EntryOperation = { type: "label"; code: string } | { type: "price"; first: number; next: number } | { type: "spaces"; total: number | null; available: number | null; observedAt?: number } | { type: "boundary"; geometry: Geometry } | { type: "ensure" };
+export type EntryStep = "choose" | "details" | "zone" | "price" | "schedule" | "spaces" | "perimeter" | "done";
+export type EntryOperation = { type: "schedule"; value: PaymentSchedule } | { type: "label"; code: string } | { type: "price"; first: number; next: number } | { type: "spaces"; total: number | null; available: number | null; observedAt?: number } | { type: "boundary"; geometry: Geometry } | { type: "ensure" };
 export type EntryDraft = {
   version: 1; updatedAt: number; requestId: string; step: EntryStep; detailed: boolean; originalKey?: string;
   code: string; first: string; next: string; capacity: string; freeSpaces: string; freeObservedAt?: number;
+  chargingHours?: string; freeWeekends?: PaymentSchedule["freeWeekends"];
   geometry?: Geometry; snapshot?: EntrySnapshot; pending: EntryOperation | null;
 };
 export type DraftStorage = {
@@ -20,13 +21,13 @@ export async function readEntryDraft(storage: DraftStorage, key: string, now = D
     const raw = await storage.getItem(key);
     if (!raw) return null;
     const value = JSON.parse(raw) as EntryDraft;
-    if (value.version !== 1 || typeof value.requestId !== "string" || !["choose", "zone", "price", "spaces", "perimeter", "done"].includes(value.step) || ![value.code, value.first, value.next, value.capacity, value.freeSpaces].every(item => typeof item === "string")) return null;
+    if (value.version !== 1 || typeof value.requestId !== "string" || !["choose", "details", "zone", "price", "schedule", "spaces", "perimeter", "done"].includes(value.step) || ![value.code, value.first, value.next, value.capacity, value.freeSpaces].every(item => typeof item === "string")) return null;
     // A previous visit's availability estimate must never be posted as current.
     if (!availabilityIsFresh(value.freeObservedAt, now)) {
       value.freeSpaces = "";
       if (value.snapshot) value.snapshot.free = undefined;
     }
-    if (value.pending?.type === "spaces" && !availabilityIsFresh(value.pending.observedAt, now)) value.pending.available = null;
+    if (value.pending?.type === "spaces") value.pending.available = null;
     return value;
   } catch { return null; }
 }

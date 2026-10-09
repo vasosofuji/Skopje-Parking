@@ -1,5 +1,8 @@
 import type { Fix } from "./arrival";
 import type { Coordinate } from "./types";
+import { distanceMeters } from "./parking";
+/** Faster than any car in a city (250 km/h) between two fixes means a multipath jump, not travel. */
+const MAX_TRAVEL_MPS = 70;
 export function nearbyOrigin(
   destination: Coordinate | null,
   fix: Fix | null,
@@ -36,6 +39,10 @@ export function preferFix(previous: Fix | null, next: Fix) {
   if (!previous) return true;
   if (next.timestamp < previous.timestamp) return false;
   if (next.timestamp === previous.timestamp) return next.accuracy! < previous.accuracy!;
+  // Within 10 s, reject a jump that even both accuracy circles cannot explain. After a longer
+  // gap (tunnel, garage exit) any fix is accepted, so a single bad fix cannot pin the map.
+  const seconds = (next.timestamp - previous.timestamp) / 1000;
+  if (seconds < 10 && distanceMeters(previous, next) - previous.accuracy! - next.accuracy! > MAX_TRAVEL_MPS * Math.max(1, seconds)) return false;
   // Keep walking/driving updates live through ordinary GPS degradation. Briefly
   // hold extreme network drift, then show its true (approximate) accuracy rather
   // than leaving a precise-looking marker at a location the driver has left.

@@ -9,13 +9,19 @@ body,
   font-family: system-ui, sans-serif;
 }
 .parking-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 0;
   background: transparent;
 }
-.parking-pin span {
+.parking-pin-face {
+  position: relative;
+  box-sizing: border-box;
   display: flex;
-  width: 24px;
-  height: 24px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 5px;
   align-items: center;
   justify-content: center;
   border: 2px solid #fff;
@@ -25,9 +31,9 @@ body,
   font-weight: 800;
   box-shadow: 0 2px 5px #173d3a35;
 }
-.parking-pin.selected span {
-  transform: scale(1.24);
+.parking-pin.selected .parking-pin-face {
   outline: 3px solid #d9a48d;
+  outline-offset: 2px;
 }
 .leaflet-control-attribution {
   font-size: 10px !important;
@@ -37,14 +43,8 @@ body,
   outline-offset: 3px;
 }
 
-.parking-pin.cluster span {
-  border-radius: 50%;
-  width: 26px;
-  height: 26px;
-  background: #f4e8d4 !important;
-  color: #392c25;
-  border: 2px solid #947459;
-}
+.parking-free-badge, .parking-state-badge { position: absolute; right: -7px; top: -8px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 17px; height: 17px; border: 1px solid #087184; border-radius: 9px; background: #fff; color: #07596a; font: 800 10px system-ui; }
+.parking-state-badge { left: -7px; right: auto; top: auto; bottom: -8px; color: #fff; border-color: #fff; }
 
 input:focus,
 input:focus-visible {
@@ -52,14 +52,14 @@ input:focus-visible {
   box-shadow: none !important;
 }
 .parking-map-dark .leaflet-tile-pane {
-  filter: invert(1) hue-rotate(180deg) brightness(0.72) saturate(0.65);
+  filter: invert(.88) hue-rotate(180deg) brightness(1.15) contrast(.8) saturate(.35);
 }
 .parking-map-dark.leaflet-container {
-  background: #281f1b;
+  background: #42484b;
 }
 .parking-map-dark .leaflet-control-attribution,
 .parking-map-dark .leaflet-control-zoom a {
-  background: #281f1b;
+  background: #42484b;
   color: #f6ead5 !important;
 }
 
@@ -67,7 +67,7 @@ input:focus-visible {
   bottom: 2px;
 }
 .leaflet-control-attribution { font-size: 10px !important; background: rgba(255,255,255,.85) !important; }
-.parking-pin.spaces span { width: 42px; height: 30px; background: #07874f !important; border: 3px solid #b5f5d0; box-shadow: 0 0 0 4px #26c77930; font-size: 13px; transform: translate(-9px,-3px); }
+.parking-pin.spaces .parking-pin-face { width: 36px; min-width: 36px; height: 36px; padding: 0; flex-shrink: 0; border-radius: 50%; box-shadow: 0 0 0 3px #26c77930; }
 .zone-label span { background: #fff; color: #392c25; border: 1px solid #527fba; border-radius: 6px; padding: 3px 6px; font: 600 12px system-ui; white-space: nowrap; }
 .zone-label.approximate span { border-style: dashed; }
 .zone-vertex { display: flex; align-items: center; justify-content: center; cursor: grab; }
@@ -76,3 +76,6 @@ input:focus-visible {
 .destination-pin span { display: block; width: 28px; height: 28px; border: 3px solid #fff; border-radius: 50% 50% 50% 0; background: #ce383e; transform: rotate(-45deg); box-shadow: -2px 2px 7px #50202050; }
 .destination-pin span::after { content: ''; display: block; width: 9px; height: 9px; border-radius: 50%; background: #fff; margin: 9px; }
 .destination-label { border: none; border-radius: 8px; color: #8e1822; padding: 6px 10px; max-width: 210px; overflow: hidden; text-overflow: ellipsis; font: 700 12px system-ui; box-shadow: 0 2px 8px #50202025; }
+
+.zone-label { display: flex; align-items: center; justify-content: center; }
+.parking-review-badge { position: absolute; right: -7px; top: -8px; width: 17px; height: 17px; box-sizing: border-box; text-align: center; border: 1px solid #65529A; border-radius: 9px; background: #fff; color: #65529A; font: 800 10px/15px system-ui; }

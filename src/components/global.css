@@ -1,3 +1,7 @@
 /* Preserve touch/keyboard scrolling without visible scrollbars. */
 * { scrollbar-width: none; }
 *::-webkit-scrollbar { display: none; width: 0; height: 0; }
+/* A clipped drawer must not become a scroll container when buttons receive focus. */
+#parking-drawer-frame {
+  overflow: clip !important;
+}

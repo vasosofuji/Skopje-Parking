@@ -31,7 +31,7 @@ export default function RewardsScreen() {
   }
   function tile(key: string, title: string, required: number, active: boolean, update: CosmeticsUpdate, preview: React.ReactNode) {
     const remaining = Math.max(0, required - points), unlocked = remaining === 0;
-    const state = active ? t("Selected", "Избрано") : unlocked ? t("Use", "Примени") : t(`${remaining} points to go`, `Уште ${remaining} поени`);
+    const state = active ? t("Selected", "Избрано") : unlocked ? t("Use", "Примени") : t("{n} points to go", "Уште {n} поени").replace("{n}", String(remaining));
     return <Pressable key={key} accessibilityRole="button" accessibilityLabel={`${title}. ${state}`} accessibilityState={{ selected: active, disabled: busy || !unlocked || active }} disabled={busy || !unlocked || active} onPress={() => void choose(update)} style={({ pressed }) => ({ flex: 1, minWidth: 140, gap: 10, padding: 14, borderRadius: 16, borderWidth: active ? 2 : 1, borderColor: active ? colors.green : colors.line, backgroundColor: colors.input, opacity: pressed ? 0.8 : 1 })}>
       {preview}
       <Text style={{ color: colors.ink, fontSize: 17, fontWeight: "700" }}>{title}</Text>
@@ -68,7 +68,7 @@ export default function RewardsScreen() {
       </View>
       {message ? <Text accessibilityLiveRegion="polite" style={{ color: colors.ink }}>{message}</Text> : null}
       <Button title={busy ? t("Saving…", "Се зачувува…") : t("Restore classic appearance", "Врати класичен изглед")} variant="secondary" disabled={busy || selected.palette === "default" && selected.accent === "default"} onPress={() => void choose({ palette: "default", accent: "default" })} />
-      {profile?.guest ? <Note>{t("Create an account in your profile to keep your rewards when you change phones.", "Создајте сметка во профилот за да ги зачувате наградите кога менувате телефон.")}</Note> : null}
+      {profile?.guest ? <Note>{t("Create an account in your profile to keep your rewards when you change phones.", "Создајте профил за да ги зачувате наградите кога менувате телефон.")}</Note> : null}
     </ScrollView>
   </Page>;
 }

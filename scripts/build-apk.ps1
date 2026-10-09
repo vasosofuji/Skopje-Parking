@@ -55,9 +55,16 @@ try {
     } finally { Pop-Location }
     Push-Location (Join-Path $parkingBuildRoot 'android')
     try {
-        & .\gradlew.bat app:assembleRelease --max-workers=2 --console=plain '-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m'
+        & .\gradlew.bat app:assembleRelease --no-daemon --max-workers=2 --console=plain '-Pkotlin.compiler.execution.strategy=in-process' '-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m'
         if ($LASTEXITCODE -ne 0) { throw 'Android APK compilation failed.' }
-    } finally { Pop-Location }
+    } finally {
+        try {
+            & .\gradlew.bat --stop --console=plain
+            if ($LASTEXITCODE -ne 0) { Write-Warning 'Gradle shutdown failed; inspect remaining builder processes.' }
+        } catch {
+            Write-Warning "Gradle shutdown could not run: $_"
+        } finally { Pop-Location }
+    }
     $parkingPreviewRoot = Join-Path $parkingProjectRoot 'preview'
     New-Item -ItemType Directory -Path $parkingPreviewRoot -Force | Out-Null
     $parkingApkPath = Join-Path $parkingPreviewRoot $(if ($DeviceTest) { 'Parkino-device-test.apk' } elseif ($TestPackage) { 'Parkino-test-connected.apk' } elseif ($OfflinePreview) { 'ParkSkopje-preview.apk' } else { 'Parkino-connected.apk' })

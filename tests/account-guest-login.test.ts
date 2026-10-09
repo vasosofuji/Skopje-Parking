@@ -40,9 +40,10 @@ test("a guest can sign into an existing account without deleting guest data", as
       if (name === "../state/ThemeContext") return { useTheme: () => ({ colors: {} }) };
       if (name === "../services/api") return { api: {} };
       if (name === "../domain/account") return accountDomain;
-      if (name === "../components/ui") return { Button: "Button", Note: "Note" };
+      if (name === "../components/ui") return { Button: "Button", Note: "Note", FormScrollView: "FormScrollView", RevealSection: "RevealSection" };
       if (name === "../components/Page") return { default: "Page", __esModule: true };
       if (name === "../components/PasswordField") return { default: "PasswordField", __esModule: true };
+      if (name === "../components/LoadingIndicator") return { default: "LoadingIndicator", __esModule: true };
       throw new Error(`Unexpected dependency: ${name}`);
     },
   };

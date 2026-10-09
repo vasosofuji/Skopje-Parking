@@ -6,7 +6,7 @@ Parkino Database (`vkqxtqcuoobiijbnpxod`), in the Parkino organization, is confi
 
 The database contains 914 imported parking records and the existing local profile, session and report. SQLite remains unchanged, with a backup in `data/runtime/parking-before-supabase-20261001.sqlite`. RLS is enabled on every application table; only the server role has application policies. Anonymous and authenticated Supabase Data API roles have no access to this private schema.
 
-The shared API is deployed at https://parkino-api.onrender.com on Render Free. Connected APKs use this HTTPS address; a local server is still available for development.
+The shared API is deployed at https://parkino-api-vaso.vercel.app on Vercel. Connected APKs use this HTTPS address; a local server is still available for development.
 
 The app uses one authenticated parking API. Every phone reads and writes the same database through that API. `DATABASE_URL` selects Supabase PostgreSQL; without it the local API uses SQLite. Nothing is silently switched to a local database after a cloud connection failure.
 

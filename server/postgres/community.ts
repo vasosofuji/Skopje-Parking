@@ -5,13 +5,14 @@ import type {
   Contribution,
   Geometry,
   ParkingPlace,
-  PhotoUpload,
+  PaymentSchedule,
   SignInfo,
-  SignPhoto,
+  SignReading,
+  Catalog,
 } from "../../src/domain/types";
 import { normalizeZoneCode } from "../../src/domain/parking";
 import type { PostgresParkingStore } from "./store";
-import { PHOTO_SELECT, photoView, enrichSigns, type PhotoRow } from "../sign-catalog";
+import { catalogDelta, enrichPlaces, type Query } from "../sign-catalog";
 export class PostgresCommunityStore {
   constructor(private store: PostgresParkingStore) {}
 
@@ -91,23 +92,35 @@ export class PostgresCommunityStore {
   async label(id: string, token: string, code: string) {
     const user = await this.store.session(token);
     await this.store.place(id);
+    await this.store.db.transaction(async () => {
+    await this.store.db.prepare("SELECT id FROM places WHERE id=? FOR UPDATE").get(id);
     await this.store.db
       .prepare(
         "INSERT INTO labels VALUES (?,?,?,?) ON CONFLICT(place_id,session_id) DO UPDATE SET code=excluded.code,created=excluded.created",
       )
       .run(id, user.id, normalizeZoneCode(code), Date.now());
+    });
     return { saved: true };
   }
   async boundary(id: string, token: string, geometry: Geometry) {
     await this.store.session(token);
     await this.store.place(id);
+    await this.store.db.transaction(async () => {
+    await this.store.db.prepare("SELECT id FROM places WHERE id=? FOR UPDATE").get(id);
     // Separate from the source catalog: importing official data must not erase edits.
     await this.store.db
       .prepare(
         "INSERT INTO boundaries VALUES (?,?,?) ON CONFLICT(place_id) DO UPDATE SET geometry=excluded.geometry,updated=excluded.updated",
       )
       .run(id, JSON.stringify(geometry), Date.now());
+    });
     return { saved: true };
+  }
+  async paymentSchedule(id: string, token: string, value: PaymentSchedule) {
+    const user = await this.store.session(token);
+    await this.store.place(id);
+    await this.store.db.prepare("INSERT INTO payment_schedules(place_id,session_id,details,updated) VALUES (?,?,?,?) ON CONFLICT(place_id,session_id) DO UPDATE SET details=excluded.details,updated=excluded.updated").run(id,user.id,JSON.stringify(value),Date.now());
+    return { ok: true };
   }
   async capacity(id: string, token: string, capacity: number) {
     const user = await this.store.session(token);
@@ -116,167 +129,36 @@ export class PostgresCommunityStore {
     await this.store.db.prepare("INSERT INTO capacity_reports(place_id,session_id,capacity,updated) VALUES (?,?,?,?) ON CONFLICT(place_id,session_id) DO UPDATE SET capacity=excluded.capacity,updated=excluded.updated").run(id,user.id,capacity,Date.now());
     return {saved:true};
   }
-  async upload(id: string, token: string, photo: PhotoUpload) {
+  private query: Query = async (sql, args = []) => (await this.store.db.prepare(sql).all(...args)) as Record<string, unknown>[];
+  /** Details a driver confirmed from a sign they read on their phone; the photo never leaves it. */
+  async addSignReading(placeId: string, token: string, info: SignInfo, model: string): Promise<SignReading> {
     const user = await this.store.session(token);
-    await this.store.place(id);
-    const bytes = Buffer.from(photo.base64, "base64");
-    const valid =
-      photo.mimeType === "image/jpeg"
-        ? bytes.subarray(0, 3).equals(Buffer.from([255, 216, 255])) &&
-          bytes.subarray(-2).equals(Buffer.from([255, 217]))
-        : bytes
-            .subarray(0, 8)
-            .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
-    if (
-      !valid ||
-      bytes.length < 32 ||
-      bytes.length > 2 * 1024 * 1024 ||
-      bytes.toString("base64") !== photo.base64
-    )
-      throw Object.assign(new Error("Use a JPEG or PNG photo under 2 MB."), {
-        statusCode: 400,
-      });
-    const hash = createHash("sha256").update(bytes).digest("hex");
-    return this.store.db.transaction(async () => {
-      await this.store.db
-        .prepare("SELECT id FROM places WHERE id=? FOR UPDATE")
-        .get(id);
-      const prior = (await this.store.db
-        .prepare("SELECT id FROM sign_photos WHERE place_id=? AND hash=?")
-        .get(id, hash)) as
-        | {
-            id: string;
-          }
-        | undefined;
-      if (prior) {
-        await this.store.db.prepare("INSERT INTO sign_uploaders(photo_id,session_id) VALUES (?,?) ON CONFLICT DO NOTHING").run(prior.id, user.id);
-        return await this.photo(prior.id, token);
-      }
-      const count = (await this.store.db
-        .prepare("SELECT COUNT(*) AS n FROM sign_photos WHERE place_id=?")
-        .get(id)) as {
-        n: number;
-      };
-      if (count.n >= 30)
-        throw Object.assign(
-          new Error("This location already has 30 sign photos."),
-          { statusCode: 409 },
-        );
-      const photoId = randomUUID();
-      // Identical images can reuse a validated extraction, even across locations.
-      const cached = (await this.store.db
-        .prepare(
-          "SELECT info,model,status FROM sign_photos WHERE hash=? AND status IN ('ready','review') LIMIT 1",
-        )
-        .get(hash)) as
-        | {
-            info: string;
-            model: string;
-            status: string;
-          }
-        | undefined;
-      await this.store.db
-        .prepare(
-          "INSERT INTO sign_photos(id,place_id,session_id,hash,mime,bytes,created,status,info,model) VALUES (?,?,?,?,?,?,?,?,?,?)",
-        )
-        .run(
-          photoId,
-          id,
-          user.id,
-          hash,
-          photo.mimeType,
-          bytes,
-          Date.now(),
-          cached?.status ?? "queued",
-          cached?.info ?? null,
-          cached?.model ?? null,
-        );
-      return await this.photo(photoId, token);
-    });
-  }
-  async photo(id: string, token?: string): Promise<SignPhoto> {
-    const row = (await this.store.db.prepare(PHOTO_SELECT + " WHERE p.id=?").get(id)) as PhotoRow | undefined;
-    if (!row) throw Object.assign(new Error("Photo not found."), { statusCode: 404 });
-    const user = token ? await this.store.session(token) : undefined;
-    const uploaded = user ? (await this.store.db.prepare("SELECT 1 FROM sign_uploaders WHERE photo_id=? AND session_id=?").get(id, user.id)) : undefined;
-    return photoView(row, user?.id, Boolean(uploaded));
-  }
-  async photos(id: string, token?: string): Promise<SignPhoto[]> {
-    await this.store.place(id);
-    const user = token ? await this.store.session(token) : undefined;
-    const rows = (await this.store.db.prepare(PHOTO_SELECT + " WHERE p.place_id=? ORDER BY p.created DESC").all(id)) as PhotoRow[];
-    const uploads = user ? (await this.store.db.prepare("SELECT photo_id FROM sign_uploaders WHERE session_id=?").all(user.id)) as { photo_id: string }[] : [];
-    const ids = new Set(uploads.map(row => row.photo_id));
-    return rows.map(row => photoView(row, user?.id, ids.has(row.id)));
-  }
-  async confirmSign(id: string, token: string, info: SignInfo): Promise<SignPhoto> {
-    const user = await this.store.session(token);
-    const photo = await this.photo(id, token);
-    if (!photo.uploadedByMe) throw Object.assign(new Error("Upload this sign before confirming its details."), { statusCode: 403 });
+    await this.store.place(placeId);
     if (!info.isParkingSign) throw Object.assign(new Error("Only parking signs can be confirmed."), { statusCode: 400 });
-    await this.store.db.prepare("INSERT INTO sign_confirmations(photo_id,session_id,info,confirmed) VALUES (?,?,?,?) ON CONFLICT(photo_id) DO UPDATE SET session_id=excluded.session_id,info=excluded.info,confirmed=excluded.confirmed")
-      .run(id, user.id, JSON.stringify(info), Date.now());
-    return await this.photo(id, token);
+    const id = randomUUID(), created = Date.now();
+    await this.store.db.prepare("INSERT INTO sign_readings(id,place_id,session_id,info,model,created) VALUES (?,?,?,?,?,?)")
+      .run(id, placeId, user.id, JSON.stringify(info), model, created);
+    return { id, placeId, createdAt: new Date(created).toISOString() };
   }
-  async image(id: string) {
-    await this.photo(id);
-    return (await this.store.db
-      .prepare("SELECT mime,bytes,hash FROM sign_photos WHERE id=?")
-      .get(id)) as {
-      mime: string;
-      bytes: Uint8Array;
-      hash: string;
-    };
+  /** Reports confirmed sign details; two reports hide them until an admin decides. */
+  async flagReading(id: string, token: string, reason: string) {
+    const user = await this.store.session(token);
+    if (!(await this.store.db.prepare("SELECT 1 FROM sign_readings WHERE id=?").get(id))) throw Object.assign(new Error("Sign not found."), { statusCode: 404 });
+    await this.store.db.prepare("INSERT INTO content_flags(reading_id,session_id,reason,created) VALUES (?,?,?,?) ON CONFLICT DO NOTHING").run(id, user.id, reason, Date.now());
+    return { flagged: true as const };
   }
-  async enrich(places: ParkingPlace[]) {
-    const accents = contributionAccents(await this.store.db.prepare(CONTRIBUTION_COSMETICS_QUERY).all() as ContributionCosmeticRow[]);
-    const boundaries = (await this.store.db.prepare("SELECT place_id,geometry FROM boundaries").all()) as { place_id: string; geometry: string }[];
-    const labels = (await this.store.db.prepare("SELECT place_id,code FROM labels ORDER BY created DESC").all()) as { place_id: string; code: string }[];
-    const photos = (await this.store.db.prepare(PHOTO_SELECT + " ORDER BY c.confirmed DESC,p.created DESC").all()) as PhotoRow[];
-    const capacities = (await this.store.db.prepare("SELECT place_id,capacity FROM capacity_reports ORDER BY updated DESC,session_id DESC").all()) as {place_id:string;capacity:number}[];
-    const latest = new Map<string,number>();
-    for (const row of capacities) if (!latest.has(row.place_id)) latest.set(row.place_id,row.capacity);
-    return enrichSigns(places.map(place => ({...place,capacity:latest.get(place.id) ?? place.capacity,contributionAccent:accents.get(place.id)})), boundaries, labels, photos);
+  async flaggedReadings() {
+    return (await this.store.db.prepare("SELECT r.id AS reading_id,r.place_id,r.info,COUNT(f.session_id)::int AS reports,STRING_AGG(f.reason,',') AS reasons,MAX(f.created) AS latest FROM content_flags f JOIN sign_readings r ON r.id=f.reading_id GROUP BY r.id,r.place_id,r.info ORDER BY latest DESC").all()) as { reading_id: string; place_id: string; info: string; reports: number; reasons: string; latest: number }[];
   }
-  async claim() {
-    const now = Date.now();
-    return (await this.store.db
-      .prepare(
-        `UPDATE sign_photos SET status='processing',attempts=attempts+1,lease_until=? WHERE id=(SELECT id FROM sign_photos WHERE (status IN ('queued','waiting') AND next_attempt<=?) OR (status='processing' AND lease_until<?) ORDER BY created LIMIT 1 FOR UPDATE SKIP LOCKED) RETURNING id,mime,bytes,attempts`,
-      )
-      .get(now + 120000, now, now)) as
-      | {
-          id: string;
-          mime: string;
-          bytes: Uint8Array;
-          attempts: number;
-        }
-      | undefined;
+  async resolveFlags(id: string, remove: boolean) {
+    if (!(await this.store.db.prepare("SELECT 1 FROM sign_readings WHERE id=?").get(id))) throw Object.assign(new Error("Sign not found."), { statusCode: 404 });
+    await this.store.db.prepare(remove ? "DELETE FROM sign_readings WHERE id=?" : "DELETE FROM content_flags WHERE reading_id=?").run(id);
+    return { removed: remove };
   }
-  async finish(id: string, info: SignInfo, model: string) {
-    const ready = info.isParkingSign && info.confidence >= 0.85;
-    await this.store.db
-      .prepare(
-        "UPDATE sign_photos SET status=?,info=?,model=?,lease_until=0 WHERE id=?",
-      )
-      .run(ready ? "ready" : "review", JSON.stringify(info), model, id);
+  enrich(places: ParkingPlace[], ids: string[] | null = places.length === 1 ? [places[0].id] : null) {
+    return enrichPlaces(this.query, places, ids);
   }
-  async defer(id: string, attempts: number, missingKeys = false) {
-    await this.store.db
-      .prepare(
-        "UPDATE sign_photos SET status=?,next_attempt=?,lease_until=0 WHERE id=?",
-      )
-      .run(
-        !missingKeys && attempts >= 5 ? "failed" : "waiting",
-        Date.now() +
-          (missingKeys
-            ? 60000
-            : Math.min(3600000, 30000 * 2 ** (attempts - 1))),
-        id,
-      );
-    if (missingKeys)
-      await this.store.db
-        .prepare("UPDATE sign_photos SET attempts=MAX(0,attempts-1) WHERE id=?")
-        .run(id);
+  changes(catalog: Catalog, since: number) {
+    return catalogDelta(this.query, catalog, since, ids => this.store.places(ids));
   }
 }

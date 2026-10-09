@@ -31,7 +31,7 @@ test("an idle PostgreSQL connection failure does not crash the API or expose cre
 });
 
 test("PostgreSQL pool initializes the private schema and keeps a transaction on one connection", async (t) => {
-  const db = new PgDatabase("postgresql://test:test@localhost:5432/test");
+  const db = new PgDatabase("postgresql://test:test@localhost:5432/test", "session");
   const queries: { sql: string; values?: unknown[] }[] = [];
   let releases = 0;
   const client = {
@@ -268,39 +268,7 @@ for (const backend of ["sqlite", "postgres"] as const) {
         const community = new PostgresCommunityStore(
           store as PostgresParkingStore,
         );
-        const photo = {
-          mimeType: "image/png" as const,
-          base64:
-            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jGqkAAAAASUVORK5CYII=",
-        };
-        const uploaded = await Promise.all(
-          [1, 2].map(() => community.upload(id, first.token, photo)),
-        );
-        assert.equal(uploaded[0].id, uploaded[1].id);
-        assert.deepEqual(
-          Buffer.from((await community.image(uploaded[0].id)).bytes),
-          Buffer.from(photo.base64, "base64"),
-        );
-        const claims = await Promise.all([
-          community.claim(),
-          community.claim(),
-        ]);
-        assert.equal(
-          claims.filter(Boolean).length,
-          1,
-          "only one worker can claim a sign",
-        );
-        const job = claims.find(Boolean)!;
-        await community.defer(job.id, job.attempts, true);
         const db = (store as PostgresParkingStore).db as TestPostgresDatabase;
-        assert.equal(
-          (
-            (await db
-              .prepare("SELECT attempts FROM sign_photos WHERE id=?")
-              .get(job.id)) as { attempts: number }
-          ).attempts,
-          0,
-        );
         const info: SignInfo = {
           isParkingSign: true,
           confidence: 0.95,
@@ -315,9 +283,7 @@ for (const backend of ["sqlite", "postgres"] as const) {
           restrictions: null,
           rawText: "A42 50 ден",
         };
-        await community.finish(job.id, info, "test-model");
-        assert.equal((await app.inject("/v1/catalog")).json().places[0].signInfo, undefined);
-        await community.confirmSign(job.id, first.token, info);
+        await community.addSignReading(id, first.token, info, "ocr:mlkit-text-v2");
         assert.equal(
           (await app.inject("/v1/catalog")).json().places[0].signInfo.firstHour,
           50,
@@ -330,7 +296,7 @@ for (const backend of ["sqlite", "postgres"] as const) {
         const all = await app.inject("/v1/catalog");
         assert.equal(all.statusCode, 200, all.body);
         assert.ok(
-          db.count <= 11, // Includes one bulk original-contributor cosmetics lookup.
+          db.count <= 12, // Includes bulk contributor cosmetics and payment schedule lookups.
           `catalog should use bulk queries, used ${db.count}`,
         );
         assert.ok(all.json().places.length >= realCatalog.places.length);

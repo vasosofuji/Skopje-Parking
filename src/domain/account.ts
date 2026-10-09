@@ -1,5 +1,5 @@
 import type { Cosmetics } from "./cosmetics";
-export const TERMS_VERSION = "2026-10-01";
+export const TERMS_VERSION = "2026-10-09";
 export type Profile = {
   id: string;
   username: string;

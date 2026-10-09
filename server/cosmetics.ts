@@ -17,9 +17,10 @@ export function checkCosmetics(profile: Profile | null, update: CosmeticsUpdate)
 }
 
 // Original creation only: reporting, labeling, or drawing an existing lot never transfers an accent.
-export const CONTRIBUTION_COSMETICS_QUERY = `SELECT d.place_id,c.accent,r.points
+// Sum points only for drivers who chose an accent; reward_events grows with every report.
+export const CONTRIBUTION_COSMETICS_QUERY = `SELECT d.place_id,c.accent,
+  (SELECT COALESCE(SUM(r.points),0) FROM reward_events r WHERE r.session_id=d.session_id) AS points
   FROM contribution_details d JOIN account_cosmetics c ON c.session_id=d.session_id
-  JOIN (SELECT session_id,SUM(points) AS points FROM reward_events GROUP BY session_id) r ON r.session_id=d.session_id
   WHERE c.accent<>'default'`;
 export type ContributionCosmeticRow = { place_id: string; accent: string; points: number };
 export function contributionAccents(rows: ContributionCosmeticRow[]) {

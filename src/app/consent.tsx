@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../components/ui";
@@ -13,19 +13,23 @@ export default function Consent() {
   const { t } = useParking(), { colors } = useTheme();
   const [open, setOpen] = useState(true);
   const [busy, setBusy] = useState(false);
+  const pending = useRef(false);
   const [error, setError] = useState("");
   async function accept() {
-    if (busy) return;
+    if (pending.current) return;
+    pending.current = true;
     setBusy(true); setError("");
     try { await account.guest(true); }
     catch (failure) { setError(failure instanceof Error ? failure.message : t("Could not save. Try again.", "Не е зачувано. Обидете се повторно.")); }
-    finally { setBusy(false); }
+    finally { pending.current = false; setBusy(false); }
   }
   async function signOut() {
+    if (pending.current) return;
+    pending.current = true;
     setBusy(true); setError("");
     try { await account.logout(); }
     catch (failure) { setError(failure instanceof Error ? failure.message : t("Could not sign out.", "Неуспешна одјава.")); }
-    finally { setBusy(false); }
+    finally { pending.current = false; setBusy(false); }
   }
   return <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }}>
     <View style={{ flex: 1, padding: 24, gap: 20, justifyContent: "center", maxWidth: 440, width: "100%", alignSelf: "center" }}>

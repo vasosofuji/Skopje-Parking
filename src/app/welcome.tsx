@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
+import LoadingIndicator from "../components/LoadingIndicator";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "../components/ui";
+import { Button, Icon } from "../components/ui";
+import StepActions from "../components/StepActions";
 import LanguagePicker from "../components/LanguagePicker";
 import TermsConsent from "../components/TermsConsent";
 import PasswordField from "../components/PasswordField";
@@ -23,6 +25,7 @@ export default function Welcome() {
   const [password, setPassword] = useState("");
   const [intent, setIntent] = useState<OnboardingIntent | null>(null);
   const [busy, setBusy] = useState(false);
+  const accepting = useRef(false);
   const [error, setError] = useState("");
   const [availability, setAvailability] = useState<"idle" | "checking" | "available" | "taken" | "offline">("idle");
   useEffect(() => {
@@ -48,8 +51,21 @@ export default function Welcome() {
     setError("");
     setIntent(next);
   }
+  async function signIn() {
+    if (accepting.current) return;
+    accepting.current = true;
+    Keyboard.dismiss();
+    setBusy(true); setError("");
+    try {
+      await completeOnboarding({ mode: "login", username, password }, false, account);
+      setPassword("");
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : t("Could not sign in. Try again.", "Неуспешна најава. Обидете се повторно."));
+    } finally { accepting.current = false; setBusy(false); }
+  }
   async function accept() {
-    if (!intent || busy) return;
+    if (!intent || accepting.current) return;
+    accepting.current = true;
     setBusy(true); setError("");
     try {
       await completeOnboarding(intent, true, account);
@@ -57,7 +73,7 @@ export default function Welcome() {
       setIntent(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : t("Could not continue. Try again.", "Не може да продолжите. Обидете се повторно."));
-    } finally { setBusy(false); }
+    } finally { accepting.current = false; setBusy(false); }
   }
   function chooseAccount(next: "create" | "login") {
     setMode(next); setError(""); setAvailability("idle"); setPassword("");
@@ -66,28 +82,26 @@ export default function Welcome() {
     void AsyncStorage.setItem(PREFERENCES_SETUP_KEY, "1").catch(() => {});
     setStep("account");
   }
-  const title = step === "language" ? "Language / Јазик" : step === "theme" ? t("Choose your appearance", "Изберете изглед") : mode === "choice" ? t("Welcome to Parkino", "Добредојдовте во Parkino") : mode === "create" ? t("Create account", "Создај сметка") : t("Sign in", "Најава");
+  const title = step === "language" ? t("Select language", "Изберете јазик") : step === "theme" ? t("Choose your appearance", "Изберете изглед") : mode === "choice" ? t("Welcome to Parkino", "Добредојдовте во Parkino") : mode === "create" ? t("Create account", "Создај профил") : t("Sign in", "Најава");
   return <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }}>
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, padding: 24, maxWidth: 440, width: "100%", alignSelf: "center" }}>
         <View style={{ flex: 1, justifyContent: "center", gap: 24, paddingVertical: 28 }}>
-          {!step ? <ActivityIndicator color={colors.accentText} /> : <>
+          {!step ? <LoadingIndicator size="large" label="Parkino" /> : <>
             <Text style={{ color: colors.muted, fontSize: 13 }}>{step === "language" ? "1 / 4" : step === "theme" ? "2 / 4" : "3 / 4"}</Text>
-            <Text accessibilityRole="header" style={{ color: colors.ink, fontSize: 30, fontWeight: "700" }}>{title}</Text>
+            <View style={{ gap: 12, alignItems: step === "language" ? "center" : "stretch" }}>
+              {step === "language" ? <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: colors.mint, alignItems: "center", justifyContent: "center", marginBottom: 6 }}><Icon name="globe" size={28} color={colors.accentText} /></View> : null}
+              <Text accessibilityRole="header" style={{ color: colors.ink, fontSize: 30, fontWeight: "700", textAlign: step === "language" ? "center" : "left" }}>{title}</Text>
+            </View>
             {step === "language" ? <>
               <LanguagePicker />
-              <Button title={t("Continue", "Продолжи")} onPress={() => setStep("theme")} />
             </> : step === "theme" ? <>
               <View style={{ gap: 10 }}>
-                {(["system", "light", "dark"] as const).map((value) => <Button key={value} icon={theme === value ? "check" : value === "system" ? "smartphone" : value === "light" ? "sun" : "moon"} title={value === "system" ? t("Use phone setting", "Како на телефонот") : value === "light" ? t("Light", "Светло") : t("Dark", "Темно")} variant={theme === value ? "primary" : "secondary"} onPress={() => setTheme(value)} />)}
+                {(["system", "light", "dark"] as const).map((value) => <Button key={value} icon={theme === value ? "check" : value === "system" ? "smartphone" : value === "light" ? "sun" : "moon"} title={value === "system" ? t("System default", "Системски стандард") : value === "light" ? t("Light", "Светло") : t("Dark", "Темно")} variant={theme === value ? "primary" : "secondary"} onPress={() => setTheme(value)} />)}
               </View>
-              <Button title={t("Continue", "Продолжи")} onPress={finishPreferences} />
-              <Button title={t("Back", "Назад")} variant="secondary" onPress={() => setStep("language")} />
             </> : mode === "choice" ? <>
-              <Button title={t("Create account", "Создај сметка")} onPress={() => chooseAccount("create")} />
+              <Button title={t("Create account", "Создај профил")} onPress={() => chooseAccount("create")} />
               <Button title={t("Sign in", "Најави се")} variant="secondary" onPress={() => chooseAccount("login")} />
-              <Button title={t("Continue as guest", "Продолжи како гостин")} variant="secondary" onPress={() => showTerms({ mode: "guest" })} />
-              <Button title={t("Back", "Назад")} variant="secondary" onPress={() => setStep("theme")} />
             </> : <>
               <View style={{ gap: 8 }}>
                 <TextInput accessibilityLabel={t("Username", "Корисничко име")} value={username} editable={!busy} onChangeText={(value) => { setUsername(value); setAvailability(validUsername(value) ? "checking" : "idle"); setError(""); }} autoCapitalize="none" autoCorrect={false} autoComplete="username" textContentType="username" maxLength={20} placeholder={t("Username", "Корисничко име")} placeholderTextColor={colors.muted} style={{ minHeight: 52, padding: 14, fontSize: 17, borderRadius: 12, borderWidth: 1, borderColor: colors.line, color: colors.ink, backgroundColor: colors.input }} />
@@ -98,12 +112,19 @@ export default function Welcome() {
                 {mode === "create" ? <Text style={{ color: colors.muted, fontSize: 12 }}>{t("At least 10 characters", "Најмалку 10 знаци")}</Text> : null}
               </View>
               {!intent && error ? <Text accessibilityLiveRegion="polite" style={{ color: colors.red }}>{error}</Text> : null}
-              <Button title={t("Continue", "Продолжи")} disabled={busy || !validUsername(username) || (mode === "create" ? !validPassword(password) || availability === "taken" : !password)} onPress={() => showTerms({ mode, username, password })} />
-              <Button title={t("Back", "Назад")} variant="secondary" disabled={busy} onPress={() => { setMode("choice"); setPassword(""); }} />
             </>}
           </>}
         </View>
       </ScrollView>
+      {step ? <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 16, maxWidth: 440, width: "100%", alignSelf: "center", borderTopWidth: 1, borderTopColor: colors.line }}>
+        <StepActions
+          onBack={step === "language" ? undefined : step === "theme" ? () => setStep("language") : mode === "choice" ? () => setStep("theme") : () => { setMode("choice"); setPassword(""); }}
+          onContinue={step === "language" ? () => setStep("theme") : step === "theme" ? finishPreferences : mode === "choice" ? () => showTerms({ mode: "guest" }) : mode === "login" ? () => void signIn() : () => showTerms({ mode, username, password })}
+          title={step === "account" && mode === "choice" ? t("Continue as guest", "Продолжи како гостин") : undefined}
+          disabled={busy || (step === "account" && mode !== "choice" && (!validUsername(username) || (mode === "create" ? !validPassword(password) || availability === "taken" : !password)))}
+          backDisabled={busy}
+        />
+      </View> : null}
     </KeyboardAvoidingView>
     {intent ? <TermsConsent busy={busy} error={error} onClose={() => { setIntent(null); setError(""); }} onAccept={() => void accept()} /> : null}
   </SafeAreaView>;

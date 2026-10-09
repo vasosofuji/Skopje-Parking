@@ -101,33 +101,76 @@ test("web launch remains in the user action without an asynchronous permission r
 });
 
 test("sign-photo controls remain usable when the catalog is offline", () => {
-  type Element = { type: unknown; props: Record<string, unknown>; children: Element[] };
+  type Element = { type: unknown; props: Record<string, any>; children: Element[] };
   const PhotoPicker = () => null;
   const react = {
     createElement: (type: unknown, props: Record<string, unknown>, ...children: Element[]): Element => ({ type, props, children }),
     useState: (value: unknown) => [value, () => {}],
     useEffect: () => {},
   };
-  const component = ts.transpileModule(readFileSync("src/components/SignPhotos.tsx", "utf8"), {
+  const component = ts.transpileModule(readFileSync("src/components/SignScanner.tsx", "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React },
   }).outputText;
   const context = {
-    exports: {} as { default: (props: { placeId: string }) => Element },
+    exports: {} as { default: (props: { placeId: string; onReview: () => void }) => Element },
     require(name: string) {
       if (name === "react") return { ...react, default: react, __esModule: true };
-      if (name === "react-native") return { View: "View", Image: "Image", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView", Platform: { OS: "android" }, useWindowDimensions: () => ({ height: 900 }) };
-      if (name === "../services/api") return { api: {} };
-      if (name === "../state/ParkingContext") return { useParking: () => ({ connected: false, t: (en: string) => en, refresh: () => {} }) };
-      if (name === "../state/ThemeContext") return { useTheme: () => ({ colors: {} }) };
-      if (name === "./ui") return { Button: "Button", Note: "Note", Sheet: "Sheet" };
+      if (name === "react-native") return { View: "View" };
+      if (name === "../services/signScan") return { scanSign: async () => { throw new Error("unused"); }, discardSignPhoto: async () => {} };
+      if (name === "../services/signReader") return { useSignReader: () => null };
+      if (name === "../services/signOcr") return { signOcrAvailable: false };
+      if (name === "../state/ParkingContext") return { useParking: () => ({ connected: false, t: (en: string) => en, catalog: { places: [] } }) };
+      if (name === "./ui") return { Button: "Button", Note: "Note" };
       if (name === "./PhotoPicker") return { default: PhotoPicker, __esModule: true };
-      if (name === "./SignReviewSheet" || name === "./DigitalParkingSign") return { default: () => null, __esModule: true };
       throw new Error(`Unexpected dependency: ${name}`);
     },
   };
   vm.runInNewContext(component, context);
-  const tree = context.exports.default({ placeId: "parking-test" });
+  const tree = context.exports.default({ placeId: "parking-test", onReview() {} });
   const control = tree.children.find(child => child?.type === PhotoPicker);
   assert.ok(control);
   assert.equal(control.props.disabled, false);
+});
+
+test("a sign that cannot be read followed by manual entry updates the same saved parking", async () => {
+  type Element = { type: unknown; props: Record<string, any>; children: unknown[] };
+  const values: unknown[] = [], savedPlace = { id: "photo-created", coordinate: { latitude: 42, longitude: 21.43 }, kind: "surface", zoneCode: null, capacity: null };
+  let cursor = 0, created = 0;
+  const react = {
+    Fragment: "Fragment",
+    createElement: (type: unknown, props: Record<string, unknown>, ...children: unknown[]): Element => ({ type, props: props ?? {}, children }),
+    useState(initial: unknown) { const index = cursor++; if (!(index in values)) values[index] = typeof initial === "function" ? (initial as () => unknown)() : initial; return [values[index], (next: unknown) => { values[index] = next; }]; },
+    useRef(initial: unknown) { const index = cursor++; if (!(index in values)) values[index] = { current: initial }; return values[index]; },
+  };
+  const component = ts.transpileModule(readFileSync("src/components/ProposalSheet.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText;
+  const context = { exports: {} as { default: (props: Record<string, unknown>) => Element }, require(name: string) {
+    if (name === "react") return { ...react, default: react, __esModule: true };
+    if (name === "react-native") return { Platform: { OS: "android" }, Pressable: "Pressable", Text: "Text", View: "View", StyleSheet: { create: (value: unknown) => value } };
+    if (name === "expo-crypto") return { randomUUID: () => "photo-request" };
+    if (name === "./ui") return { Button: "Button", Icon: "Icon", Note: "Note", Sheet: "Sheet" };
+    if (name.startsWith("./")) return { default: name.slice(2), __esModule: true };
+    if (name === "../state/ParkingContext") return { useParking: () => ({ t: (en: string) => en, refresh: async () => {}, catalog: { places: [] } }) };
+    if (name === "../state/ThemeContext") return { useTheme: () => ({ colors: {} }) };
+    if (name === "../services/api") return { api: { contribute: async () => { created++; return savedPlace; } } };
+    if (name === "../services/signScan") return { scanSign: async () => { throw new Error("unreadable"); }, discardSignPhoto: async () => {} };
+    throw new Error(`Unexpected proposal dependency: ${name}`);
+  } };
+  vm.runInNewContext(component, context);
+  const props = { coordinate: savedPlace.coordinate, onClose() {}, onSubmitted() {} };
+  const render = () => { cursor = 0; return context.exports.default(props); };
+  function nodes(tree: unknown): Element[] { if (Array.isArray(tree)) return tree.flatMap(nodes); if (!tree || typeof tree !== "object" || !("children" in tree)) return []; const node = tree as Element; return [node, ...node.children.flatMap(nodes), ...nodes(node.props.footer)]; }
+  const find = (tree: Element, predicate: (node: Element) => boolean) => { const node = nodes(tree).find(predicate); assert.ok(node); return node; };
+  let tree = render(); find(tree, node => node.props.accessibilityLabel === "Photograph a sign").props.onPress();
+  tree = render(); find(tree, node => node.type === "PhotoPicker").props.onChange({ uri: "file:///test.jpg", base64: "jpeg", mimeType: "image/jpeg" });
+  tree = render(); find(tree, node => node.props.title === "Read sign & review").props.onContinue();
+  await new Promise<void>(resolve => setImmediate(resolve)); tree = render();
+  assert.equal(created, 1);
+  find(tree, node => node.type === "Sheet").props.onBack(); tree = render();
+  find(tree, node => node.props.accessibilityLabel === "Enter manually").props.onPress(); tree = render();
+  const manual = find(tree, node => node.type === "ManualParkingWizard");
+  assert.equal(manual.props.place.id, "photo-created"); assert.equal(manual.props.existingPlaceId, "photo-created");
+  assert.equal(manual.props.coordinate, savedPlace.coordinate); assert.equal(manual.props.kind, "surface");
+  // The draft stays keyed to the added location, so creating the place mid-entry (e.g. after
+  // drawing the perimeter) cannot remount the wizard and drop unsaved detailed fields.
+  assert.equal(manual.props.entryKey, `surface:${savedPlace.coordinate.latitude.toFixed(6)}:${savedPlace.coordinate.longitude.toFixed(6)}`);
 });

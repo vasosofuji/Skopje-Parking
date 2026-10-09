@@ -1,3 +1,4 @@
+import { weekendLabel } from "./PaymentScheduleFields";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { SignInfo } from "../domain/types";
@@ -30,6 +31,7 @@ export default function DigitalParkingSign({ info, compact = false, preview = fa
         </Text>
         {!free && info.nextHour !== null && info.nextHour !== info.firstHour ? <Text style={{ color: colors.ink }}>{info.nextHour} {info.currency ?? ""} / {t("following hour", "следен час")}</Text> : null}
         {info.chargingHours ? <Text style={{ color: colors.ink, fontWeight: "600" }}>{info.chargingHours}</Text> : null}
+        {info.freeWeekends ? <Text style={{ color: colors.ink }}>{weekendLabel(info.freeWeekends, t)}</Text> : null}
         {!compact && info.maxStayMinutes !== null ? <Text style={{ color: colors.ink }}>{t("Maximum stay", "Максимален престој")}: {info.maxStayMinutes} {t("min", "мин")}</Text> : null}
         {!compact && info.paymentInstructions ? <Text style={{ color: colors.ink, lineHeight: 20 }}>{info.paymentInstructions}</Text> : null}
         {!compact && info.restrictions ? <Text style={{ color: colors.ink, lineHeight: 20 }}>{info.restrictions}</Text> : null}

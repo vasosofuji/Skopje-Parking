@@ -25,13 +25,12 @@ export default function DrawerHandle(props: DrawerHandleProps) {
         pointer.current = { y: event.clientY, time: Date.now(), moved: false };
         ignoreClick.current = false;
         event.currentTarget.setPointerCapture(event.pointerId);
-        props.onStart();
       }}
       onPointerMove={(event) => {
         const start = pointer.current;
         if (!start) return;
         const delta = event.clientY - start.y;
-        if (Math.abs(delta) > 4) start.moved = true;
+        if (!start.moved && Math.abs(delta) > 4) { start.moved = true; props.onStart(); }
         if (start.moved) props.onDrag(delta);
       }}
       onPointerUp={(event) => {
@@ -42,13 +41,14 @@ export default function DrawerHandle(props: DrawerHandleProps) {
           props.onEnd(
             (event.clientY - start.y) / Math.max(1, Date.now() - start.time),
           );
-        }
+        } else if (start && Date.now() - start.time >= 400) ignoreClick.current = true;
         event.currentTarget.releasePointerCapture(event.pointerId);
       }}
       onPointerCancel={() => {
+        const moved = pointer.current?.moved;
         pointer.current = null;
         ignoreClick.current = true;
-        props.onEnd(0);
+        if (moved) props.onEnd(0);
       }}
       onClick={() => {
         if (!ignoreClick.current) props.onToggle();

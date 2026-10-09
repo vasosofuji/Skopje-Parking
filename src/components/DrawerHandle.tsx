@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import { PanResponder, Pressable, View } from "react-native";
 import type { DrawerHandleProps } from "./drawerHandleTypes";
 export default function DrawerHandle(props: DrawerHandleProps) {
   const { onStart, onDrag, onEnd } = props;
+  const held = useRef(false);
   const pan = useMemo(
     () =>
       PanResponder.create({
@@ -21,7 +22,10 @@ export default function DrawerHandle(props: DrawerHandleProps) {
         accessibilityRole="button"
         accessibilityLabel={props.label}
         accessibilityState={{ expanded: props.open }}
-        onPress={props.onToggle}
+        onPressIn={() => { held.current = false; }}
+        delayLongPress={400}
+        onLongPress={() => { held.current = true; }}
+        onPress={() => { if (!held.current) props.onToggle(); }}
         style={{ height: 30, alignItems: "center", justifyContent: "center" }}
       >
         <View

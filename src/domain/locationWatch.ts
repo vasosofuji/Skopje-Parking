@@ -1,4 +1,5 @@
 import type { Fix } from "./arrival";
+import { classifyLocationError } from "./locationIssue";
 export type LocationIssue = {
   code:
     | "denied"
@@ -7,17 +8,21 @@ export type LocationIssue = {
     | "timeout"
     | "unavailable"
     | "unsupported"
-    | "insecure";
+    | "insecure"
+    | "approximate";
   detail?: string;
 };
 export type LocationCallbacks = {
   onFix: (fix: Fix) => void;
   onIssue: (issue: LocationIssue) => void;
+  /** Android 12+ lets drivers grant only approximate location (a ~2 km grid). */
+  onPrecision?: (precise: boolean) => void;
 };
+type Permission = { granted: boolean; canAskAgain: boolean; android?: { accuracy: string } };
 type NativePosition = { coords: Omit<Fix, "timestamp">; timestamp: number };
 export type NativeLocationAdapter = {
-  permission: () => Promise<{ granted: boolean; canAskAgain: boolean }>;
-  requestPermission: () => Promise<{ granted: boolean; canAskAgain: boolean }>;
+  permission: () => Promise<Permission>;
+  requestPermission: () => Promise<Permission>;
   servicesEnabled: () => Promise<boolean>;
   enableServices?: () => Promise<void>;
   cached: () => Promise<NativePosition | null>;
@@ -56,12 +61,7 @@ export function startNativeLocation(
         }),
       ]);
     } catch (error) {
-      issue({
-        code:
-          error instanceof Error && error.message === "timeout"
-            ? "timeout"
-            : "unavailable",
-      });
+      issue(classifyLocationError(error));
     } finally {
       clearTimeout(timeout);
       inFlight = false;
@@ -77,6 +77,7 @@ export function startNativeLocation(
       issue({ code: permission.canAskAgain ? "denied" : "blocked" });
       return;
     }
+    callbacks.onPrecision?.(permission.android?.accuracy !== "coarse");
     if (!(await adapter.servicesEnabled())) {
       if (cancelled) return;
       if (adapter.enableServices) {
@@ -104,13 +105,13 @@ export function startNativeLocation(
     timer = setInterval(() => void poll(), 10000);
     try {
       subscription = await adapter.watch(received, (detail) =>
-        issue({ code: "unavailable", detail }),
+        issue(classifyLocationError(detail)),
       );
       if (cancelled) subscription.remove();
-    } catch {
-      issue({ code: "unavailable" });
+    } catch (error) {
+      issue(classifyLocationError(error));
     }
-  })().catch(() => issue({ code: "unavailable" }));
+  })().catch((error) => issue(classifyLocationError(error)));
   return () => {
     cancelled = true;
     clearInterval(timer);

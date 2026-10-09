@@ -14,7 +14,7 @@ import type { Catalog } from "../src/domain/types";
 const catalog: Catalog = { generatedAt: "2026-10-01T00:00:00Z", places: [], zones: [], destinations: [], coverage: { complete: false, bounds: [], notes: [] } };
 const password = "guest upgrade test password";
 const contribution = { requestId: "guest-contribution", name: "Guest parking", coordinate: { latitude: 41.997, longitude: 21.433 }, kind: "surface", zoneCode: null, firstHour: null, nextHour: null };
-const image = { mimeType: "image/png", base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jGqkAAAAASUVORK5CYII=" };
+const sign = { info: { isParkingSign: true, confidence: 0.8, zoneCode: "A3", operator: null, currency: "MKD", firstHour: 40, nextHour: 40, maxStayMinutes: 120, freeWeekends: null, chargingHours: null, paymentInstructions: null, restrictions: null, rawText: "" }, model: "ocr:mlkit-text-v2" };
 const auth = (token: string) => ({ authorization: `Bearer ${token}` });
 async function fixture(backend: "sqlite" | "postgres") {
   let store: ParkingStore | PostgresParkingStore;
@@ -106,16 +106,17 @@ for (const backend of ["sqlite", "postgres"] as const) {
   });
 }
 
-test("upload and contribution budgets follow an account across IP addresses", async () => {
+test("sign and contribution budgets follow an account across IP addresses", async () => {
   const { app, token, write } = await fixture("sqlite");
   try {
     await write("/v1/auth/guest", { accepted: true, termsVersion: TERMS_VERSION });
     const place = (await write("/v1/contributions", contribution)).json();
     for (let i = 0; i < 11; i++) {
-      const response = await app.inject({ method: "POST", url: `/v1/places/${place.id}/signs`, headers: auth(token), remoteAddress: `10.0.0.${i + 1}`, payload: image });
+      const response = await app.inject({ method: "POST", url: `/v1/places/${place.id}/signs`, headers: auth(token), remoteAddress: `10.0.0.${i + 1}`, payload: sign });
       assert.equal(response.statusCode, i < 10 ? 201 : 429, response.body);
     }
-    const oversized = await app.inject({ method: "POST", url: `/v1/places/${place.id}/signs`, headers: auth(token), remoteAddress: "10.0.1.1", payload: { ...image, base64: "A".repeat(3 * 1024 * 1024) } });
+    // Only small confirmed details are accepted; a photo-sized body is refused before it is read.
+    const oversized = await app.inject({ method: "POST", url: `/v1/places/${place.id}/signs`, remoteAddress: "10.0.1.1", payload: { ...sign, info: { ...sign.info, rawText: "A".repeat(100 * 1024) } } });
     assert.equal(oversized.statusCode, 413);
     for (let i = 0; i < 20; i++) {
       const response = await app.inject({ method: "POST", url: "/v1/contributions", headers: auth(token), remoteAddress: `10.1.0.${i + 1}`, payload: contribution });
@@ -140,5 +141,15 @@ test("resource budgets stay bounded, expire and release password work after fail
   release(); await pending;
   await assert.rejects(gate.run(async () => { throw new Error("failure"); }), /failure/);
   assert.equal(await gate.run(async () => "released"), "released");
+  // A sign-up burst waits in a bounded queue instead of failing.
+  const queued = new PasswordWorkLimiter(1, 1);
+  let finish!: () => void;
+  const order: string[] = [];
+  const first = queued.run(() => new Promise<void>(resolve => { finish = resolve; }).then(() => { order.push("first"); }));
+  const second = queued.run(async () => { order.push("second"); });
+  await assert.rejects(queued.run(async () => "overflow"), { statusCode: 429 });
+  finish(); await Promise.all([first, second]);
+  assert.deepEqual(order, ["first", "second"]);
+  assert.equal(await queued.run(async () => "idle"), "idle");
   assert.equal(await verifyPassword("x".repeat(129)), false);
 });

@@ -13,7 +13,7 @@ export function hasCurrentTerms(profile: Pick<Profile, "termsVersion"> | null) {
   return profile?.termsVersion === TERMS_VERSION;
 }
 
-/** Authentication is the final action, after the user explicitly accepts Terms. */
+/** Returning accounts authenticate first; the saved profile decides whether renewed consent is needed. */
 export async function completeOnboarding(
   intent: OnboardingIntent,
   accepted: boolean,
@@ -23,7 +23,7 @@ export async function completeOnboarding(
     login: (username: string, password: string, accepted: boolean) => Promise<void>;
   },
 ) {
-  if (!accepted) throw new Error("Terms must be accepted.");
+  if (!accepted && intent.mode !== "login") throw new Error("Terms must be accepted.");
   if (intent.mode === "guest") return actions.guest(true);
   const username = cleanUsername(intent.username);
   if (!validUsername(username)) throw new Error("Enter a valid username.");
@@ -32,5 +32,5 @@ export async function completeOnboarding(
     return actions.register(username, true, intent.password);
   }
   if (!intent.password || intent.password.length > 128) throw new Error("Enter your password.");
-  return actions.login(username, intent.password, true);
+  return actions.login(username, intent.password, accepted);
 }

@@ -15,6 +15,7 @@ import {
   distanceMeters,
   UNKNOWN_AVAILABILITY,
 } from "../../src/domain/parking";
+import { assemblePlaces, placeQueries, type PlaceRows } from "../store";
 export class PostgresParkingStore {
   db: StoreDatabase;
   constructor(
@@ -27,7 +28,8 @@ export class PostgresParkingStore {
   async seed(catalog: Catalog) {
     await this.db
       .prepare(
-        "INSERT INTO places(id,data) SELECT item->>'id', item::text FROM jsonb_array_elements(?::jsonb) item ON CONFLICT(id) DO UPDATE SET data=excluded.data",
+        // Every cold start seeds; rewriting unchanged rows would only churn locks and WAL.
+        "INSERT INTO places(id,data) SELECT item->>'id', item::text FROM jsonb_array_elements(?::jsonb) item ON CONFLICT(id) DO UPDATE SET data=excluded.data WHERE places.data IS DISTINCT FROM excluded.data",
       )
       .run(JSON.stringify(catalog.places));
   }
@@ -180,151 +182,11 @@ export class PostgresParkingStore {
       }
     });
   }
-  async places(): Promise<ParkingPlace[]> {
-    const now = this.clock(),
-      cutoff = now - 90 * 86400000;
+  async places(ids?: string[]): Promise<ParkingPlace[]> {
+    const now = this.clock();
     // Fixed number of database trips, independent of how many parking places exist.
-    const [raw, priceRows, presenceRows, reportRows, observationRows] =
-      await Promise.all([
-        this.db.prepare("SELECT data FROM places ORDER BY id").all(),
-        this.db
-          .prepare(
-            "SELECT * FROM price_reports WHERE observed>? ORDER BY observed DESC,session_id DESC",
-          )
-          .all(cutoff),
-        this.db
-          .prepare(
-            "SELECT * FROM location_reports ORDER BY observed DESC,session_id DESC",
-          )
-          .all(),
-        this.db
-          .prepare(
-            "SELECT * FROM reports WHERE observed>? ORDER BY observed DESC,session_id DESC",
-          )
-          .all(now - REPORT_TTL_MS),
-        this.db
-          .prepare("SELECT * FROM observations WHERE observed>?")
-          .all(now - OPERATOR_TTL_MS),
-      ]);
-    const places = (raw as { data: string }[]).map(
-      (row) => JSON.parse(row.data) as ParkingPlace,
-    );
-    function grouped<T extends { place_id: string }>(rows: T[]) {
-      const map = new Map<string, T[]>();
-      for (const row of rows) {
-        const group = map.get(row.place_id) ?? [];
-        group.push(row);
-        map.set(row.place_id, group);
-      }
-      return map;
-    }
-    const prices = grouped(
-      priceRows as {
-        place_id: string;
-        first_hour: number;
-        next_hour: number;
-        observed: number;
-      }[],
-    );
-    const presence = grouped(
-      presenceRows as { place_id: string; present: number; observed: number }[],
-    );
-    const reports = grouped(
-      reportRows as {
-        place_id: string;
-        status: "spaces" | "full";
-        observed: number;
-        free_spaces: number | null;
-      }[],
-    );
-    const observations = grouped(
-      observationRows as {
-        place_id: string;
-        free_spaces: number;
-        observed: number;
-      }[],
-    );
-    const targets = new Map<string, string>();
-    for (const p of places)
-      if (p.kind === "zone" && p.operator && p.zoneCode) {
-        const key = p.operator + ":" + p.zoneCode;
-        if (!targets.has(key)) targets.set(key, p.id);
-      }
-    return places
-      .filter(
-        (p) => !this.trustInputs || presence.get(p.id)?.[0]?.present !== 0,
-      )
-      .map((place) => {
-        const price =
-          prices.get(
-            place.kind === "zone"
-              ? (targets.get(place.operator + ":" + place.zoneCode) ?? place.id)
-              : place.id,
-          ) ?? [];
-        const confirmations = (presence.get(place.id) ?? []).filter(
-          (row) => row.observed > cutoff,
-        );
-        const community = reports.get(place.id) ?? [],
-          operator = observations.get(place.id)?.[0];
-        let availability = UNKNOWN_AVAILABILITY;
-        if (
-          operator &&
-          (!this.trustInputs ||
-            !community.length ||
-            operator.observed >= community[0].observed)
-        ) {
-          availability = {
-            status: operator.free_spaces > 0 ? "spaces" : "full",
-            source: "operator",
-            freeSpaces: operator.free_spaces,
-            reports: 0,
-            observedAt: new Date(operator.observed).toISOString(),
-            expiresAt: new Date(
-              operator.observed + OPERATOR_TTL_MS,
-            ).toISOString(),
-          };
-        } else if (community.length) {
-          const spaces = community.filter((r) => r.status === "spaces").length;
-          availability = {
-            status: this.trustInputs
-              ? community[0].status
-              : spaces === community.length
-                ? "spaces"
-                : spaces === 0
-                  ? "full"
-                  : "mixed",
-            source: "community",
-            ...((this.trustInputs || spaces === community.length || spaces === 0) && community[0].free_spaces !== null
-              ? { freeSpaces: community[0].free_spaces } : {}),
-            reports: community.length,
-            observedAt: new Date(community[0].observed).toISOString(),
-            expiresAt: new Date(
-              community[this.trustInputs ? 0 : community.length - 1].observed +
-                REPORT_TTL_MS,
-            ).toISOString(),
-          };
-        }
-        return {
-          ...place,
-          availability,
-          communityPrice: price.length
-            ? {
-                firstHour: price[0].first_hour,
-                nextHour: price[0].next_hour,
-                observedAt: new Date(price[0].observed).toISOString(),
-                reports: price.filter(
-                  (p) =>
-                    p.first_hour === price[0].first_hour &&
-                    p.next_hour === price[0].next_hour,
-                ).length,
-              }
-            : undefined,
-          locationReports: {
-            yes: confirmations.filter((r) => r.present === 1).length,
-            no: confirmations.filter((r) => r.present === 0).length,
-          },
-        };
-      });
+    const rows = await Promise.all(placeQueries(now, ids).map(([sql, ...args]) => this.db.prepare(sql).all(...args)));
+    return assemblePlaces(rows as PlaceRows, now, this.trustInputs);
   }
   async report(placeId: string, token: string, status: "spaces" | "full", freeSpaces?: number) {
     const user = await this.session(token),

@@ -38,7 +38,8 @@ export class ParkingStore {
       this.db.exec("ALTER TABLE reports ADD COLUMN free_spaces INTEGER");
     this.db.exec("CREATE TABLE IF NOT EXISTS capacity_reports(place_id TEXT NOT NULL REFERENCES places(id) ON DELETE CASCADE,session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,capacity INTEGER NOT NULL,updated INTEGER NOT NULL,PRIMARY KEY(place_id,session_id))");
     const put = this.db.prepare(
-      "INSERT INTO places(id,data) VALUES (?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data",
+      // Unchanged rows are skipped so a restart does not mark every place as changed for phones.
+      "INSERT INTO places(id,data) VALUES (?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data WHERE places.data IS NOT excluded.data",
     );
     this.db.exec("BEGIN");
     try {
@@ -174,49 +175,10 @@ export class ParkingStore {
       throw error;
     }
   }
-  places() {
-    return (
-      this.db.prepare(this.trustInputs ? "SELECT data FROM places WHERE COALESCE((SELECT present FROM location_reports WHERE place_id=places.id ORDER BY observed DESC, rowid DESC LIMIT 1),1)=1" : "SELECT data FROM places").all() as { data: string }[]
-    ).map((row) => {
-      const place: ParkingPlace = JSON.parse(row.data);
-      const prices = this.db
-        .prepare(
-          "SELECT first_hour,next_hour,observed FROM price_reports WHERE place_id=? AND observed>? ORDER BY observed DESC, rowid DESC",
-        )
-        .all(this.priceTarget(place), this.clock() - 90 * 86400000) as {
-        first_hour: number;
-        next_hour: number;
-        observed: number;
-      }[];
-      const confirmations = this.db
-        .prepare(
-          "SELECT present,COUNT(*) AS n FROM location_reports WHERE place_id=? AND observed>? GROUP BY present",
-        )
-        .all(place.id, this.clock() - 90 * 86400000) as {
-        present: number;
-        n: number;
-      }[];
-      return {
-        ...place,
-        availability: this.availability(place.id),
-        communityPrice: prices.length
-          ? {
-              firstHour: prices[0].first_hour,
-              nextHour: prices[0].next_hour,
-              observedAt: new Date(prices[0].observed).toISOString(),
-              reports: prices.filter(
-                (p) =>
-                  p.first_hour === prices[0].first_hour &&
-                  p.next_hour === prices[0].next_hour,
-              ).length,
-            }
-          : undefined,
-        locationReports: {
-          yes: confirmations.find((r) => r.present === 1)?.n ?? 0,
-          no: confirmations.find((r) => r.present === 0)?.n ?? 0,
-        },
-      };
-    });
+  places(ids?: string[]) {
+    const now = this.clock();
+    const rows = placeQueries(now, ids).map(([sql, ...args]) => this.db.prepare(sql).all(...(args as never[])));
+    return assemblePlaces(rows as PlaceRows, now, this.trustInputs);
   }
   report(placeId: string, token: string, status: "spaces" | "full", freeSpaces?: number) {
     const user = this.session(token),
@@ -450,4 +412,94 @@ export class ParkingStore {
   close() {
     this.db.close();
   }
+}
+
+const PRICE_WINDOW_MS = 90 * 86400000;
+type PriceRow = { place_id: string; first_hour: number; next_hour: number; observed: number };
+type PresenceRow = { place_id: string; present: number; observed: number };
+type ReportRow = { place_id: string; status: "spaces" | "full"; observed: number; free_spaces: number | null };
+type ObservationRow = { place_id: string; free_spaces: number; observed: number };
+export type PlaceRows = [{ data: string }[], PriceRow[], PresenceRow[], ReportRow[], ObservationRow[]];
+/** One query per table, shared by SQLite and PostgreSQL, so the catalog cost does not grow per place. */
+/** Fixed number of reads; `ids` limits them to those places (a delta) instead of the whole map. */
+export function placeQueries(now: number, ids?: string[]): [string, ...unknown[]][] {
+  const only = (column: string, first = false) => ids ? `${first ? " WHERE" : " AND"} ${column} IN (${ids.map(() => "?").join(",")})` : "";
+  const list = ids ?? [];
+  return [
+    ["SELECT data FROM places" + only("id", true) + " ORDER BY id", ...list],
+    ["SELECT place_id,first_hour,next_hour,observed FROM price_reports WHERE observed>?" + only("place_id") + " ORDER BY observed DESC,session_id DESC", now - PRICE_WINDOW_MS, ...list],
+    ["SELECT place_id,present,observed FROM location_reports" + only("place_id", true) + " ORDER BY observed DESC,session_id DESC", ...list],
+    ["SELECT place_id,status,observed,free_spaces FROM reports WHERE observed>?" + only("place_id") + " ORDER BY observed DESC,session_id DESC", now - REPORT_TTL_MS, ...list],
+    ["SELECT place_id,free_spaces,observed FROM observations WHERE observed>?" + only("place_id"), now - OPERATOR_TTL_MS, ...list],
+  ];
+}
+export function assemblePlaces([raw, priceRows, presenceRows, reportRows, observationRows]: PlaceRows, now: number, trustInputs: boolean): (ParkingPlace & { availability: Availability })[] {
+  const cutoff = now - PRICE_WINDOW_MS;
+  const places = raw.map((row) => JSON.parse(row.data) as ParkingPlace);
+  function grouped<T extends { place_id: string }>(rows: T[]) {
+    const map = new Map<string, T[]>();
+    for (const row of rows) {
+      const group = map.get(row.place_id);
+      if (group) group.push(row);
+      else map.set(row.place_id, [row]);
+    }
+    return map;
+  }
+  const prices = grouped(priceRows), presence = grouped(presenceRows),
+    reports = grouped(reportRows), observations = grouped(observationRows);
+  // Price reports for a tariff zone are shared by every sector with the same operator and code.
+  const targets = new Map<string, string>();
+  for (const p of places)
+    if (p.kind === "zone" && p.operator && p.zoneCode) {
+      const key = p.operator + ":" + p.zoneCode;
+      if (!targets.has(key)) targets.set(key, p.id);
+    }
+  return places
+    .filter((p) => !trustInputs || Number(presence.get(p.id)?.[0]?.present ?? 1) !== 0)
+    .map((place) => {
+      const price = prices.get(place.kind === "zone" && place.operator && place.zoneCode
+        ? targets.get(place.operator + ":" + place.zoneCode) ?? place.id : place.id) ?? [];
+      const confirmations = (presence.get(place.id) ?? []).filter((row) => Number(row.observed) > cutoff);
+      const community = reports.get(place.id) ?? [],
+        operator = observations.get(place.id)?.[0];
+      let availability: Availability = UNKNOWN_AVAILABILITY;
+      if (operator && (!trustInputs || !community.length || Number(operator.observed) >= Number(community[0].observed))) {
+        availability = {
+          status: operator.free_spaces > 0 ? "spaces" : "full",
+          source: "operator",
+          freeSpaces: operator.free_spaces,
+          reports: 0,
+          observedAt: new Date(Number(operator.observed)).toISOString(),
+          expiresAt: new Date(Number(operator.observed) + OPERATOR_TTL_MS).toISOString(),
+        };
+      } else if (community.length) {
+        const spaces = community.filter((r) => r.status === "spaces").length;
+        const status = trustInputs ? community[0].status : spaces === community.length ? "spaces" : spaces === 0 ? "full" : "mixed";
+        // Expire the aggregate at the oldest report's expiry so clients cannot keep a stale conflict alive.
+        availability = {
+          status,
+          source: "community",
+          ...(status !== "mixed" && community[0].free_spaces !== null ? { freeSpaces: community[0].free_spaces } : {}),
+          reports: community.length,
+          observedAt: new Date(Number(community[0].observed)).toISOString(),
+          expiresAt: new Date(Number(community[trustInputs ? 0 : community.length - 1].observed) + REPORT_TTL_MS).toISOString(),
+        };
+      }
+      return {
+        ...place,
+        availability,
+        communityPrice: price.length
+          ? {
+              firstHour: price[0].first_hour,
+              nextHour: price[0].next_hour,
+              observedAt: new Date(Number(price[0].observed)).toISOString(),
+              reports: price.filter((p) => p.first_hour === price[0].first_hour && p.next_hour === price[0].next_hour).length,
+            }
+          : undefined,
+        locationReports: {
+          yes: confirmations.filter((r) => Number(r.present) === 1).length,
+          no: confirmations.filter((r) => Number(r.present) === 0).length,
+        },
+      };
+    });
 }

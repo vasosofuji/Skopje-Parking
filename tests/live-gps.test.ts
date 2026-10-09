@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import ts from "typescript";
+import * as locationIssue from "../src/domain/locationIssue";
 import { containsParkingFix, type Fix } from "../src/domain/arrival";
 import { preferFix, usableFix } from "../src/domain/location";
 import type { ParkingPlace } from "../src/domain/types";
@@ -13,11 +14,12 @@ function harness(record: (fix: Fix) => Promise<ParkingPlace | null> = async () =
   let callback!: (fix: Fix) => void, stopped = 0, catalogSaves = 0, now = Date.now();
   const appState = { currentState: "active", addEventListener: (_event: string, listener: (state: string) => void) => { listeners.push(listener); return { remove() {} }; } };
   const scope = {
-    exports: {} as { useArrival: (places: ParkingPlace[]) => unknown }, __DEV__: false,
+    exports: {} as { useArrival: (places: ParkingPlace[], accountId: string) => unknown }, __DEV__: false,
     Date: class extends Date { static now() { return now; } }, setInterval: () => 1, clearInterval: () => {},
     fetch() { assert.fail("location updates must never make API requests"); },
     require(name: string) {
       if (name === "react") return {
+        useMemo: (value: () => unknown) => value(),
         useState(initial: unknown) { const index = states.length; states.push(typeof initial === "function" ? (initial as () => unknown)() : initial); return [states[index], (value: unknown) => { states[index] = typeof value === "function" ? (value as (prior: unknown) => unknown)(states[index]) : value; }]; },
         useRef(initial: unknown) { return { current: initial }; },
         useEffect(effect: () => (() => void) | void) { const cleanup = effect(); if (cleanup) cleanups.push(cleanup); },
@@ -25,6 +27,7 @@ function harness(record: (fix: Fix) => Promise<ParkingPlace | null> = async () =
       if (name === "react-native") return { AppState: appState };
       if (name === "../domain/arrival") return { containsParkingFix };
       if (name === "../domain/location") return { preferFix, usableFix: (fix: Fix) => usableFix(fix, now) };
+      if (name === "../domain/locationIssue") return locationIssue;
       if (name === "../services/location") return { watchLocation: async (next: (fix: Fix) => void) => { callback = next; return () => { stopped++; }; } };
       if (name === "../services/arrivalStorage") return { saveArrivalCatalog: async () => { catalogSaves++; } };
       if (name === "../services/backgroundArrival") return { consumePendingArrival: async () => null, observePendingArrival: () => () => {}, resetArrivalCandidate: async () => {}, recordForegroundArrival: record };
@@ -32,7 +35,7 @@ function harness(record: (fix: Fix) => Promise<ParkingPlace | null> = async () =
     },
   };
   vm.runInNewContext(source, scope);
-  scope.exports.useArrival([]);
+  scope.exports.useArrival([], "driver-one");
   return {
     states,
     fix(value: Fix) { now = value.timestamp; callback(value); },

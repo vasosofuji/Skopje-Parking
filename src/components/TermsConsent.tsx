@@ -11,7 +11,9 @@ import { useParking } from "../state/ParkingContext";
 import { useTheme } from "../state/ThemeContext";
 import { termsParagraphs } from "../domain/terms";
 import ModalBackdrop from "./ModalBackdrop";
-import { Button, IconButton } from "./ui";
+import { IconButton } from "./ui";
+import LoadingIndicator from "./LoadingIndicator";
+import StepActions from "./StepActions";
 export default function TermsConsent({
   busy,
   error,
@@ -88,6 +90,7 @@ export default function TermsConsent({
             <IconButton
               name="x"
               label={t("Back", "Назад")}
+              disabled={busy}
               onPress={() => {
                 if (!busy) onClose();
               }}
@@ -149,14 +152,27 @@ export default function TermsConsent({
                 {error}
               </Text>
             ) : null}
-            <Button
+            {busy ? (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <LoadingIndicator size="small" label="" />
+                <Text accessibilityLiveRegion="polite" style={{ flex: 1, color: colors.muted, fontSize: 12 }}>
+                  {t(
+                    "Connecting and saving. The server may take up to a minute to wake up. One tap is enough.",
+                    "Се поврзуваме и зачувуваме. На серверот може да му треба до една минута да се активира. Доволен е еден допир.",
+                  )}
+                </Text>
+              </View>
+            ) : null}
+            <StepActions
               title={
                 busy
                   ? t("Please wait…", "Почекајте…")
                   : t("I accept and continue", "Прифаќам и продолжувам")
               }
               disabled={!read || busy}
-              onPress={onAccept}
+              backDisabled={busy}
+              onBack={onClose}
+              onContinue={onAccept}
             />
           </View>
         </View>

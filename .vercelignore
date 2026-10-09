@@ -1,0 +1,13 @@
+.env*
+!.env.example
+.git
+.expo
+dist
+node_modules
+/android
+/ios
+preview
+data/runtime
+data/raw
+docs
+render.yaml

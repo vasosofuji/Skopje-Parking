@@ -29,3 +29,11 @@ test("a failed poll does not poison future refreshes", async () => {
   await refresh();
   assert.equal(calls, 2);
 });
+
+test("recent foreground polls reuse fresh data but mutation refreshes bypass freshness", async () => {
+  let clock = 1000, calls = 0;
+  const refresh = createRefreshCoordinator(async () => { calls++; }, 25000, () => clock);
+  await refresh(); await refresh(); assert.equal(calls, 1);
+  await refresh(true); assert.equal(calls, 2);
+  clock += 25000; await refresh(); assert.equal(calls, 3);
+});

@@ -1,19 +1,32 @@
+import { translate, placeName } from "../domain/language";
 import React, { useEffect, useRef, useState } from "react";
+import { parkingSelectionZoom } from "../domain/map-selection-camera";
 import L from "leaflet";
 import "./leaflet.css";
 import "./map.css";
 import type { ParkingMapProps } from "./mapTypes";
-import { currentAvailability, SKOPJE } from "../domain/parking";
+import { createLayerCache } from "../domain/layer-cache";
+import { SKOPJE } from "../domain/parking";
+import { canInteractWithZone, isPocSector } from "../domain/zone-interaction";
 import { groupParking } from "../domain/clusters";
-import { accentColor } from "../domain/cosmetics";
+import { parkingMarker, parkingMarkerHtml } from "../domain/marker-appearance";
+
+function moveCamera(map: L.Map, point: L.LatLngTuple, zoom: number, animate = true) {
+  map.stop();
+  if (animate && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === false)
+    map.flyTo(point, zoom, { animate: true, duration: 0.45, easeLinearity: 0.25 });
+  else map.setView(point, zoom, { animate: false });
+}
 
 export default function ParkingMap(props: ParkingMapProps) {
   const host = useRef<HTMLDivElement>(null),
     map = useRef<L.Map | null>(null);
   const layers = useRef<L.LayerGroup | null>(null),
     draftLayer = useRef<L.LayerGroup | null>(null);
+  const layerCache = useRef<ReturnType<typeof createLayerCache<L.Layer>> | null>(null);
   const callbacks = useRef(props);
   const userDot = useRef<L.CircleMarker | null>(null), accuracyCircle = useRef<L.Circle | null>(null);
+  const cameraMoving = useRef(false), destinationKey = useRef(""), selectionKey = useRef("");
   useEffect(() => {
     callbacks.current = props;
   }, [props]);
@@ -26,24 +39,35 @@ export default function ParkingMap(props: ParkingMapProps) {
       attributionControl: false,
       scrollWheelZoom: "center",
       minZoom: 3,
+      zoomSnap: 0.5,
     }).setView([SKOPJE.latitude, SKOPJE.longitude], 15);
-    L.tileLayer(
+    // Keep broad tariff regions below actual parking footprints, including
+    // when the layer cache recreates a changed region after the footprints.
+    instance.createPane("tariff-regions").style.zIndex = "390";
+    const raster = L.tileLayer(
       process.env.EXPO_PUBLIC_TILE_URL ??
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
         maxZoom: 19,
+        keepBuffer: 4,
+        updateWhenIdle: true,
+        updateWhenZooming: false,
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       },
     ).addTo(instance);
+    let basemapCleanup = () => { raster.remove(); };
+    void import("../services/leaflet-basemap.web").then(({ addBasemap }) => {
+      if (map.current === instance) basemapCleanup = addBasemap(instance, raster);
+    }).catch(error => { console.warn("Vector basemap module unavailable; keeping raster map.", error); });
     layers.current = L.layerGroup().addTo(instance);
+    layerCache.current = createLayerCache(layer => layer.addTo(layers.current!), layer => layers.current?.removeLayer(layer), layer => layer.off());
     draftLayer.current = L.layerGroup().addTo(instance);
     map.current = instance;
     instance.on("zoomend", () => setZoom(instance.getZoom()));
-    instance.on("movestart", () =>
-      callbacks.current.onSelectedPosition?.(null),
-    );
+    instance.on("movestart", () => { cameraMoving.current = true; callbacks.current.onSelectedPosition?.(null); });
     instance.on("moveend", () => {
+      cameraMoving.current = false;
       setViewRevision((value) => value + 1);
       const p = instance.getCenter();
       callbacks.current.onCenterChange?.({ latitude: p.lat, longitude: p.lng });
@@ -57,10 +81,22 @@ export default function ParkingMap(props: ParkingMapProps) {
         });
       else callbacks.current.onBlankPress?.();
     });
-    const resize = new ResizeObserver(() => instance.invalidateSize());
+    const resize = new ResizeObserver(() => instance.invalidateSize({ pan: false }));
     resize.observe(host.current);
+    const motion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    const motionChanged = (event: MediaQueryListEvent) => {
+      if (!event.matches) return;
+      instance.stop(); cameraMoving.current = false;
+      const anchor = callbacks.current.selectedAnchor;
+      callbacks.current.onSelectedPosition?.(callbacks.current.selectedId && anchor
+        ? instance.latLngToContainerPoint([anchor.latitude, anchor.longitude]) : null);
+    };
+    motion?.addEventListener("change", motionChanged);
     return () => {
+      motion?.removeEventListener("change", motionChanged);
       resize.disconnect();
+      basemapCleanup();
+      layerCache.current?.clear(); layerCache.current = null;
       instance.remove();
       map.current = null;
       layers.current = null;
@@ -70,26 +106,38 @@ export default function ParkingMap(props: ParkingMapProps) {
     };
   }, []);
   useEffect(() => {
+    const handler = map.current?.doubleClickZoom;
+    if (props.drawing) { map.current?.stop(); cameraMoving.current = false; handler?.disable(); }
+    else handler?.enable();
+  }, [props.drawing]);
+  useEffect(() => {
     const group = layers.current,
       instance = map.current;
-    if (!group || !instance) return;
+    if (!group || !instance || !layerCache.current) return;
+    const cache = layerCache.current;
+    cache.begin();
+    const retain = (key: string, state: unknown, create: () => L.Layer) => cache.use(key, JSON.stringify([state, props.picking, props.selectionEnabled, props.language]), create);
     const select = (
       place: ParkingMapProps["places"][number],
       point = place.coordinate,
     ) => {
+      if (!canInteractWithZone(place, instance.getZoom(), callbacks.current.picking)) return;
       if (props.picking) callbacks.current.onPick(point);
       else if (props.selectionEnabled !== false)
         callbacks.current.onSelect(place, point);
     };
     if (!props.drawing && props.showZones) {
-      for (const place of props.places.filter((p) => p.kind === "zone")) {
+      for (const place of props.places.filter((p) => isPocSector(p))) {
         const selected = place.id === props.selectedId;
+        const interactive = canInteractWithZone(place, zoom, props.picking);
         if (place.geometry) {
-          L.polygon(
-            place.geometry.coordinates.map((ring) =>
+          retain(`zone:${place.id}`, [place, selected, interactive], () => L.polygon(
+            place.geometry!.coordinates.map((ring) =>
               ring.map(([lon, lat]) => [lat, lon] as L.LatLngTuple),
             ),
             {
+              pane: "tariff-regions",
+              interactive,
               color: selected ? "#962e2b" : "#527FBA",
               weight: selected ? 2.5 : 1,
               dashArray: "5 5",
@@ -97,28 +145,32 @@ export default function ParkingMap(props: ParkingMapProps) {
             },
           )
             .on("click", (event: L.LeafletMouseEvent) => {
+              if (!canInteractWithZone(place, instance.getZoom(), callbacks.current.picking)) return;
               L.DomEvent.stopPropagation(event);
               select(place, {
                 latitude: event.latlng.lat,
                 longitude: event.latlng.lng,
               });
             })
-            .addTo(group);
+            );
         }
-        if (zoom >= 17 || selected) {
+        if (zoom >= 14 || selected) {
           const label = document.createElement("span");
           label.textContent = place.zoneCode ?? place.name;
-          L.marker([place.coordinate.latitude, place.coordinate.longitude], {
+          retain(`zone-label:${place.id}`, [place, selected, interactive], () => L.marker([place.coordinate.latitude, place.coordinate.longitude], {
+            interactive, keyboard: interactive,
+            autoPanOnFocus: false,
             icon: L.divIcon({
               className: "zone-label" + (!place.geometry ? " approximate" : ""),
               html: label,
-              iconSize: [44, 24],
+              iconSize: [60, 44],
+              iconAnchor: [30, 22],
             }),
             title: place.name,
-            zIndexOffset: selected ? 1100 : 0,
+            zIndexOffset: selected ? 1100 : -500,
           })
             .on("click", () => select(place))
-            .addTo(group);
+            );
         }
       }
     }
@@ -130,80 +182,64 @@ export default function ParkingMap(props: ParkingMapProps) {
       bounds.contains([place.coordinate.latitude, place.coordinate.longitude]),
     );
     if (!props.drawing) {
-      for (const place of visible.filter((p) => p.kind !== "zone" && p.geometry && (zoom >= 17 || p.id === props.selectedId))) {
+      for (const place of visible.filter((p) => !isPocSector(p) && (props.showZones || p.kind !== "zone") && p.geometry && (zoom >= 17 || p.id === props.selectedId))) {
         const selected = place.id === props.selectedId;
-        L.polygon(place.geometry!.coordinates.map((ring) => ring.map(([lon, lat]) => [lat, lon] as L.LatLngTuple)), {
+        retain(`footprint:${place.id}`, [place, selected], () => L.polygon(place.geometry!.coordinates.map((ring) => ring.map(([lon, lat]) => [lat, lon] as L.LatLngTuple)), {
           color: "#962E2B", weight: selected ? 2.5 : 1.5, fillOpacity: selected ? 0.12 : 0.045,
         }).on("click", (event: L.LeafletMouseEvent) => {
           L.DomEvent.stopPropagation(event);
           select(place, { latitude: event.latlng.lat, longitude: event.latlng.lng });
-        }).addTo(group);
+        }));
       }
     }
     for (const members of groupParking(
-      props.drawing ? [] : visible,
+      props.drawing ? [] : visible.filter(p => props.showZones || p.kind !== "zone"),
       latitudeStep,
       longitudeStep,
       props.selectedId,
+      props.now,
+      props.filtered,
     )) {
       const place = members[0],
         selected = place.id === props.selectedId,
         cluster = members.length > 1;
-      const availability = currentAvailability(place.availability);
-      const color = cluster
-        ? "#392c25"
-        : availability.status === "spaces"
-          ? "#087958"
-          : availability.status === "full"
-            ? "#B83A36"
-            : place.access === "restricted"
-              ? "#88948D"
-              : "#392c25";
-      const label = cluster ? String(members.length) : "P";
-      const accent = cluster ? undefined : accentColor(place.contributionAccent);
+      const appearance = parkingMarker(place, members.length, props.now);
       const icon = L.divIcon({
         className:
           "parking-pin" +
           (selected ? " selected" : "") +
           (cluster ? " cluster" : "") +
-          (!cluster && availability.status === "spaces" ? " spaces" : ""),
-        html:
-          '<span style="background:' +
-          color +
-          (accent ? ";border-color:" + accent : "") +
-          '">' +
-          (!cluster && availability.status === "spaces" ? "P ✓" : label) +
-          "</span>",
-        iconSize: [26, 26],
-        iconAnchor: [13, 13],
+          (appearance.spaces ? " spaces" : ""),
+        html: parkingMarkerHtml(appearance),
+        iconSize: [60, 48],
+        iconAnchor: [30, 24],
       });
       const title = cluster
         ? members.length +
-          (props.language === "mk" ? " паркинг локации" : " parking places")
-        : props.language === "en"
-          ? (place.nameEn ?? place.name)
-          : place.name;
-      L.marker([place.coordinate.latitude, place.coordinate.longitude], {
+          (translate(props.language, " parking places", " паркинг локации"))
+        : placeName(place, props.language);
+      retain(`pin:${place.id}`, [place, selected, members.map(member => member.id), appearance], () => L.marker([place.coordinate.latitude, place.coordinate.longitude], {
+        autoPanOnFocus: false,
         icon,
         title,
         zIndexOffset: selected
           ? 1000
-          : availability.status === "spaces"
+          : appearance.spaces
             ? 800
             : 0,
       })
         .on("click", () => {
           if (props.picking) callbacks.current.onPick(place.coordinate);
           else if (props.selectionEnabled === false) return;
-          else if (cluster)
-            instance.setView(
+          else if (cluster) {
+            callbacks.current.onPan?.();
+            moveCamera(instance,
               [place.coordinate.latitude, place.coordinate.longitude],
-              Math.min(19, zoom + 1),
-              { animate: false },
+              Math.min(19, instance.getZoom() + 1),
             );
-          else callbacks.current.onSelect(place);
+          } else callbacks.current.onSelect(place);
         })
-        .addTo(group);
+        );
     }
     const markerPoint =
       props.destinationMarker === undefined
@@ -213,8 +249,8 @@ export default function ParkingMap(props: ParkingMapProps) {
       const title = document.createElement("span");
       title.textContent =
         props.destinationName ??
-        (props.language === "mk" ? "Дестинација" : "Destination");
-      L.marker([markerPoint.latitude, markerPoint.longitude], {
+        (translate(props.language, "Destination", "Дестинација"));
+      retain("destination", [markerPoint, title.textContent], () => L.marker([markerPoint.latitude, markerPoint.longitude], {
         icon: L.divIcon({
           className: "destination-pin",
           html: "<span></span>",
@@ -230,24 +266,23 @@ export default function ParkingMap(props: ParkingMapProps) {
           offset: [0, -44],
           className: "destination-label",
         })
-        .addTo(group);
+        );
     }
+    cache.end();
     userDot.current?.bringToFront();
     const anchor = props.selectedAnchor;
-    if (props.selectedId && anchor) {
+    if (props.selectedId && anchor && !cameraMoving.current) {
       const p = instance.latLngToContainerPoint([
         anchor.latitude,
         anchor.longitude,
       ]);
       callbacks.current.onSelectedPosition?.({ x: p.x, y: p.y });
     } else callbacks.current.onSelectedPosition?.(null);
-    return () => {
-      const old = group.getLayers();
-      group.clearLayers();
-      old.forEach((layer) => layer.off());
-    };
+
   }, [
     props.places,
+    props.filtered,
+    props.now,
     props.selectedId,
     props.selectedAnchor,
     props.destination,
@@ -306,7 +341,7 @@ export default function ParkingMap(props: ParkingMapProps) {
         autoPan: true,
         zIndexOffset: 3000,
         title:
-          (callbacks.current.language === "mk" ? "Агол " : "Corner ") +
+          (translate(callbacks.current.language, "Corner ", "Агол ")) +
           (index + 1),
         icon: L.divIcon({
           className: "zone-vertex",
@@ -357,24 +392,36 @@ export default function ParkingMap(props: ParkingMapProps) {
     };
   }, [props.draftCoordinates, props.drawing]);
   useEffect(() => {
-    map.current?.setView(
-      [props.destination.latitude, props.destination.longitude],
-      15,
-      { animate: false },
-    );
+    const instance = map.current;
+    if (!instance) return;
+    const key = `${props.destination.latitude},${props.destination.longitude}:${props.cameraRevision ?? 0}:${props.cameraZoom ?? 15}`;
+    const selected = props.selectedId && props.selectedAnchor ? `${props.selectedId}:${props.selectedAnchor.latitude},${props.selectedAnchor.longitude}` : "";
+    if (key !== destinationKey.current) {
+      const initial = !destinationKey.current;
+      destinationKey.current = key;
+      moveCamera(instance, [props.destination.latitude, props.destination.longitude], props.cameraZoom ?? 15, !initial && !props.drawing);
+    } else if (selected && selected !== selectionKey.current && !props.picking && !props.drawing) {
+      const place = props.places.find(place => place.id === props.selectedId);
+      moveCamera(instance, [props.selectedAnchor!.latitude, props.selectedAnchor!.longitude], parkingSelectionZoom(instance.getZoom(), Boolean(place && isPocSector(place))), false);
+    }
+    selectionKey.current = selected;
   }, [
     props.destination.latitude,
     props.destination.longitude,
     props.cameraRevision,
+    props.cameraZoom,
+    props.selectedId,
+    props.selectedAnchor,
+    props.places,
+    props.picking,
+    props.drawing,
   ]);
   return (
     <div
       ref={host}
       className={props.dark ? "parking-map-dark" : ""}
       aria-label={
-        props.language === "mk"
-          ? "Мапа на паркинзи во Скопје"
-          : "Skopje parking map"
+        translate(props.language, "Skopje parking map", "Мапа на паркинзи во Скопје")
       }
       style={{
         width: "100%",

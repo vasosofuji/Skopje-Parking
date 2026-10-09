@@ -41,11 +41,11 @@ export async function createApp(backgroundTask?: (task: Promise<void>) => void, 
     return await buildApp(catalog, store, {
       adminKey: process.env.ADMIN_API_KEY,
       feedKeys: process.env.OPERATOR_FEED_KEYS ? JSON.parse(process.env.OPERATOR_FEED_KEYS) : {},
-      origins: process.env.ALLOWED_ORIGINS?.split(",").map(value => value.trim()).filter(Boolean),
+      origins: process.env.ALLOWED_ORIGINS?.split(",").map((value: string) => value.trim()).filter(Boolean),
       requireOnboarding: true,
       // The function's gateway appends the client address; trust only that hop.
       trustedProxies: backgroundTask ? (_address, hop) => hop === 0 :
-        process.env.TRUSTED_PROXIES?.split(",").map(value => value.trim()).filter(Boolean),
+        process.env.TRUSTED_PROXIES?.split(",").map((value: string) => value.trim()).filter(Boolean),
       backgroundTask,
       cronSecret: process.env.CRON_SECRET,
     });

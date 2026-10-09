@@ -20,6 +20,7 @@ import { PostgresAccountStore } from "./postgres/accounts";
 import { SharedRequestBudget, sharedRateLimitStore } from "./postgres/rate-limits";
 import { DestinationAlerts, registerDestinationAlertRoutes, type PushSender } from "./destination-alerts";
 import { registerParkingDeletion } from "./parking-deletion";
+import { registerTesterApplications, type TelegramTarget } from "./tester-applications";
 const coordinate = z.object({
   latitude: z.number().min(41.91).max(42.08),
   longitude: z.number().min(21.3).max(21.58),
@@ -60,6 +61,7 @@ export async function buildApp(
     trustedProxies?: string[] | ((address: string, hop: number) => boolean);
     backgroundTask?: (task: Promise<void>) => void;
     cronSecret?: string;
+    telegram?: TelegramTarget;
     destinationPushSender?: PushSender;
   } = {},
 ) {
@@ -124,6 +126,7 @@ export async function buildApp(
       url === "/v1/auth/login" ||
       url === "/v1/auth/guest" ||
       url === "/v1/auth/logout" ||
+      url === "/v1/tester-applications" ||
       url.startsWith("/v1/operators/")
     )
       return;
@@ -192,6 +195,7 @@ export async function buildApp(
   const token = bearerToken;
   registerDestinationAlertRoutes(app, destinationAlerts);
   registerParkingDeletion(app, store, catalog);
+  registerTesterApplications(app, options.telegram);
   app.get("/health", { config: { rateLimit: false } }, async (_request, reply) => {
     try {
       await store.db.prepare("SELECT 1 FROM places LIMIT 1").get();

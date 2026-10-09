@@ -231,3 +231,29 @@ form.delete button[disabled] { opacity: 0.6; cursor: wait; }
   html { scroll-behavior: auto; }
   .btn { transition: none; }
 }
+
+/* Tester application dialog */
+dialog.apply { width: min(560px, 100% - 32px); max-height: calc(100svh - 32px); padding: 0; border: 0; border-radius: 28px; background: var(--paper); color: var(--ink); box-shadow: 0 40px 100px -30px rgba(21, 17, 16, 0.6); }
+dialog.apply::backdrop { background: rgba(21, 17, 16, 0.55); backdrop-filter: blur(4px); }
+dialog.apply form, dialog.apply .done { display: grid; gap: 18px; padding: clamp(28px, 5vw, 40px); position: relative; }
+dialog.apply [hidden] { display: none; }
+dialog.apply h2 { font-size: clamp(38px, 6vw, 52px); padding-right: 40px; }
+dialog.apply .intro-text, dialog.apply .done p { margin: 0; color: var(--soft); }
+dialog.apply label { display: grid; gap: 8px; font-weight: 700; font-size: 15px; }
+dialog.apply input[type="text"], dialog.apply input[type="email"], dialog.apply input[type="tel"] { font: inherit; font-weight: 400; padding: 14px 16px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff; color: var(--ink); }
+dialog.apply input:focus { border-color: var(--ink); outline: none; }
+dialog.apply .hint { font-weight: 400; font-size: 13px; color: var(--soft); }
+dialog.apply fieldset { margin: 0; padding: 0; border: 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+dialog.apply legend { width: 100%; margin-bottom: 8px; font-weight: 700; font-size: 15px; padding: 0; }
+dialog.apply .choice { display: inline-flex; flex-direction: row; align-items: center; gap: 8px; padding: 10px 18px; border: 1.5px solid var(--line); border-radius: 999px; font-weight: 500; cursor: pointer; }
+dialog.apply .choice:has(input:checked) { border-color: var(--red); background: rgba(150, 46, 43, 0.06); }
+dialog.apply .choice input { accent-color: var(--red); margin: 0; }
+dialog.apply .consent { margin: 0; font-size: 13px; color: var(--soft); }
+dialog.apply .consent a { color: var(--ink); }
+dialog.apply .trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+dialog.apply button[type="submit"], dialog.apply .done .btn { justify-self: start; cursor: pointer; }
+dialog.apply button[disabled] { opacity: 0.6; cursor: wait; }
+dialog.apply .close { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--sand); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+dialog.apply .close svg { width: 18px; height: 18px; }
+.top nav button.btn { cursor: pointer; }
+button.btn { cursor: pointer; font-family: var(--body); }

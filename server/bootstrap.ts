@@ -48,6 +48,7 @@ export async function createApp(backgroundTask?: (task: Promise<void>) => void, 
         process.env.TRUSTED_PROXIES?.split(",").map((value: string) => value.trim()).filter(Boolean),
       backgroundTask,
       cronSecret: process.env.CRON_SECRET,
+      telegram: process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID ? { token: process.env.TELEGRAM_BOT_TOKEN, chatId: process.env.TELEGRAM_CHAT_ID } : undefined,
     });
   } catch (error) {
     await store.close();

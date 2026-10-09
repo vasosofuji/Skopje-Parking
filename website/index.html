@@ -14,6 +14,7 @@
 <meta property="og:type" content="website">
 <link rel="preload" href="fonts/anton-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles.css">
+<script src="apply.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -26,7 +27,7 @@
       <a href="#features">Features</a>
       <a href="#privacy">Privacy</a>
       <a href="#faq">Questions</a>
-      <a class="btn btn-primary btn-small" href="#download">Get the app</a>
+      <button class="btn btn-primary btn-small" type="button" data-apply>Apply for testing</button>
     </nav>
   </div>
 </header>
@@ -35,21 +36,19 @@
 <section class="hero" aria-labelledby="hero-title">
   <div class="wrap">
     <div>
-      <p class="eyebrow">Parking app for Skopje</p>
       <h1 class="display" id="hero-title"><span>Where to</span><span>park in</span><span class="red">Skopje</span></h1>
       <p class="lead">See the car parks, garages and paid street zones around you, what they cost, and whether another driver just found space there. Then pay your zone by SMS from the same screen.</p>
       <div class="buttons">
-        <!-- APK: put the file URL in href and remove aria-disabled once it is uploaded. -->
-        <a class="btn btn-primary" href="#download" id="apk-hero">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
-          Download the APK
-        </a>
+        <button class="btn btn-primary" type="button" data-apply>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+          Apply for testing
+        </button>
         <span class="btn btn-ghost btn-soon" aria-disabled="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
           Soon on Google Play
         </span>
       </div>
-      <p class="note">Free, with no ads. Android only for now.</p>
+      <p class="note">Free, with no ads. Now in closed testing on Android.</p>
     </div>
     <div class="hero-art">
       <div class="device">
@@ -63,7 +62,6 @@
 <section class="intro section" aria-labelledby="intro-title">
   <div class="wrap">
     <div>
-      <p class="eyebrow">Why it exists</p>
       <h2 class="display" id="intro-title">Most of us have circled Centar <em>looking for a spot.</em></h2>
     </div>
     <div class="copy">
@@ -74,7 +72,7 @@
   <div class="wrap numbers">
     <div><b>866</b><span>car parks, garages and street parking spots on the map</span></div>
     <div><b>48</b><span>paid zones run by Gradski Parking and POC</span></div>
-    <div><b>15 min</b><span>how long a free-spaces report stays up</span></div>
+    <div><b>10 sec</b><span>is all it takes to tell other drivers if there's space</span></div>
     <div><b>4</b><span>languages: Macedonian, Albanian, Turkish and English</span></div>
   </div>
 </section>
@@ -111,7 +109,6 @@
 <section class="feature-row section" aria-labelledby="reports-title">
   <div class="wrap">
     <div class="copy">
-      <p class="eyebrow">Live reports</p>
       <h2 class="display" id="reports-title">One tap tells the next driver</h2>
       <p>When your phone has been still at a car park for about ten seconds, the app asks whether there were free spaces. Your answer turns the pin green or red for the next 15 minutes.</p>
       <ul class="checks">
@@ -129,7 +126,6 @@
 <section class="feature-row flip section" aria-labelledby="signs-title">
   <div class="wrap">
     <div class="copy">
-      <p class="eyebrow">Sign reading</p>
       <h2 class="display" id="signs-title">The sign, typed out for you</h2>
       <p>Point the camera at a parking sign. Text recognition runs on the phone and turns it into a digital card with the zone, the price, the hours and the free days. It reads Macedonian, Albanian and English signs.</p>
       <p>You compare the card with the photo and fix anything it got wrong. Only the details you confirm are published, and the photo is deleted once you're done.</p>
@@ -184,7 +180,6 @@
 <section class="night section" aria-labelledby="night-title">
   <div class="wrap">
     <div>
-      <p class="eyebrow">Evenings</p>
       <h2 class="display" id="night-title">Made for late arrivals too</h2>
       <p>The dark theme keeps the map easy to read after sunset, or the app can simply follow your phone's setting. Pick the language you're most comfortable with.</p>
       <ul class="langs" aria-label="Languages"><li>Македонски</li><li>Shqip</li><li>Türkçe</li><li>English</li></ul>
@@ -222,7 +217,7 @@
       </details>
       <details>
         <summary>Which phones does it run on?</summary>
-        <p>Android. The Google Play listing is on its way, and until then you can install the APK from this page.</p>
+        <p>Android. The app is in closed testing on Google Play right now, so apply on this page and we'll send you an invite.</p>
       </details>
       <details>
         <summary>Does it work outside Skopje?</summary>
@@ -240,20 +235,18 @@
   <div class="wrap">
     <div class="panel">
       <div>
-        <h2 class="display" id="download-title">Get Skopje Parking</h2>
-        <p>Android will ask you once to allow installs from your browser. When the Google Play listing goes live, switch to it for automatic updates.</p>
+        <h2 class="display" id="download-title">Join the test</h2>
+        <p>Skopje Parking is in closed testing on Google Play. Apply with the Google account you use on your phone, and we'll add you to the test and send you the link to install it.</p>
         <div class="buttons">
-          <!-- APK: put the file URL in href and remove aria-disabled once it is uploaded. -->
-          <a class="btn btn-primary" href="#download" id="apk-download" aria-disabled="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
-            Download the APK
-          </a>
+          <button class="btn btn-primary" type="button" data-apply>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+            Apply for testing
+          </button>
           <span class="btn btn-ghost btn-soon" aria-disabled="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
             Soon on Google Play
           </span>
         </div>
-        <p class="note" id="apk-note">The download link goes up here shortly.</p>
       </div>
       <img class="mark" src="img/logo-white.svg" width="240" height="250" alt="">
     </div>
@@ -269,7 +262,7 @@
     </div>
     <div>
       <h3>App</h3>
-      <ul><li><a href="#how">How it works</a></li><li><a href="#features">Features</a></li><li><a href="#faq">Questions</a></li><li><a href="#download">Download</a></li></ul>
+      <ul><li><a href="#how">How it works</a></li><li><a href="#features">Features</a></li><li><a href="#faq">Questions</a></li><li><a href="#download">Join the test</a></li></ul>
     </div>
     <div>
       <h3>Legal</h3>
@@ -285,5 +278,29 @@
     </div>
   </div>
 </footer>
+
+<dialog class="apply" id="apply" aria-labelledby="apply-title">
+  <form id="apply-form" novalidate>
+    <button class="close" type="button" data-close aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <h2 class="display" id="apply-title">Apply for testing</h2>
+    <p class="intro-text">We add testers on Google Play by hand. Fill this in and we'll send the invite to your Google account.</p>
+    <label>Full name<input type="text" name="name" autocomplete="name" required maxlength="100"></label>
+    <label>Google account email<input type="email" name="email" autocomplete="email" required maxlength="200"><span class="hint">The Gmail address you use for the Play Store on your phone. The test invite goes there.</span></label>
+    <label>Phone number<input type="tel" name="phone" autocomplete="tel" required maxlength="30" placeholder="+389 70 123 456"></label>
+    <fieldset><legend>Do you have a driving licence?</legend><label class="choice"><input type="radio" name="licence" value="yes" required>Yes</label><label class="choice"><input type="radio" name="licence" value="no">No</label></fieldset>
+    <fieldset><legend>Do you have a car?</legend><label class="choice"><input type="radio" name="car" value="yes" required>Yes</label><label class="choice"><input type="radio" name="car" value="no">No</label></fieldset>
+    <input class="trap" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p class="consent">We use these details only to invite you to the test and to contact you about it. See the <a href="/privacy">privacy policy</a>.</p>
+    <button class="btn btn-primary" type="submit">Send application</button>
+    <p class="status" id="apply-status" role="status" aria-live="polite"></p>
+  </form>
+  <div class="done" id="apply-done" hidden>
+    <h2 class="display">Thanks</h2>
+    <p id="apply-done-text"></p>
+    <button class="btn btn-primary" type="button" data-close>Close</button>
+  </div>
+</dialog>
 </body>
 </html>

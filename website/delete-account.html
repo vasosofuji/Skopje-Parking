@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delete your account · Parkino</title>
+<meta name="description" content="Delete your Parkino account and contributor data, in the app or on this page.">
+<meta name="theme-color" content="#f3eee4">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css">
+<script src="delete.js" defer></script>
+</head>
+<body class="page">
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Parkino home"><img src="logo.svg" alt="" width="30" height="31">Parkino</a>
+    <nav aria-label="Main"><a href="/">Home</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
+  </div>
+</header>
+<main class="wrap">
+  <h1 class="display">Delete your account</h1>
+
+  <h2>In the app</h2>
+  <p>Open Settings, then Privacy &amp; data, then Delete my contributor data, and confirm. Deletion happens right away.</p>
+
+  <h2>On this page</h2>
+  <p>Sign in with the username and password you use in Parkino. Guest accounts have no password or personal details, so delete those from the app on the phone that created them.</p>
+  <form class="delete" id="delete-form" novalidate>
+    <label>Username<input type="text" name="username" autocomplete="username" required maxlength="100"></label>
+    <label>Password<input type="password" name="password" autocomplete="current-password" required maxlength="128"></label>
+    <label class="check"><input type="checkbox" name="confirm" required><span>I understand this permanently deletes my account and I can't sign back in to it.</span></label>
+    <button class="btn btn-primary" type="submit">Delete my account</button>
+    <p class="status" id="delete-status" role="status" aria-live="polite"></p>
+  </form>
+
+  <h2>What gets deleted</h2>
+  <p>Your username, password, sign-in sessions, points, sign details, zone-label edits, price and availability reports and confirmations. Parking places and boundaries you published stay on the shared map without your name. Your licence plate and any AI key were only ever stored on your phone.</p>
+</main>
+<footer class="footer">
+  <div class="wrap">
+    <div class="legal"><span>© 2026 Parkino</span><span><a href="/">Home</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></span></div>
+  </div>
+</footer>
+</body>
+</html>

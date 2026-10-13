@@ -766,7 +766,7 @@ export default function MapScreen() {
               </View>
               {searchFocused && !query.trim() ? <SavedPlaceChips onChoose={value => choose(value)} /> : null}
               {licensePlate.pendingStop ? <Button title={t("Parking SMS", "Паркинг SMS")} variant="secondary" icon="message-square" onPress={() => setStopSms(true)} /> : null}
-              <LeavingSpotButton />
+              <LeavingSpotButton session={myCar.active} />
               {locationWarning && locationDismissed !== locationWarningKey ? (
                 <View style={s.locationNotice}>
                   <Pressable

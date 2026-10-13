@@ -9,10 +9,15 @@ import { DestinationAlerts, type PushMessage } from "../server/destination-alert
 import { SPOT_NOTICE_MS, SPOT_OPENING_KIND, SPOT_TTL_MS, SpotOpenings, spotNearDestination } from "../server/spot-openings";
 import { buildApp } from "../server/app";
 import { distanceMeters } from "../src/domain/parking";
-import { nextSpotShare } from "../src/domain/spot-openings";
+import * as spotDomain from "../src/domain/spot-openings";
+import * as sessionDomain from "../src/domain/parking-sessions";
 import type { ParkingSession } from "../src/domain/parking-sessions";
 import type { Catalog, ParkingPlace } from "../src/domain/types";
 import seed from "../data/catalog.json";
+import vm from "node:vm";
+import ts from "typescript";
+
+const { nextSpotShare } = spotDomain;
 
 const catalog = seed as Catalog;
 const fcm = (token: string) => ({ type: "fcm" as const, token: `${token}:APA91b${"x".repeat(140)}` });
@@ -166,4 +171,39 @@ test("the phone shares a bought end time once, a stop SMS as leaving now, and no
   const extra: ParkingSession = { ...paid, id: "b", startedAt: now, paidHours: 1 };
   assert.deepEqual(nextSpotShare([paid, extra], now, { session: "a", endsAt }), { session: "b", placeId: paid.placeId, endsAt }, "one more hour bought sooner keeps the later end");
   assert.equal(nextSpotShare([paid, extra], now, { session: "b", endsAt }), null);
+});
+
+/** The phone's session log and spot sharing services over an in-memory AsyncStorage. */
+function phone(sharing: boolean) {
+  const storage = new Map<string, string>(sharing ? [] : [["spot-sharing-off-v1", "1"]]), requests: unknown[][] = [];
+  const AsyncStorage = { getItem: async (key: string) => storage.get(key) ?? null, setItem: async (key: string, value: string) => { storage.set(key, value); }, removeItem: async (key: string) => { storage.delete(key); } };
+  const load = (file: string, modules: Record<string, unknown>) => {
+    const module = { exports: {} as any };
+    vm.runInNewContext(ts.transpileModule(readFileSync(file, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText,
+      { module, exports: module.exports, require: (name: string) => modules[name] ?? assert.fail(`unexpected import ${name}`) });
+    return module.exports;
+  };
+  const shared = { "@react-native-async-storage/async-storage": { __esModule: true, default: AsyncStorage }, "../domain/parking-sessions": sessionDomain };
+  const sessions = load("src/services/parkingSessions.ts", shared);
+  const spots = load("src/services/spotOpenings.ts", { ...shared, "./parkingSessions": sessions, "../domain/spot-openings": spotDomain,
+    "./api": { api: { spotOpening: async (...args: unknown[]) => { requests.push(args); } } } });
+  return { sessions, spots, requests };
+}
+
+test("I'm leaving my spot stops the session, and that change shares it with exactly one request", async () => {
+  for (const sharing of [true, false]) {
+    const { sessions, spots, requests } = phone(sharing);
+    const session: ParkingSession = { id: "a", placeId: "gradski:zone:D42", zoneCode: "D42", zoneName: "MIDA", operator: "gradski", startedAt: Date.now() - 30 * 60000, stoppedAt: null, paidHours: 2, maxStayMinutes: null, firstHour: 40, nextHour: 40, car: null };
+    await sessions.saveParkingSession(session);
+    const stop = spots.watchSpotOpenings();
+    await spots.shareSpotOpening();
+    assert.deepEqual(requests.map(([, endsAt]) => endsAt), sharing ? [session.startedAt + 2 * 3600000] : [], "the paid end, shared once");
+    assert.equal(await spots.leaveSpot(session), sharing);
+    const [stored] = await sessions.listParkingSessions() as ParkingSession[];
+    assert.ok(stored.stoppedAt !== null && stored.stoppedAt >= session.startedAt, "the session stopped");
+    assert.equal(sessionDomain.activeSession([stored], Date.now()), null, "so the button hides");
+    await spots.shareSpotOpening();
+    assert.deepEqual(requests.slice(1), sharing ? [["gradski:zone:D42", "left"]] : [], sharing ? "one request for leaving" : "sharing off sends nothing");
+    stop();
+  }
 });

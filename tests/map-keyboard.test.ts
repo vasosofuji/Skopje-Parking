@@ -55,8 +55,8 @@ test("current Leaflet taps wait for native acceptance but pan intent is immediat
     if (name.endsWith("layer-cache")) return { createLayerCache };
     if (name.endsWith("zone-interaction")) return zoneInteraction;
     if (name.endsWith("map-selection-camera")) return selectionCamera;
-    if (name.endsWith("clusters")) return { groupParking: () => [] };
-    if (name.endsWith("marker-appearance")) return {};
+    if (name.endsWith("clusters")) return { keepsOwnMarker: () => false };
+    if (name.endsWith("marker-appearance")) return { clusterMarker: () => ({}) };
     if (name.endsWith("offlineMapHtml")) return { mapHtml: "map" };
     if (name.endsWith("skopje-parking-map-keyboard")) return { dismissMapKeyboard: () => { calls.push("dismiss"); return new Promise<boolean>(resolve => pending.push(resolve)); } };
     throw new Error(name);

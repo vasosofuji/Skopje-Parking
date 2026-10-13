@@ -2123,6 +2123,23 @@
     "tr": "Park ücreti öde",
     "sq": "Paguaj parkimin"
   },
+  "Pay for parking here?": { "tr": "Burada park ücretini ödemek ister misiniz?", "sq": "Të paguani parkimin këtu?" },
+  "Which zone is on the sign?": { "tr": "Tabelada hangi bölge yazıyor?", "sq": "Cila zonë shkruhet në tabelë?" },
+  "{price} MKD per hour": { "tr": "Saatlik {price} MKD", "sq": "{price} MKD në orë" },
+  "{first} MKD first hour, then {next} MKD": { "tr": "İlk saat {first} MKD, sonra {next} MKD", "sq": "Ora e parë {first} MKD, pastaj {next} MKD" },
+  "Pay {zone} by SMS": { "tr": "{zone} için SMS ile öde", "sq": "Paguaj {zone} me SMS" },
+  "Add licence plate": { "tr": "Plaka ekle", "sq": "Shto targën" },
+  "Check that the sign at your car shows {zone}.": { "tr": "Aracınızın yanındaki tabelada {zone} yazdığını kontrol edin.", "sq": "Kontrolloni që tabela pranë makinës tregon {zone}." },
+  "Other zone": { "tr": "Başka bölge", "sq": "Zonë tjetër" },
+  "My car": { "tr": "Aracım", "sq": "Makina ime" },
+  "Walk to car": { "tr": "Araca yürü", "sq": "Ec deri te makina" },
+  "Car is here": { "tr": "Araç burada", "sq": "Makina është këtu" },
+  "Clear location": { "tr": "Konumu sil", "sq": "Fshi vendndodhjen" },
+  "Paid until {time}": { "tr": "{time} saatine kadar ödendi", "sq": "Paguar deri në {time}" },
+  "Parked since {time}": { "tr": "{time} saatinden beri park halinde", "sq": "Parkuar që nga {time}" },
+  "No precise location was saved for your car.": { "tr": "Aracınız için kesin konum kaydedilmedi.", "sq": "Nuk u ruajt vendndodhje e saktë për makinën tuaj." },
+  "Stand next to your car with precise location on to save it.": { "tr": "Kaydetmek için kesin konum açıkken aracınızın yanında durun.", "sq": "Qëndroni pranë makinës me vendndodhjen e saktë të aktivizuar për ta ruajtur." },
+  "Waiting for a precise location.": { "tr": "Kesin konum bekleniyor.", "sq": "Në pritje të vendndodhjes së saktë." },
   "Payment details changed. Check the sign and try again.": {
     "tr": "Ödeme bilgileri değişti. Tabelayı kontrol edip tekrar deneyin.",
     "sq": "Të dhënat e pagesës ndryshuan. Kontrolloni tabelën dhe provoni përsëri."

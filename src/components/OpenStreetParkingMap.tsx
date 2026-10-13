@@ -150,6 +150,12 @@ export default function OpenStreetParkingMap(props: ParkingMapProps) {
     const point = props.userLocation ? [props.userLocation.latitude, props.userLocation.longitude] : null;
     web.current?.injectJavaScript(`window.updateUserLocation && window.updateUserLocation(${JSON.stringify(point)},${JSON.stringify(props.userAccuracy ?? null)});true;`);
   }, [ready, props.userLocation, props.userAccuracy]);
+  const carLatitude = props.carLocation?.latitude, carLongitude = props.carLocation?.longitude, carTitle = translate(props.language, "My car", "Моето возило");
+  useEffect(() => {
+    if (!ready) return;
+    const point = carLatitude !== undefined && carLongitude !== undefined ? [carLatitude, carLongitude] : null;
+    web.current?.injectJavaScript(`window.updateCarLocation && window.updateCarLocation(${JSON.stringify(point)},${JSON.stringify(carTitle)});true;`);
+  }, [ready, carLatitude, carLongitude, carTitle]);
   function receive(event: WebViewMessageEvent) {
     let message;
     try {

@@ -45,7 +45,7 @@ test("web camera transitions run once per intent, hide moving projections, cance
     if (name.endsWith("zone-interaction")) return zoneInteraction;
     if (name.endsWith("map-selection-camera")) return selectionCamera;
     if (name.endsWith("clusters")) return { groupParking: () => [] };
-    if (name.endsWith("marker-appearance")) return {};
+    if (name.endsWith("marker-appearance") || name.endsWith("my-car")) return {};
     throw new Error(name);
   } });
   const render = (props: ParkingMapProps) => { cursor = 0; const tree = exports.default!(props); tree.props.ref.current = {}; effects.splice(0).forEach(effect => effect()); };

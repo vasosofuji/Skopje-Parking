@@ -17,6 +17,8 @@ export type ParkingMapProps = {
   destinationMarker?: Coordinate | null;
   userLocation: Coordinate | null;
   userAccuracy?: number | null;
+  /** Where the driver left the car when paying ("My car"). */
+  carLocation?: Coordinate | null;
   destinationName?: string;
   drawing?: boolean;
   onMoveVertex?: (index: number, coordinate: Coordinate) => void;

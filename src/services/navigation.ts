@@ -24,6 +24,6 @@ export function useNavigationPreference() {
   return current;
 }
 /** Call from the user's navigation press: the first URL opens without a storage await. */
-export function openParkingDirections(point: Coordinate): Promise<void> {
-  return openDirections(preference.current(), Platform.OS, point, Linking.openURL);
+export function openParkingDirections(point: Coordinate, walking = false): Promise<void> {
+  return openDirections(preference.current(), Platform.OS, point, Linking.openURL, walking);
 }

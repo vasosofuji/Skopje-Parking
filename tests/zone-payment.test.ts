@@ -7,8 +7,8 @@ import { paymentFix, paymentNow, paymentZone, verified } from "./fixtures/zone-p
 test("payment needs 15 consecutive seconds, precise stationary fixes and a saved compact plate", () => {
   const detector = new ZonePaymentDwell();
   for (const offset of [0, 5000, 10000]) assert.equal(detector.update(paymentFix(offset), [paymentZone], "SK1234FF", true, paymentNow + offset), null);
-  assert.equal(detector.update(paymentFix(15000), [paymentZone], "SK1234FF", true, paymentNow + 15000)?.id, "gradski:zone:D8");
-  assert.equal(detector.update(paymentFix(15000), [paymentZone], "SK1234FF", true, paymentNow + 15500)?.id, "gradski:zone:D8");
+  assert.equal(detector.update(paymentFix(15000), [paymentZone], "SK1234FF", true, paymentNow + 15000)?.[0].id, "gradski:zone:D8");
+  assert.equal(detector.update(paymentFix(15000), [paymentZone], "SK1234FF", true, paymentNow + 15500)?.[0].id, "gradski:zone:D8");
   for (const fix of [{ ...paymentFix(), accuracy: 21 }, { ...paymentFix(), speed: 1 }, { ...paymentFix(), speed: -1 }, { ...paymentFix(), timestamp: paymentNow - 20001 }]) assert.equal(eligibleSmsZone(fix, [paymentZone], "SK1234FF", paymentNow), null);
   for (const plate of [null, "", "SK 1234 FF", "SK12FF", "SK12345FF", "1234SKFF", "SK1234F"]) assert.equal(eligibleSmsZone(paymentFix(), [paymentZone], plate, paymentNow), null);
 });
@@ -61,12 +61,13 @@ test("leaving, background, GPS gaps, protocol or plate changes reset dwell and s
 });
 
 test("prompt cooldown is per zone and plate without claiming paid status", () => {
-  const detector = new ZonePaymentDwell();
-  assert.equal(detector.canPrompt(paymentZone, "SK1234FF", paymentNow), true);
-  detector.prompted(paymentZone, "SK1234FF", paymentNow);
-  assert.equal(detector.canPrompt(paymentZone, "SK1234FF", paymentNow + 50000), false);
-  assert.equal(detector.canPrompt(paymentZone, "SK9999FF", paymentNow + 50000), true);
-  assert.equal(detector.canPrompt(paymentZone, "SK1234FF", paymentNow + 3600000), true);
+  const detector = new ZonePaymentDwell(), zone = [paymentZone.id];
+  assert.equal(detector.canPrompt(zone, "SK1234FF", paymentNow), true);
+  detector.prompted(zone, "SK1234FF", paymentNow);
+  assert.equal(detector.canPrompt(zone, "SK1234FF", paymentNow + 50000), false);
+  assert.equal(detector.canPrompt(zone, "SK9999FF", paymentNow + 50000), true);
+  assert.equal(detector.canPrompt(zone, "SK1234FF", paymentNow + 3600000), true);
+  assert.equal(detector.canPrompt([paymentZone.id, "gradski:zone:D5"], "SK1234FF", paymentNow + 50000), false, "a dismissed zone stays quiet next to another");
 });
 
 test("official or current community zero rates suppress an otherwise verified SMS prompt", () => {

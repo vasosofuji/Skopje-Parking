@@ -10,12 +10,13 @@ import { SKOPJE } from "../domain/parking";
 import { canInteractWithZone, isPocSector } from "../domain/zone-interaction";
 import { groupParking } from "../domain/clusters";
 import { PARKING_PIN_CSS, parkingMarker, parkingMarkerHtml } from "../domain/marker-appearance";
+import { CAR_PIN_CSS, CAR_PIN_HTML, CAR_PIN_SIZE } from "../domain/my-car";
 
 // The Android WebView map embeds the same pin styles in its page.
 if (typeof document !== "undefined" && !document.getElementById("parking-pin-css")) {
   const style = document.createElement("style");
   style.id = "parking-pin-css";
-  style.textContent = PARKING_PIN_CSS;
+  style.textContent = PARKING_PIN_CSS + CAR_PIN_CSS;
   document.head.appendChild(style);
 }
 
@@ -33,7 +34,7 @@ export default function ParkingMap(props: ParkingMapProps) {
     draftLayer = useRef<L.LayerGroup | null>(null);
   const layerCache = useRef<ReturnType<typeof createLayerCache<L.Layer>> | null>(null);
   const callbacks = useRef(props);
-  const userDot = useRef<L.CircleMarker | null>(null), accuracyCircle = useRef<L.Circle | null>(null);
+  const userDot = useRef<L.CircleMarker | null>(null), accuracyCircle = useRef<L.Circle | null>(null), carPin = useRef<L.Marker | null>(null);
   const cameraMoving = useRef(false), destinationKey = useRef(""), selectionKey = useRef("");
   useEffect(() => {
     callbacks.current = props;
@@ -321,6 +322,14 @@ export default function ParkingMap(props: ParkingMapProps) {
     } else { accuracyCircle.current?.remove(); accuracyCircle.current = null; }
     userDot.current.bringToFront();
   }, [props.userLocation, props.userAccuracy]);
+  const carLatitude = props.carLocation?.latitude, carLongitude = props.carLocation?.longitude, carTitle = translate(props.language, "My car", "Моето возило");
+  useEffect(() => {
+    const instance = map.current;
+    carPin.current?.remove(); carPin.current = null;
+    if (!instance || carLatitude === undefined || carLongitude === undefined) return;
+    carPin.current = L.marker([carLatitude, carLongitude], { interactive: false, keyboard: false, zIndexOffset: 1500, title: carTitle,
+      icon: L.divIcon({ className: "car-pin", html: CAR_PIN_HTML, iconSize: CAR_PIN_SIZE, iconAnchor: [CAR_PIN_SIZE[0] / 2, CAR_PIN_SIZE[1]] }) }).addTo(instance);
+  }, [carLatitude, carLongitude, carTitle]);
   // Keep handles alive while GPS/catalog updates redraw the other overlays.
   useEffect(() => {
     const group = draftLayer.current;

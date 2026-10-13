@@ -5,11 +5,13 @@ export type NavigationApp = typeof NAVIGATION_APPS[number];
 export function isNavigationApp(value: unknown): value is NavigationApp {
   return value === "default" || value === "google" || value === "waze";
 }
-export function directionUrls(preference: NavigationApp, platform: string, point: Coordinate): string[] {
+export function directionUrls(preference: NavigationApp, platform: string, point: Coordinate, walking = false): string[] {
   if (!Number.isFinite(point.latitude) || !Number.isFinite(point.longitude) || Math.abs(point.latitude) > 90 || Math.abs(point.longitude) > 180)
     throw new Error("This parking location is invalid.");
   const coordinate = `${point.latitude},${point.longitude}`;
-  const googleWeb = `https://www.google.com/maps/dir/?api=1&destination=${coordinate}&travelmode=driving`;
+  const googleWeb = `https://www.google.com/maps/dir/?api=1&destination=${coordinate}&travelmode=${walking ? "walking" : "driving"}`;
+  // Waze and the Android geo: intent have no walking mode; the Google Maps link opens its app when installed.
+  if (walking) return platform === "ios" ? [`https://maps.apple.com/?daddr=${coordinate}&dirflg=w`, googleWeb] : [googleWeb];
   const wazeWeb = `https://waze.com/ul?ll=${coordinate}&navigate=yes`;
   if (platform === "web") return [preference === "waze" ? wazeWeb : googleWeb];
   if (preference === "waze") return [`waze://?ll=${coordinate}&navigate=yes`, wazeWeb];
@@ -19,8 +21,8 @@ export function directionUrls(preference: NavigationApp, platform: string, point
     : [`geo:0,0?q=${coordinate}`, googleWeb];
 }
 
-export async function openDirections(preference: NavigationApp, platform: string, point: Coordinate, open: (url: string) => Promise<unknown>): Promise<void> {
-  const urls = directionUrls(preference, platform, point);
+export async function openDirections(preference: NavigationApp, platform: string, point: Coordinate, open: (url: string) => Promise<unknown>, walking = false): Promise<void> {
+  const urls = directionUrls(preference, platform, point, walking);
   for (const url of urls) {
     try { await open(url); return; }
     catch { /* The selected app may not be installed; its web route is next. */ }

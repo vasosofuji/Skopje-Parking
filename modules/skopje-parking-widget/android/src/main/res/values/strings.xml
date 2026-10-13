@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="skopje_parking_widget_label">Parking zone</string>
+  <string name="skopje_parking_widget_description">Your current Skopje Parking zone, with a button to pay by SMS</string>
+  <string name="skopje_parking_widget_empty">No paid zone nearby</string>
+  <string name="skopje_parking_widget_open">Open</string>
+  <string name="skopje_parking_widget_pay">Pay</string>
+</resources>

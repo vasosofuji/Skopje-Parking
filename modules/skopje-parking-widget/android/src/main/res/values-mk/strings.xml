@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="skopje_parking_widget_label">Паркинг зона</string>
+  <string name="skopje_parking_widget_description">Вашата моментална зона во Skopje Parking, со копче за плаќање со SMS</string>
+  <string name="skopje_parking_widget_empty">Нема платена зона во близина</string>
+  <string name="skopje_parking_widget_open">Отвори</string>
+  <string name="skopje_parking_widget_pay">Плати</string>
+</resources>

@@ -17,6 +17,7 @@ import type { ParkingPlace } from "../domain/types";
 import { isLanguage, translate, placeName, type Language } from "../domain/language";
 import { startArrivalInForeground } from "./foregroundArrivalStart";
 import { PARKING_LIMIT_REMINDER } from "./parkingReminder";
+import { showWidgetZone } from "./parkingWidget";
 import {
   arrivalTransaction,
   backgroundArrivalEnabled,
@@ -71,6 +72,7 @@ if (Tasks && !Tasks.isTaskDefined(TASK)) {
       const before = await readArrivalState();
       const fixes = data.locations.map((location) => ({ ...location.coords, timestamp: location.timestamp }));
       const language = await savedLanguage();
+      showWidgetZone(fixes.reduce((latest, fix) => fix.timestamp > latest.timestamp ? fix : latest), places, language, null);
       const result = advanceArrival(before, fixes, places, true);
       await saveArrivalState(result.state);
       if (before.pending && before.pending.notificationId !== result.state.pending?.notificationId)

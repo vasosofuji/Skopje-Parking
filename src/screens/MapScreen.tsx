@@ -25,7 +25,7 @@ import MapDrawer from "../components/MapDrawer";
 import LocationHelp from "../components/LocationHelp";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ParkingPreview from "../components/ParkingPreview";
-import { router, useIsFocused } from "expo-router";
+import { router, useIsFocused, useLocalSearchParams } from "expo-router";
 import { useMapSettingsLocation } from "../state/SettingsLocationContext";
 import { useLicensePlate } from "../state/LicensePlateContext";
 import { useZonePayment } from "../hooks/useZonePayment";
@@ -66,6 +66,7 @@ import { eligibleSmsZone, payableZones } from "../domain/zone-payment";
 import { isVerifiedSmsPayment, smsZoneMatches } from "../domain/sms-payment";
 import { CURRENT_LOCATION_ZOOM } from "../domain/map-selection-camera";
 import PocCardSuggestion from "../components/PocCardSuggestion";
+import { showWidgetZone } from "../services/parkingWidget";
 
 type NewParking = {
   coordinate: Coordinate;
@@ -198,6 +199,21 @@ export default function MapScreen() {
     setAnchor(null);
     setSelectedPoint(null);
   }, [setSelected, setAnchor]);
+  useEffect(() => { if (fix) showWidgetZone(fix, catalog.places, language, licensePlate.savedPlate); }, [fix, catalog.places, language, licensePlate.savedPlate]);
+  // The widget's Pay (`/?pay=<placeId>`) is consumed only here; switch this to quick pay when it lands.
+  const { pay } = useLocalSearchParams<{ pay?: string }>();
+  useEffect(() => {
+    if (!pay || !focused) return;
+    const place = payablePlace(pay, catalog.places);
+    // A cold start has only the bundled catalog, without SMS rules, until the saved or server copy loads.
+    if (!place && !connected) return;
+    const timer = setTimeout(() => {
+      router.setParams({ pay: undefined });
+      clearSelection();
+      if (place) setManualPayId(place.id); else setPayChooser(payOrigin);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [pay, focused, catalog.places, connected, clearSelection, payOrigin]);
   const select = useCallback((place: ParkingPlace, coordinate?: Coordinate) => {
     pendingNearMe.current = false;
     cameraMoved.current = true;

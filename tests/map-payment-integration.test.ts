@@ -29,6 +29,7 @@ function harness(zoneOnly = false, restored = false) {
   const state: unknown[] = [], effects: (() => void)[] = [], timers: (() => void)[] = [], payments: any[] = [], reports: string[] = [];
   let cursor = 0, focused = true, offerPlate = false, accountId = "account";
   let resetNavigation: ((value: unknown) => void) | undefined;
+  const params: { pay?: string } = {}, widget: unknown[][] = [];
   const savedPoint = { latitude: 42.01, longitude: 21.41 };
   const gps = { location: paymentFix() as ReturnType<typeof paymentFix> | null, initialLocation: null as { latitude: number; longitude: number } | null, accuracy: 5, status: "ready", issue: null, arrival: (zoneOnly ? priced : facility) as ParkingPlace | null, arrivalFromNotification: false, reported: async () => {}, dismiss() { gps.arrival = null; }, retry() {} };
   const react = { Fragment: "Fragment", createElement: (type: string, props: Record<string, any>, ...children: unknown[]): Element => ({ type, props: props ?? {}, children }), useState(value: unknown) { const index = cursor++; if (!(index in state)) state[index] = typeof value === "function" ? value() : value; return [state[index], (next: any) => { state[index] = typeof next === "function" ? next(state[index]) : next; }]; }, useRef(value: unknown) { const index = cursor++; return state[index] ?? (state[index] = { current: value }); }, useEffect(fn: () => void) { effects.push(fn); }, useLayoutEffect(fn: () => void) { effects.push(fn); }, useMemo: (fn: () => unknown) => fn(), useCallback: (fn: unknown) => fn };
@@ -38,7 +39,8 @@ function harness(zoneOnly = false, restored = false) {
     if (name === "../hooks/usePriceCheck") return { usePriceCheck: () => () => true };
     if (name === "react-native") return { BackHandler: { addEventListener: (_event: string, handler: () => boolean) => { backHandlers.push(handler); return { remove() { backHandlers.splice(backHandlers.indexOf(handler), 1); } }; } }, Keyboard: { dismiss() {} }, Platform: { OS: "web" }, Pressable: "Pressable", Text: "Text", TextInput: "TextInput", View: "View", StyleSheet: { create: (value: unknown) => value, absoluteFill: {} } };
     if (name === "react-native-safe-area-context") return { SafeAreaView: "SafeAreaView" };
-    if (name === "expo-router") return { router: { push() {} }, useIsFocused: () => focused };
+    if (name === "expo-router") return { router: { push() {}, setParams: (next: typeof params) => Object.assign(params, next) }, useIsFocused: () => focused, useLocalSearchParams: () => ({ ...params }) };
+    if (name === "../services/parkingWidget") return { showWidgetZone: (...args: unknown[]) => widget.push(args) };
     if (name === "../state/ParkingContext") return { useParking: () => ({ catalog: { places: [priced, facility], destinations: [] }, connected: true, now: paymentNow, language: "en", t: (en: string) => en, refresh: async () => {}, latestCatalog: async () => ({ places: [priced, facility] }) }) };
     if (name === "../state/ThemeContext") return { useTheme: () => ({ colors: {}, dark: false }) };
     if (name === "../state/ContributionFeedback") return { useContributionFeedback: () => ({ thankYou() {} }) };
@@ -73,8 +75,25 @@ function harness(zoneOnly = false, restored = false) {
   } };
   vm.runInNewContext(ts.transpileModule(readFileSync("src/screens/MapScreen.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText, context);
   const render = () => { cursor = 0; effects.length = 0; return context.exports.default(); };
-  return { render, gps, savedPoint, back: () => backHandlers.at(-1)?.() ?? false, switchAccount: () => { accountId = "second"; restored = false; resetNavigation?.(defaultMapNavigationState()); }, payment: () => payments.at(-1), reports, runEffects: () => { effects.splice(0).forEach(fn => fn()); timers.splice(0).forEach(fn => fn()); }, plateOffer: () => { offerPlate = true; }, blur: () => { focused = false; } };
+  return { render, gps, params, widget, savedPoint, back: () => backHandlers.at(-1)?.() ?? false, switchAccount: () => { accountId = "second"; restored = false; resetNavigation?.(defaultMapNavigationState()); }, payment: () => payments.at(-1), reports, runEffects: () => { effects.splice(0).forEach(fn => fn()); timers.splice(0).forEach(fn => fn()); }, plateOffer: () => { offerPlate = true; }, blur: () => { focused = false; } };
 }
+
+test("the widget's pay link opens that zone's SMS sheet once, and an unpayable zone falls back to the chooser", () => {
+  const view = harness(); view.gps.arrival = null;
+  const sheet = (tree: Element) => nodes(tree).find(node => node.type === "ZonePaymentSheet" && node.props.manual)!;
+  view.params.pay = paymentZone.id;
+  view.render(); view.runEffects();
+  let tree = view.render();
+  assert.equal(sheet(tree).props.place?.id, paymentZone.id);
+  assert.equal(view.params.pay, undefined, "the link is consumed, so closing the sheet does not reopen it");
+  sheet(tree).props.onClose(); view.render(); view.runEffects();
+  assert.equal(sheet(view.render()).props.place, null);
+  view.params.pay = "gradski:zone:removed";
+  view.render(); view.runEffects(); tree = view.render();
+  assert.equal(sheet(tree).props.place, null);
+  assert.equal(nodes(tree).find(node => node.type === "PayParkingChooser")!.props.visible, true);
+  assert.deepEqual(view.widget.at(-1)?.slice(2), ["en", "SK1234FF"], "foreground fixes keep the widget current");
+});
 
 test("actual MapScreen queues SMS while availability is open and releases it after a successful Yes report", async () => {
   const view = harness(); const tree = view.render();

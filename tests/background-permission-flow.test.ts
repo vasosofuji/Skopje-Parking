@@ -39,6 +39,7 @@ function load({ accuracy = "fine", explain = true, saved = "en" } = {}) {
     "../domain/backgroundArrival": backgroundDomain, "../domain/language": language,
     "./foregroundArrivalStart": { startArrivalInForeground },
     "./parkingReminder": { PARKING_LIMIT_REMINDER: "parking-sms-limit" },
+    "./parkingWidget": { showWidgetZone: (...args: unknown[]) => widget.push(args) },
     "./arrivalStorage": {
       arrivalTransaction: (work: () => Promise<unknown>) => work(),
       backgroundArrivalEnabled: async () => enabled, saveBackgroundArrivalEnabled: async (value: boolean) => { enabled = value; },
@@ -70,3 +71,11 @@ test("declining the explanation stops before Android's settings page; approximat
   assert.deepEqual(coarse.steps, ["foreground"]);
 });
 
+test("the background location task keeps the widget on the newest fix", async () => {
+  const flow = load();
+  await flow.service.enableBackgroundArrival(flow.explain);
+  flow.appState.currentState = "background";
+  const location = (timestamp: number, latitude: number) => ({ coords: { latitude, longitude: 21, accuracy: 5, speed: 0 }, timestamp });
+  await flow.task()({ data: { locations: [location(2000, 42.002), location(1000, 42.001)] }, error: null, executionInfo: { appState: "background" } });
+  assert.deepEqual(JSON.parse(JSON.stringify(flow.widget)), [[{ latitude: 42.002, longitude: 21, accuracy: 5, speed: 0, timestamp: 2000 }, [], "en", null]]);
+});

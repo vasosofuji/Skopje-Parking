@@ -8,6 +8,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD="${SKOPJE_PARKING_BUILD_DIR:-/c/pb/release}"
 SDK="${ANDROID_HOME:-$LOCALAPPDATA/Android/Sdk}"
 API="https://vkqxtqcuoobiijbnpxod.supabase.co/functions/v1/api"
+# Background arrival reminders and the widget's background updates. Prebuild adds the permissions
+# and Gradle embeds the flag in the app config, so both steps need it. A Play upload with it also
+# needs the background location declaration approved first.
+export SKOPJE_PARKING_BACKGROUND_LOCATION=1
 key() { grep -E "^$1=" "$ROOT/.env" | head -1 | cut -d= -f2- | tr -d '\r'; }
 KEYSTORE="$(key SKOPJE_PARKING_KEYSTORE)"; ALIAS="$(key SKOPJE_PARKING_KEY_ALIAS)"
 SKOPJE_PARKING_KEYSTORE_PASSWORD="$(key SKOPJE_PARKING_KEYSTORE_PASSWORD)"; export SKOPJE_PARKING_KEYSTORE_PASSWORD
@@ -19,6 +23,9 @@ mkdir -p "$BUILD"
 robocopy "$(cygpath -w "$ROOT")" "$(cygpath -w "$BUILD")" //MIR //NFL //NDL //NJH //NJS //NP \
   //XD node_modules android ios .git dist output data\\runtime website presentations .presentation-build \
   //XF .env .env.local > /dev/null || [ $? -lt 8 ]
+# /XD android above also skips modules/*/android, the local native modules' source.
+robocopy "$(cygpath -w "$ROOT/modules")" "$(cygpath -w "$BUILD/modules")" //MIR //NFL //NDL //NJH //NJS //NP \
+  //XD node_modules build .gradle .cxx > /dev/null || [ $? -lt 8 ]
 cd "$BUILD"
 npm install --no-audit --no-fund --loglevel=error
 

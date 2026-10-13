@@ -19,6 +19,8 @@ import * as feedback from "../src/domain/report-feedback";
 import { MARKER_COLORS } from "../src/domain/marker-appearance";
 import { paymentFix, paymentNow, paymentZone } from "./fixtures/zone-payment";
 import type { ParkingPlace } from "../src/domain/types";
+import type { ParkingSession } from "../src/domain/parking-sessions";
+import { paymentSession } from "../src/domain/my-car";
 
 type Element = { type: string; props: Record<string, any>; children: unknown[] };
 const nodes = (value: unknown): Element[] => Array.isArray(value) ? value.flatMap(nodes) : value && typeof value === "object" && "children" in value ? [value as Element, ...(value as Element).children.flatMap(nodes)] : [];
@@ -27,7 +29,8 @@ function harness(zoneOnly = false, restored = false) {
   const facility: ParkingPlace = { ...priced, id: "facility", kind: "surface", name: "Parking" };
   const backHandlers: (() => boolean)[] = [];
   const state: unknown[] = [], effects: (() => void)[] = [], timers: (() => void)[] = [], payments: any[] = [], reports: string[] = [];
-  let cursor = 0, focused = true, offerPlate = false, accountId = "account";
+  let cursor = 0, focused = true, offerPlate = false, accountId = "account", dismissed = 0, offer: ParkingPlace[] = [], detected: ParkingPlace[] | null = null;
+  let car: { session: ParkingSession | null; active: ParkingSession | null } = { session: null, active: null };
   let resetNavigation: ((value: unknown) => void) | undefined;
   const params: { pay?: string } = {}, widget: unknown[][] = [];
   const savedPoint = { latitude: 42.01, longitude: 21.41 };
@@ -54,7 +57,8 @@ function harness(zoneOnly = false, restored = false) {
       return { ...value, center: value.viewport, ready: true, restored, setCenter: setter("viewport"), rememberViewport: setter("viewport"), setDestination: setter("destination"), setSelected: setter("selected"), setAnchor: setter("anchor"), setSort: setter("sort"), setParkingFilters: setter("parkingFilters") };
     } };
     if (name === "../hooks/usePocCards") return { usePocCards: () => ({ record() {}, offer: null, dismiss() {} }) };
-    if (name === "../hooks/useZonePayment") return { useZonePayment: (input: unknown) => { payments.push(input); return { place: null, validate() {}, dismiss() {} }; } };
+    if (name === "../hooks/useZonePayment") return { useZonePayment: (input: unknown) => { payments.push(input); return { choices: offer, validate() {}, dismiss() { dismissed++; } }; } };
+    if (name === "../hooks/useMyCar") return { useMyCar: () => car };
     if (name === "../domain/parking-filters") return filters;
     if (name === "../domain/parking") return parking;
     if (name === "../domain/payment-hours") return paymentHours;
@@ -63,7 +67,7 @@ function harness(zoneOnly = false, restored = false) {
     if (name === "../domain/location") return location;
     if (name === "../domain/locationIssue") return locationIssue;
     if (name === "../domain/map-selection-camera") return mapCamera;
-    if (name === "../domain/zone-payment") return zonePayment;
+    if (name === "../domain/zone-payment") return { ...zonePayment, smsZoneChoices: (...args: Parameters<typeof zonePayment.smsZoneChoices>) => detected ?? zonePayment.smsZoneChoices(...args) };
     if (name === "../domain/sms-payment") return smsPayment;
     if (name === "../domain/report-feedback") return feedback;
     if (name === "../domain/marker-appearance") return { MARKER_COLORS };
@@ -75,7 +79,8 @@ function harness(zoneOnly = false, restored = false) {
   } };
   vm.runInNewContext(ts.transpileModule(readFileSync("src/screens/MapScreen.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText, context);
   const render = () => { cursor = 0; effects.length = 0; return context.exports.default(); };
-  return { render, gps, params, widget, savedPoint, back: () => backHandlers.at(-1)?.() ?? false, switchAccount: () => { accountId = "second"; restored = false; resetNavigation?.(defaultMapNavigationState()); }, payment: () => payments.at(-1), reports, runEffects: () => { effects.splice(0).forEach(fn => fn()); timers.splice(0).forEach(fn => fn()); }, plateOffer: () => { offerPlate = true; }, blur: () => { focused = false; } };
+  return { render, gps, params, widget, savedPoint, back: () => backHandlers.at(-1)?.() ?? false, switchAccount: () => { accountId = "second"; restored = false; resetNavigation?.(defaultMapNavigationState()); }, payment: () => payments.at(-1), reports, runEffects: () => { effects.splice(0).forEach(fn => fn()); timers.splice(0).forEach(fn => fn()); }, plateOffer: () => { offerPlate = true; }, blur: () => { focused = false; },
+    offer: (next: ParkingPlace[]) => { offer = next; }, detect: (next: ParkingPlace[]) => { detected = next; }, dismissed: () => dismissed, park: (next: typeof car) => { car = next; }, priced, facility };
 }
 
 test("the widget's pay link opens that zone's SMS sheet once, and an unpayable zone falls back to the chooser", () => {
@@ -200,4 +205,45 @@ test("Android Back closes the parking popup or leaves drawing before it can leav
   assert.equal(map(tree).props.drawing, true);
   assert.equal(view.back(), true);
   assert.equal(map(view.render()).props.drawing, false);
+});
+
+const find = (tree: Element, type: string, title?: string) => nodes(tree).find(node => node.type === type && (title === undefined || node.props.title === title));
+test("the quick pay card waits for the availability question, then shows above the map without blocking it", () => {
+  const view = harness(); view.offer([view.priced]);
+  let tree = view.render();
+  assert.equal(find(tree, "Sheet", "Any free spaces here?")!.props.visible, true);
+  assert.equal(find(tree, "../components/QuickPayCard"), undefined, "the full-screen question comes first");
+  view.gps.arrival = null; tree = view.render();
+  const card = find(tree, "../components/QuickPayCard")!;
+  assert.deepEqual(card.props.choices.map((place: ParkingPlace) => place.id), [view.priced.id]);
+  assert.equal(find(tree, "Button", "Pay parking"), undefined, "the card replaces the button");
+  assert.equal(find(tree, "../components/ParkingMap")!.props.isInteractionCurrent(Date.now() + 1), true, "the map stays usable");
+  card.props.onClose(); assert.equal(view.dismissed(), 1);
+});
+
+test("Pay parking opens the one detected zone directly and the chooser otherwise", () => {
+  for (const one of [true, false]) {
+    const view = harness(); view.gps.arrival = null; view.detect(one ? [view.priced] : [view.priced, view.facility]);
+    find(view.render(), "Button", "Pay parking")!.props.onPress();
+    const tree = view.render();
+    assert.equal(find(tree, "ZonePaymentSheet")!.props.place?.id ?? null, one ? view.priced.id : null);
+    assert.equal(find(tree, "PayParkingChooser")!.props.visible, !one);
+  }
+});
+
+test("a running session holds the offer back; My car centres the map on the car pin and opens its card", () => {
+  const view = harness(); view.gps.arrival = null;
+  const car = { latitude: 42.003, longitude: 21.004 };
+  const session = paymentSession(view.priced, view.priced.smsPayment!, null, car, paymentNow);
+  view.park({ session, active: session }); view.render();
+  assert.equal(view.payment().blocked, true);
+  view.park({ session, active: null });
+  let tree = view.render();
+  assert.deepEqual(find(tree, "../components/ParkingMap")!.props.carLocation, car);
+  find(tree, "Button", "My car")!.props.onPress(); tree = view.render();
+  const map = find(tree, "../components/ParkingMap")!;
+  assert.deepEqual({ ...map.props.destination }, car); assert.equal(map.props.cameraZoom, 18);
+  const card = find(tree, "../components/MyCarCard")!;
+  assert.equal(card.props.session.id, session.id);
+  card.props.onClose(); assert.equal(find(view.render(), "../components/MyCarCard"), undefined);
 });

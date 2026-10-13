@@ -4,6 +4,7 @@ import { guardVectorLayerRemoval, installBasemap, registerOfflineBasemap } from 
 import { createLayerCache } from "../domain/layer-cache";
 import { parkingSelectionZoom } from "../domain/map-selection-camera";
 import { PARKING_PIN_CSS } from "../domain/marker-appearance";
+import { CAR_PIN_CSS, CAR_PIN_HTML, CAR_PIN_SIZE } from "../domain/my-car";
 import { leafletScript, leafletStyles } from "../vendor/leaflet";
 const tileUrl =
   process.env.EXPO_PUBLIC_TILE_URL ??
@@ -13,7 +14,7 @@ export const mapHtml = `<!doctype html><html><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>${maplibreStyles}</style>
 <style>${leafletStyles}html,body,#map{height:100%;width:100%;margin:0}.leaflet-container{background:#ede2d0;font-family:system-ui,sans-serif}.leaflet-container{touch-action:none}.leaflet-bottom{bottom:2px}.leaflet-control-attribution{font-size:10px!important;background:rgba(255,255,255,.85)!important}.dark .leaflet-tile-pane{filter:invert(.88) hue-rotate(180deg) brightness(1.15) contrast(.8) saturate(.35)}.dark.leaflet-container{background:#42484b}</style>
-<style>${PARKING_PIN_CSS}
+<style>${PARKING_PIN_CSS}${CAR_PIN_CSS}
 .zone-label{display:flex;align-items:center;justify-content:center}
 .zone-vertex{display:flex;align-items:center;justify-content:center}.zone-vertex span{width:18px;height:18px;border:3px solid #fff;border-radius:50%;background:#962e2b;box-shadow:0 1px 5px #392c2570}
 .destination-pin span{display:block;width:28px;height:28px;border:3px solid #fff;border-radius:50% 50% 50% 0;background:#ce383e;transform:rotate(-45deg);box-shadow:-2px 2px 7px #50202050}.destination-pin span::after{content:'';display:block;width:9px;height:9px;border-radius:50%;background:#fff;margin:9px}
@@ -55,6 +56,11 @@ window.updateUserLocation = function(point,accuracy) {
     else userAccuracy=L.circle(point,{radius:accuracy,color:'#3977D5',weight:1,fillOpacity:.08,interactive:false}).addTo(map);
   }else if(userAccuracy){userAccuracy.remove();userAccuracy=null;}
   userDot.bringToFront();
+};
+let carPin = null;
+window.updateCarLocation = function(point,title) {
+  if(carPin){carPin.remove();carPin=null;}
+  if(point)carPin=L.marker(point,{interactive:false,keyboard:false,zIndexOffset:1500,title,icon:L.divIcon({className:'car-pin',html:${JSON.stringify(CAR_PIN_HTML)},iconSize:${JSON.stringify(CAR_PIN_SIZE)},iconAnchor:[${CAR_PIN_SIZE[0] / 2},${CAR_PIN_SIZE[1]}]})}).addTo(map);
 };
 let current = null;
 let destinationKey = '', selectionKey = '', cameraMoving = false, cameraChanging = false;

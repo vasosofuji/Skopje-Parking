@@ -25,7 +25,7 @@ function harness() {
     useMemo(callback: () => unknown, deps: unknown[]) { const index = cursor++, previous = state[index]; if (!previous || deps.some((value, i) => value !== previous.deps[i])) state[index] = { deps, value: callback() }; return state[index].value; },
     useCallback(callback: unknown, deps: unknown[]) { return react.useMemo(() => callback, deps); },
   };
-  const context = { exports: {} as { useZonePayment: (input: Input) => { place: ParkingPlace | null; validate: (id: string) => ParkingPlace | null; dismiss: () => void } }, Date: { now: () => clock },
+  const context = { exports: {} as { useZonePayment: (input: Input) => { choices: ParkingPlace[]; validate: (id: string) => ParkingPlace | null; dismiss: () => void } }, Date: { now: () => clock },
     setInterval: () => 0, clearInterval() {}, setTimeout(callback: () => void, delay: number) { const id = ++timerId; timers.set(id, { at: clock + delay, callback }); return id; }, clearTimeout(id: number) { timers.delete(id); },
     require(name: string) { if (name === "react") return react; if (name === "react-native") return { AppState: app, Platform: { OS: "android" } }; if (name === "../domain/zone-payment") return { ZonePaymentDwell }; throw new Error(name); } };
   vm.runInNewContext(ts.transpileModule(readFileSync("src/hooks/useZonePayment.ts", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, context);
@@ -36,9 +36,9 @@ function harness() {
 
 test("payment queues behind availability/followups and waits for their dismissal before showing", () => {
   const view = harness(); view.render();
-  for (const offset of [5000, 10000, 15000]) assert.equal(view.advance(offset).place, null);
-  assert.equal(view.change({ blocked: false }).place, null);
-  const offer = view.advance(15400, false); assert.equal(offer.place?.id, "gradski:zone:D8");
+  for (const offset of [5000, 10000, 15000]) assert.equal(view.advance(offset).choices.length, 0);
+  assert.equal(view.change({ blocked: false }).choices.length, 0);
+  const offer = view.advance(15400, false); assert.equal(offer.choices[0]?.id, "gradski:zone:D8");
   assert.equal(offer.validate("gradski:zone:D8")?.id, "gradski:zone:D8");
   view.change({ fix: { ...paymentFix(15500), latitude: 43 } });
   assert.equal(offer.validate("gradski:zone:D8"), null, "a stale button cannot open SMS after leaving");
@@ -47,12 +47,12 @@ test("payment queues behind availability/followups and waits for their dismissal
 test("known-price paths still prompt after dwell, X dismiss has cooldown, and account/Android blur invalidate immediately", () => {
   const view = harness(); view.change({ blocked: false }); view.advance(400, false);
   for (const offset of [5000, 10000, 15000]) view.advance(offset);
-  const offer = view.render(); assert.equal(offer.place?.id, "gradski:zone:D8");
+  const offer = view.render(); assert.equal(offer.choices[0]?.id, "gradski:zone:D8");
   view.blur(); assert.equal(offer.validate("gradski:zone:D8"), null, "Android notification drawer keeps AppState active but must invalidate SMS");
   const second = harness(); second.change({ blocked: false }); second.advance(400, false);
   for (const offset of [5000, 10000, 15000]) second.advance(offset);
   const opened = second.render(); opened.dismiss(); assert.equal(opened.validate("gradski:zone:D8"), null);
-  assert.equal(second.advance(16000).place, null, "X does not immediately repeat");
+  assert.equal(second.advance(16000).choices.length, 0, "X does not immediately repeat");
   second.change({ scope: "different-account" }); assert.equal(opened.validate("gradski:zone:D8"), null);
 });
 
@@ -60,23 +60,23 @@ test("an offered payment disappears on background and cannot survive expired evi
   const view = harness(); view.change({ blocked: false }); view.advance(400, false);
   for (const offset of [5000, 10000, 15000]) view.advance(offset);
   const offer = view.render(); view.background(); assert.equal(offer.validate("gradski:zone:D8"), null);
-  assert.equal(view.render().place, null);
+  assert.equal(view.render().choices.length, 0);
 });
 
 test("an offer interrupted by availability or refreshed evidence is not consumed as a dismissal", () => {
   const view = harness(); view.change({ blocked: false }); view.advance(400, false);
   for (const offset of [5000, 10000, 15000]) view.advance(offset);
-  assert.equal(view.render().place?.id, "gradski:zone:D8");
-  assert.equal(view.change({ blocked: true }).place, null);
+  assert.equal(view.render().choices[0]?.id, "gradski:zone:D8");
+  assert.equal(view.change({ blocked: true }).choices.length, 0);
   view.advance(16000); view.change({ blocked: false });
   const resumed = view.advance(16400, false);
-  assert.equal(resumed.place?.id, "gradski:zone:D8", "availability must release the pending SMS instead of starting an hour cooldown");
+  assert.equal(resumed.choices[0]?.id, "gradski:zone:D8", "availability must release the pending SMS instead of starting an hour cooldown");
   (resumed.dismiss as (remember?: boolean) => void)(false);
-  assert.equal(view.advance(17000).place?.id, "gradski:zone:D8", "automatic invalidation can recheck current proof");
+  assert.equal(view.advance(17000).choices[0]?.id, "gradski:zone:D8", "automatic invalidation can recheck current proof");
 });
 
 test("normal ten-second GPS updates can complete stationary payment dwell", () => {
   const view = harness(); view.change({ blocked: false }); view.advance(400, false);
   view.advance(10000);
-  assert.equal(view.advance(20000).place?.id, "gradski:zone:D8");
+  assert.equal(view.advance(20000).choices[0]?.id, "gradski:zone:D8");
 });

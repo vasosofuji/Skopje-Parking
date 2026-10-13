@@ -38,7 +38,7 @@ function harness(zoneOnly = false, restored = false) {
     if (name === "../hooks/usePriceCheck") return { usePriceCheck: () => () => true };
     if (name === "react-native") return { BackHandler: { addEventListener: (_event: string, handler: () => boolean) => { backHandlers.push(handler); return { remove() { backHandlers.splice(backHandlers.indexOf(handler), 1); } }; } }, Keyboard: { dismiss() {} }, Platform: { OS: "web" }, Pressable: "Pressable", Text: "Text", TextInput: "TextInput", View: "View", StyleSheet: { create: (value: unknown) => value, absoluteFill: {} } };
     if (name === "react-native-safe-area-context") return { SafeAreaView: "SafeAreaView" };
-    if (name === "expo-router") return { router: { push() {} }, useIsFocused: () => focused };
+    if (name === "expo-router") return { router: { push() {}, setParams() {} }, useIsFocused: () => focused, useLocalSearchParams: () => ({}) };
     if (name === "../state/ParkingContext") return { useParking: () => ({ catalog: { places: [priced, facility], destinations: [] }, connected: true, now: paymentNow, language: "en", t: (en: string) => en, refresh: async () => {}, latestCatalog: async () => ({ places: [priced, facility] }) }) };
     if (name === "../state/ThemeContext") return { useTheme: () => ({ colors: {}, dark: false }) };
     if (name === "../state/ContributionFeedback") return { useContributionFeedback: () => ({ thankYou() {} }) };

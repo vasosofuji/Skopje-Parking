@@ -2442,5 +2442,29 @@
   "Guest contributions and points stay with this device until you create an account. Your username, contributions and points belong to your account. Save your password to sign in after reinstalling; email password reset is not available yet. Existing device accounts need to add a password in Account first. You can delete your account, sign details and reports in Privacy. Published parking locations and boundaries remain on the shared map. Contribution points have no monetary value.": {
     "tr": "Misafir katkıları ve puanları hesap oluşturana kadar bu cihazda kalır. Kullanıcı adınız, katkılarınız ve puanlarınız hesabınıza aittir. Yeniden yükledikten sonra giriş yapabilmek için şifrenizi saklayın; e-postayla şifre sıfırlama henüz yoktur. Mevcut cihaz hesapları önce Hesap bölümünden şifre eklemelidir. Hesabınızı, tabela bilgilerinizi ve bildirimlerinizi Gizlilik bölümünden silebilirsiniz. Yayımlanan otopark konumları ve sınırları ortak haritada kalır. Katkı puanlarının parasal değeri yoktur.",
     "sq": "Kontributet dhe pikët e vizitorit mbeten në këtë pajisje derisa të krijoni llogari. Emri, kontributet dhe pikët i përkasin llogarisë suaj. Ruani fjalëkalimin për t'u identifikuar pas riinstalimit; rivendosja me email ende nuk ofrohet. Llogaritë ekzistuese të pajisjes duhet së pari të shtojnë fjalëkalim te Llogaria. Mund të fshini llogarinë, të dhënat e tabelave dhe raportimet te Privatësia. Vendndodhjet dhe kufijtë e publikuar mbeten në hartën e përbashkët. Pikët e kontributeve nuk kanë vlerë monetare."
+  },
+  "Spots opening nearby": {
+    "tr": "Yakında boşalan park yerleri",
+    "sq": "Vende që lirohen afër"
+  },
+  "I'm leaving my spot": {
+    "tr": "Park yerimden ayrılıyorum",
+    "sq": "Po largohem nga vendi im"
+  },
+  "Could not share. Try again.": {
+    "tr": "Paylaşılamadı. Tekrar deneyin.",
+    "sq": "Ndarja dështoi. Provoni përsëri."
+  },
+  "Share when my parking time ends": {
+    "tr": "Park sürem bittiğinde paylaş",
+    "sq": "Ndaj kur mbaron koha ime e parkimit"
+  },
+  "Could not withdraw your parking end time. Try again online.": {
+    "tr": "Park bitiş saatiniz geri çekilemedi. İnternete bağlıyken tekrar deneyin.",
+    "sq": "Ora e mbarimit të parkimit nuk u tërhoq. Provoni përsëri me internet."
+  },
+  "When you pay in the app, drivers heading nearby are told 5 minutes before your paid time ends. Only the parking place and the time are shared, never your plate or position.": {
+    "tr": "Uygulamadan ödeme yaptığınızda, yakına gelen sürücülere ücretli süreniz bitmeden 5 dakika önce haber verilir. Yalnızca otopark ve saat paylaşılır, plakanız veya konumunuz asla paylaşılmaz.",
+    "sq": "Kur paguani në aplikacion, shoferët që vijnë afër njoftohen 5 minuta para se t'ju mbarojë koha e paguar. Ndahen vetëm parkingu dhe ora, kurrë targa apo pozicioni juaj."
   }
 }

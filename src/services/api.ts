@@ -20,6 +20,7 @@ import type {
   SignInfo,
   VerifiedSmsPayment,
 } from "../domain/types";
+type PushTarget = { type: "expo" | "fcm"; token: string } | { type: "web"; subscription: { endpoint: string; keys: { p256dh: string; auth: string } } };
 const developmentHost =
   Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
 // React Native aliases `window` to its global object; it has no browser location.
@@ -87,14 +88,17 @@ export const api = {
       return authenticated<T>("/v1/notifications/destination", body, method, token);
     }
     return {
-      start: (placeId: string, language: "en" | "mk", target: { type: "expo"; token: string } | { type: "web"; subscription: { endpoint: string; keys: { p256dh: string; auth: string } } }) => bound<{ expiresAt: number }>({ placeId, language, target }, "PUT"),
+      start: (placeId: string, language: "en" | "mk", target: PushTarget) => bound<{ expiresAt: number }>({ placeId, language, target }, "PUT"),
       stop: () => bound(undefined, "DELETE"),
     };
   },
   notificationConfig: () => request<{ webPushPublicKey: string | null }>("/v1/notifications/config"),
-  watchDestination: (placeId: string, language: "en" | "mk", target: { type: "expo"; token: string } | { type: "web"; subscription: { endpoint: string; keys: { p256dh: string; auth: string } } }) =>
+  watchDestination: (placeId: string, language: "en" | "mk", target: PushTarget) =>
     authenticated<{ expiresAt: number }>("/v1/notifications/destination", { placeId, language, target }, "PUT"),
   stopDestinationWatch: () => authenticated<{ ok: boolean }>("/v1/notifications/destination", undefined, "DELETE"),
+  spotOpening: (placeId: string, endsAt: number | "left") =>
+    authenticated<{ notifyAt: number }>("/v1/spot-openings", endsAt === "left" ? { placeId, leaving: true } : { placeId, endsAt: Math.round(endsAt) }),
+  withdrawSpotOpening: () => authenticated<{ ok: boolean }>("/v1/spot-openings", undefined, "DELETE"),
   removal: (id: string) => authenticated<{ canRemove: boolean }>(`/v1/places/${encodeURIComponent(id)}/removal`, undefined, "GET"),
   removeParking: (id: string) => authenticated<{ deleted: true }>(`/v1/places/${encodeURIComponent(id)}`, { confirmed: true }, "DELETE"),
   progressiveWriter: async () => {

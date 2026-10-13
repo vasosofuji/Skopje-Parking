@@ -25,7 +25,7 @@ import MapDrawer from "../components/MapDrawer";
 import LocationHelp from "../components/LocationHelp";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ParkingPreview from "../components/ParkingPreview";
-import { router, useIsFocused } from "expo-router";
+import { router, useIsFocused, useLocalSearchParams } from "expo-router";
 import { useMapSettingsLocation } from "../state/SettingsLocationContext";
 import { useLicensePlate } from "../state/LicensePlateContext";
 import { useZonePayment } from "../hooks/useZonePayment";
@@ -66,6 +66,7 @@ import { eligibleSmsZone, payableZones } from "../domain/zone-payment";
 import { isVerifiedSmsPayment, smsZoneMatches } from "../domain/sms-payment";
 import { CURRENT_LOCATION_ZOOM } from "../domain/map-selection-camera";
 import PocCardSuggestion from "../components/PocCardSuggestion";
+import LeavingSpotButton from "../components/LeavingSpotButton";
 
 type NewParking = {
   coordinate: Coordinate;
@@ -224,6 +225,17 @@ export default function MapScreen() {
     },
     [],
   );
+  // A tapped destination or spot push (usePlaceNotifications) opens the map on its place.
+  const { placeId: pushedPlaceId } = useLocalSearchParams<{ placeId?: string }>();
+  useEffect(() => {
+    const place = navigationState.ready && pushedPlaceId ? catalog.places.find(item => item.id === pushedPlaceId) : undefined;
+    if (!place) return;
+    const timer = setTimeout(() => {
+      router.setParams({ placeId: undefined });
+      select(place); setCameraZoom(15); setCenter(place.coordinate); setCameraRevision(value => value + 1);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [pushedPlaceId, navigationState.ready, catalog.places, select, setCenter]);
   const centerChanged = useCallback((point: Coordinate) => {
     viewport.current = point;
     if (cameraMoved.current) rememberViewport(point);
@@ -699,6 +711,7 @@ export default function MapScreen() {
                 />
               </View>
               {licensePlate.pendingStop ? <Button title={t("Parking SMS", "Паркинг SMS")} variant="secondary" icon="message-square" onPress={() => setStopSms(true)} /> : null}
+              <LeavingSpotButton />
               {locationWarning && locationDismissed !== locationWarningKey ? (
                 <View style={s.locationNotice}>
                   <Pressable

@@ -27,11 +27,15 @@ export function parkingReviewEvidence(place: ParkingPlace, now = Date.now()) {
   return null;
 }
 
-export function parkingMarker(place: ParkingPlace, count = 1, now = Date.now()) {
-  if (count > 1) return {
+export function clusterMarker(count: number) {
+  return {
     fill: MARKER_COLORS.cluster, text: MARKER_COLORS.clusterText, border: MARKER_COLORS.clusterBorder, state: MARKER_COLORS.clusterText,
     label: String(count), badge: null, round: true, hollow: false, needsInfo: false, freeOfCharge: false, spaces: false, full: false, cluster: true,
   } as const;
+}
+
+export function parkingMarker(place: ParkingPlace, count = 1, now = Date.now()) {
+  if (count > 1) return clusterMarker(count);
   const review = parkingReviewEvidence(place, now), price = parkingPrice(place, now);
   const reliablePrice = price?.evidence === "official" || price?.evidence === "community" && "observedAt" in price || price?.evidence === "sign" && review === "sign";
   const freeOfCharge = Boolean(reliablePrice && price && price.firstHour === 0 && price.nextHour === 0);
@@ -56,6 +60,8 @@ export type MarkerAppearance = ReturnType<typeof parkingMarker>;
 
 // Values originate in parkingMarker: fixed colors/labels or a numeric cluster count.
 export function parkingMarkerHtml(marker: MarkerAppearance) {
+  // Injected into the map WebView via toString(); Hermes keeps source only with this directive.
+  "show source";
   const shape = (marker.round ? " round" : "") + (marker.hollow ? " hollow" : "") + (marker.cluster && Number(marker.label) >= 25 ? " large" : "");
   return `<span class="parking-pin-face${shape}" style="background:${marker.fill};color:${marker.text};border-color:${marker.border};--pin:${marker.state}">${marker.label}${marker.badge ? '<b class="parking-free-badge">0</b>' : ""}</span>`;
 }

@@ -8,7 +8,7 @@ import type { ParkingMapProps } from "./mapTypes";
 import { createLayerCache } from "../domain/layer-cache";
 import { SKOPJE } from "../domain/parking";
 import { canInteractWithZone, isPocSector } from "../domain/zone-interaction";
-import { groupParking } from "../domain/clusters";
+import { clusterSteps, groupParking } from "../domain/clusters";
 import { PARKING_PIN_CSS, parkingMarker, parkingMarkerHtml } from "../domain/marker-appearance";
 import { CAR_PIN_CSS, CAR_PIN_HTML, CAR_PIN_SIZE } from "../domain/my-car";
 
@@ -36,6 +36,7 @@ export default function ParkingMap(props: ParkingMapProps) {
   const callbacks = useRef(props);
   const userDot = useRef<L.CircleMarker | null>(null), accuracyCircle = useRef<L.Circle | null>(null), carPin = useRef<L.Marker | null>(null);
   const cameraMoving = useRef(false), destinationKey = useRef(""), selectionKey = useRef("");
+  const drawn = useRef<L.LatLngBounds | null>(null);
   useEffect(() => {
     callbacks.current = props;
   }, [props]);
@@ -73,7 +74,10 @@ export default function ParkingMap(props: ParkingMapProps) {
     layerCache.current = createLayerCache(layer => layer.addTo(layers.current!), layer => layers.current?.removeLayer(layer), layer => layer.off());
     draftLayer.current = L.layerGroup().addTo(instance);
     map.current = instance;
-    instance.on("zoomend", () => setZoom(instance.getZoom()));
+    // Pinch fires these every frame: regroup at each half step, and redraw before pins
+    // beyond the drawn margin come into view instead of after the gesture ends.
+    instance.on("zoom", () => setZoom(Math.round(instance.getZoom() * 2) / 2));
+    instance.on("move", () => { if (!drawn.current?.contains(instance.getBounds().pad(0.1))) setViewRevision(value => value + 1); });
     instance.on("movestart", () => { cameraMoving.current = true; callbacks.current.onSelectedPosition?.(null); });
     instance.on("moveend", () => {
       cameraMoving.current = false;
@@ -183,15 +187,10 @@ export default function ParkingMap(props: ParkingMapProps) {
         }
       }
     }
-    const longitudeStep = zoom < 18 ? (120 * 360) / (256 * 2 ** zoom) : 0;
-    const latitudeStep =
-      longitudeStep * Math.cos((SKOPJE.latitude * Math.PI) / 180);
-    const bounds = instance.getBounds().pad(0.15);
-    const visible = props.places.filter((place) =>
-      bounds.contains([place.coordinate.latitude, place.coordinate.longitude]),
-    );
+    const [latitudeStep, longitudeStep] = clusterSteps(zoom, SKOPJE.latitude);
+    const bounds = drawn.current = instance.getBounds().pad(0.5);
     if (!props.drawing) {
-      for (const place of visible.filter((p) => !isPocSector(p) && (props.showZones || p.kind !== "zone") && p.geometry && (zoom >= 17 || p.id === props.selectedId))) {
+      for (const place of props.places.filter((p) => !isPocSector(p) && (props.showZones || p.kind !== "zone") && p.geometry && (zoom >= 17 || p.id === props.selectedId) && bounds.contains([p.coordinate.latitude, p.coordinate.longitude]))) {
         const selected = place.id === props.selectedId;
         retain(`footprint:${place.id}`, [place, selected], () => L.polygon(place.geometry!.coordinates.map((ring) => ring.map(([lon, lat]) => [lat, lon] as L.LatLngTuple)), {
           color: "#962E2B", weight: selected ? 2.5 : 1.5, fillOpacity: selected ? 0.12 : 0.045,
@@ -201,8 +200,9 @@ export default function ParkingMap(props: ParkingMapProps) {
         }));
       }
     }
+    // Group every place so counts do not depend on the view; draw the groups near it.
     for (const members of groupParking(
-      props.drawing ? [] : visible.filter(p => props.showZones || p.kind !== "zone"),
+      props.drawing ? [] : props.places.filter(p => props.showZones || p.kind !== "zone"),
       latitudeStep,
       longitudeStep,
       props.selectedId,
@@ -212,6 +212,7 @@ export default function ParkingMap(props: ParkingMapProps) {
       const place = members[0],
         selected = place.id === props.selectedId,
         cluster = members.length > 1;
+      if (!selected && !bounds.contains([place.coordinate.latitude, place.coordinate.longitude])) continue;
       const appearance = parkingMarker(place, members.length, props.now);
       const icon = L.divIcon({
         className:

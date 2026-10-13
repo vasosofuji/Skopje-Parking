@@ -1,10 +1,12 @@
 import { maplibreScript, maplibreStyles } from "../vendor/maplibre";
 import { BASEMAP_ATTRIBUTION, createBasemapStyle, OFFLINE_BASEMAP } from "../domain/basemap-style";
 import { guardVectorLayerRemoval, installBasemap, registerOfflineBasemap } from "../domain/basemap-lifecycle";
+import { clusterSteps, groupMarkers } from "../domain/clusters";
 import { createLayerCache } from "../domain/layer-cache";
 import { parkingSelectionZoom } from "../domain/map-selection-camera";
-import { PARKING_PIN_CSS } from "../domain/marker-appearance";
+import { PARKING_PIN_CSS, parkingMarkerHtml } from "../domain/marker-appearance";
 import { CAR_PIN_CSS, CAR_PIN_HTML, CAR_PIN_SIZE } from "../domain/my-car";
+import { SKOPJE } from "../domain/parking";
 import { leafletScript, leafletStyles } from "../vendor/leaflet";
 const tileUrl =
   process.env.EXPO_PUBLIC_TILE_URL ??
@@ -45,7 +47,12 @@ if(typeof maplibregl!=='undefined')(${registerOfflineBasemap.toString()})(maplib
 else startBasemap(false);
 window.addEventListener('pagehide',()=>disposeBasemap());
 const group = L.layerGroup().addTo(map);
-const layerCache = (${createLayerCache.toString()})(layer=>layer.addTo(group),layer=>group.removeLayer(layer),layer=>layer.off());
+const createLayerCache = ${createLayerCache.toString()};
+const layerCache = createLayerCache(layer=>layer.addTo(group),layer=>group.removeLayer(layer),layer=>layer.off());
+// Pins, zone labels and footprints follow the live zoom and viewport here, without waiting for React Native.
+const viewCache = createLayerCache(layer=>layer.addTo(group),layer=>group.removeLayer(layer),layer=>layer.off());
+const groupMarkers = ${groupMarkers.toString()}, clusterSteps = ${clusterSteps.toString()}, parkingMarkerHtml = ${parkingMarkerHtml.toString()};
+let pinData = null, footprints = [], groups = null, groupedFor = '', drawnLevel = null, drawnBounds = null;
 let userDot = null, userAccuracy = null;
 window.updateUserLocation = function(point,accuracy) {
   if(!point){if(userDot){userDot.remove();userDot=null;}if(userAccuracy){userAccuracy.remove();userAccuracy=null;}return;}
@@ -79,6 +86,9 @@ map.on('dragstart',()=>send({type:'pan'}));
 map.on('movestart',()=>{cameraMoving=true;position();});
 function position(){if(current && current.selectedId && current.selectedAnchor){const p=cameraMoving||cameraChanging?null:map.latLngToContainerPoint(current.selectedAnchor);send({type:'position',selectionId:current.selectedId,anchor:current.selectedAnchor,point:p?{x:p.x,y:p.y}:null});}else send({type:'position',selectionId:null,anchor:null,point:null});}
 map.on('moveend',()=>{cameraMoving=false;const p=map.getCenter();send({type:'center',latitude:p.lat,longitude:p.lng});position();});
+// Pans, flings, pinches and flights fire this every frame (animated zooms once, at their final zoom).
+// Redraw on each half zoom step, and before pins beyond the drawn margin come into view.
+map.on('move',()=>{if(Math.round(map.getZoom()*2)/2!==drawnLevel||!drawnBounds||!drawnBounds.contains(map.getBounds().pad(.1)))drawView();});
 map.on('zoomend',()=>send({type:'zoom',zoom:map.getZoom()}));
 map.on('click',event=>{if(current && current.picking)send({type:'pick',latitude:event.latlng.lat,longitude:event.latlng.lng});else send({type:'blank'});});
 function zoneInteractive() { return true; }
@@ -98,32 +108,11 @@ window.renderParking = function(next) {
   document.getElementById("map").classList.toggle("dark",Boolean(next.dark));
   layerCache.begin();
   const retain=(key,state,create)=>layerCache.use(key,JSON.stringify(state),create);
-  (next.footprints || []).forEach(area=>{
-    if(!area.selected && !map.getBounds().intersects(L.latLngBounds(area.rings[0])))return;
-    retain('footprint:'+area.id,area,()=>L.polygon(area.rings,{color:'#962E2B',weight:area.selected?2.5:1.5,fillOpacity:area.selected?.12:.045})
-      .on('click',event=>{L.DomEvent.stopPropagation(event);select(area.id,event.latlng);}));
-  });
   next.zones.forEach(zone=>{
     const interactive=zoneInteractive(zone);
     retain('zone:'+zone.id,[zone,interactive],()=> { const polygon = L.polygon(zone.rings,{pane:'tariff-regions',interactive,color:'#527FBA',weight:1,dashArray:'5 5',fillOpacity:0.035});
     polygon.on('click',event=>{if(!zoneInteractive(zone))return;L.DomEvent.stopPropagation(event);select(zone.id,event.latlng);});
     return polygon; });
-  });
-  (next.zoneLabels || []).forEach(zone=>{
-    const label=document.createElement('span');label.textContent=zone.label;
-    label.style.cssText='background:#fff;color:#392c25;border:1px '+(zone.approximate?'dashed':'solid')+' #527FBA;border-radius:6px;padding:3px 6px;font:600 12px system-ui;white-space:nowrap';
-    const interactive=zoneInteractive(zone);
-    retain('zone-label:'+zone.id,[zone,interactive],()=>L.marker(zone.point,{interactive,keyboard:interactive,autoPanOnFocus:false,zIndexOffset:-500,icon:L.divIcon({className:'zone-label',html:label,iconSize:[60,44],iconAnchor:[30,22]}),title:zone.title}).on('click',()=>select(zone.id,{lat:zone.point[0],lng:zone.point[1]})));
-  });
-  next.pins.forEach(pin=>{
-    retain('pin:'+pin.id,pin,()=> { const icon=L.divIcon({className:'parking-pin'+(pin.selected?' selected':'')+(pin.cluster?' cluster':'')+(pin.spaces?' spaces':''),html:pin.html,iconSize:[60,48],iconAnchor:[30,24]});
-    const marker=L.marker(pin.point,{autoPanOnFocus:false,icon,title:pin.title,zIndexOffset:pin.selected?1000:pin.spaces?800:0});
-    marker.on('click',()=>{
-      if(current.selectionEnabled===false&&!current.picking)return;
-      if(!current.picking && pin.cluster){send({type:'pan'});send({type:'interaction'});moveCamera(pin.point,Math.min(19,map.getZoom()+1));}
-      else select(pin.id,{lat:pin.point[0],lng:pin.point[1]});
-    });
-    return marker; });
   });
   const draft=next.draft||[];
   const outline=retain('draft-line',draft,()=>L.polyline(draft,{color:'#962e2b',weight:3,dashArray:'7 5',interactive:false}));
@@ -144,7 +133,8 @@ window.renderParking = function(next) {
     retain('destination',[next.destinationMarker,next.destinationName],()=>L.marker(next.destinationMarker,{zIndexOffset:2000,title:next.destinationName,icon:L.divIcon({className:'destination-pin',html:'<span></span>',iconSize:[34,44],iconAnchor:[17,44]})}).on('click',()=>send({type:'interaction'})).bindTooltip(label,{permanent:true,direction:'top',offset:[0,-44],className:'destination-label'}));
   }
   layerCache.end();
-  if(userDot)userDot.bringToFront();
+  footprints=(next.footprints||[]).map(area=>({area,signature:JSON.stringify(area),bounds:L.latLngBounds(area.rings[0])}));
+  drawView();
   const key=next.destination.join(',')+':'+(next.cameraRevision||0)+':'+(next.cameraZoom??15);
   const selected=next.selectedId&&next.selectedAnchor?next.selectedId+':'+next.selectedAnchor.join(','):'';
   if(key!==destinationKey){const initial=!destinationKey;destinationKey=key;moveCamera(next.destination,next.cameraZoom??15,!initial&&!next.drawing);}
@@ -152,6 +142,52 @@ window.renderParking = function(next) {
   selectionKey=selected;
   position();
 };
+window.setParkingPins = function(next) {
+  pinData={filtered:next.filtered,clusterMarker:next.clusterMarker,pins:next.pins.map(pin=>({pin,signature:JSON.stringify(pin)}))};
+  groups=null;
+  drawView();
+};
+function drawView(){
+  if(!current)return;
+  // Only the viewport and half a screen around it: creating every marker in town stalls a zoom step on phones.
+  const level=Math.round(map.getZoom()*2)/2, selectedId=current.selectedId, bounds=map.getBounds().pad(.5);
+  drawnLevel=level;drawnBounds=bounds;
+  viewCache.begin();
+  footprints.forEach(({area,signature,bounds:areaBounds})=>{
+    if(!area.selected && (level<17 || !bounds.intersects(areaBounds)))return;
+    viewCache.use('footprint:'+area.id,signature,()=>L.polygon(area.rings,{color:'#962E2B',weight:area.selected?2.5:1.5,fillOpacity:area.selected?.12:.045})
+      .on('click',event=>{L.DomEvent.stopPropagation(event);select(area.id,event.latlng);}));
+  });
+  (current.zoneLabels || []).forEach(zone=>{
+    if(level<14 && zone.id!==selectedId)return;
+    const label=document.createElement('span');label.textContent=zone.label;
+    label.style.cssText='background:#fff;color:#392c25;border:1px '+(zone.approximate?'dashed':'solid')+' #527FBA;border-radius:6px;padding:3px 6px;font:600 12px system-ui;white-space:nowrap';
+    const interactive=zoneInteractive(zone);
+    viewCache.use('zone-label:'+zone.id,JSON.stringify([zone,interactive]),()=>L.marker(zone.point,{interactive,keyboard:interactive,autoPanOnFocus:false,zIndexOffset:-500,icon:L.divIcon({className:'zone-label',html:label,iconSize:[60,44],iconAnchor:[30,22]}),title:zone.title}).on('click',()=>select(zone.id,{lat:zone.point[0],lng:zone.point[1]})));
+  });
+  if(pinData && (!groups || groupedFor!==level+':'+selectedId)){
+    const steps=clusterSteps(level,${SKOPJE.latitude});
+    groups=groupMarkers(pinData.pins.map(entry=>({entry,point:entry.pin.point,alone:entry.pin.alone||entry.pin.id===selectedId})),steps[0],steps[1],pinData.filtered);
+    groupedFor=level+':'+selectedId;
+  }
+  (pinData?groups:[]).forEach(members=>{
+    const {pin,signature}=members[0].entry, count=members.length, cluster=count>1, selected=pin.id===selectedId, spaces=!cluster&&pin.spaces;
+    if(!selected && !bounds.contains(pin.point))return;
+    viewCache.use('pin:'+pin.id+(cluster?'#'+count:''),signature+(selected?'+selected':''),()=> {
+      const html=cluster?parkingMarkerHtml({...pinData.clusterMarker,label:String(count)}):pin.html;
+      const icon=L.divIcon({className:'parking-pin'+(selected?' selected':'')+(cluster?' cluster':'')+(spaces?' spaces':''),html,iconSize:[60,48],iconAnchor:[30,24]});
+      const marker=L.marker(pin.point,{autoPanOnFocus:false,icon,title:pin.title,zIndexOffset:selected?1000:spaces?800:0});
+      marker.on('click',()=>{
+        if(current.selectionEnabled===false&&!current.picking)return;
+        if(!current.picking && cluster){send({type:'pan'});send({type:'interaction'});moveCamera(pin.point,Math.min(19,map.getZoom()+1));}
+        else select(pin.id,{lat:pin.point[0],lng:pin.point[1]});
+      });
+      return marker;
+    });
+  });
+  viewCache.end();
+  if(userDot)userDot.bringToFront();
+}
 window.addEventListener('resize',()=>{map.invalidateSize({pan:false});position();});
 send({type:'ready'});
 })();

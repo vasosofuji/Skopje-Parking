@@ -12,7 +12,7 @@ export const mapHtml = `<!doctype html><html><head>
 <title>Skopje Parking map</title>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>${maplibreStyles}</style>
-<style>${leafletStyles}html,body,#map{height:100%;width:100%;margin:0}.leaflet-container{touch-action:none}.leaflet-bottom{bottom:2px}.leaflet-control-attribution{font-size:10px!important;background:rgba(255,255,255,.85)!important}.dark .leaflet-tile-pane{filter:invert(.88) hue-rotate(180deg) brightness(1.15) contrast(.8) saturate(.35)}.dark.leaflet-container{background:#42484b}</style>
+<style>${leafletStyles}html,body,#map{height:100%;width:100%;margin:0}.leaflet-container{background:#ede2d0;font-family:system-ui,sans-serif}.leaflet-container{touch-action:none}.leaflet-bottom{bottom:2px}.leaflet-control-attribution{font-size:10px!important;background:rgba(255,255,255,.85)!important}.dark .leaflet-tile-pane{filter:invert(.88) hue-rotate(180deg) brightness(1.15) contrast(.8) saturate(.35)}.dark.leaflet-container{background:#42484b}</style>
 <style>${PARKING_PIN_CSS}
 .zone-label{display:flex;align-items:center;justify-content:center}
 .zone-vertex{display:flex;align-items:center;justify-content:center}.zone-vertex span{width:18px;height:18px;border:3px solid #fff;border-radius:50%;background:#962e2b;box-shadow:0 1px 5px #392c2570}

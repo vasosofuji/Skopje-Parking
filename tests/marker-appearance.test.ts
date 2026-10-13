@@ -6,6 +6,7 @@ import { PRICE_REPORT_TTL_MS } from "../src/domain/parking";
 import type { ParkingPlace, SignInfo } from "../src/domain/types";
 import { groupParking } from "../src/domain/clusters";
 import { createOverlayTapGate } from "../src/domain/map-interactions";
+import { leafletStyles } from "../src/vendor/leaflet";
 
 const now = Date.parse("2026-10-01T12:00:00Z");
 const parking: ParkingPlace = { id: "osm:1", name: "Imported parking", coordinate: { latitude: 42, longitude: 21.4 }, kind: "surface", operator: null, zoneCode: null, access: "public", tariff: null, capacity: null, openingHours: null, verification: "osm", source: { label: "OSM", url: "", retrievedAt: new Date(now).toISOString() } };
@@ -117,4 +118,8 @@ test("named local zones join regular parking clusters from overview zoom", () =>
     assert.ok(groups.flat().some(place => place.id === named.id));
     assert.equal(groupParking([named, parking], 1, 1, named.id, now, filtered).length, 2);
   }
+});
+test("the Android map page has one source of pin styles", () => {
+  // A stale copy of the app CSS in the vendored Leaflet styles once overrode every WebView pin.
+  assert.doesNotMatch(leafletStyles, /parking-pin/);
 });

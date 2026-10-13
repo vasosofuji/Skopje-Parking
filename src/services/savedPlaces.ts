@@ -1,12 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useSyncExternalStore } from "react";
 import { readSavedPlaces, type SavedPlace } from "../domain/saved-places";
+import { serialQueue } from "./serial";
 
 const KEY = "parkskopje-saved-places-v1";
 const listeners = new Set<() => void>();
-let places: SavedPlace[] = [], loading: Promise<void> | null = null, queue: Promise<unknown> = Promise.resolve();
+let places: SavedPlace[] = [], loading: Promise<void> | null = null;
 const publish = (next: SavedPlace[]) => { places = next; listeners.forEach(listener => listener()); };
-const serial = (work: () => Promise<void>) => { const next = queue.then(work, work); queue = next.catch(() => {}); return next; };
+const serial = serialQueue();
 // A failed read retries later and blocks writes, so an unreadable list is never overwritten.
 const load = () => loading ??= AsyncStorage.getItem(KEY).then(raw => publish(readSavedPlaces(raw))).catch(error => { loading = null; throw error; });
 

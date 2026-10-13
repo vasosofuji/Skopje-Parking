@@ -2577,9 +2577,9 @@
     "tr": "Park yerimden ayrılıyorum",
     "sq": "Po largohem nga vendi im"
   },
-  "Could not share. Try again.": {
-    "tr": "Paylaşılamadı. Tekrar deneyin.",
-    "sq": "Ndarja dështoi. Provoni përsëri."
+  "A parking payment is still running: {zone}.": {
+    "tr": "Bir park ödemesi hâlâ devam ediyor: {zone}.",
+    "sq": "Një pagesë parkimi është ende aktive: {zone}."
   },
   "Share when my parking time ends": {
     "tr": "Park sürem bittiğinde paylaş",

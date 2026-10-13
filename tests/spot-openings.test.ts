@@ -6,13 +6,19 @@ import { ParkingStore } from "../server/store";
 import { PostgresParkingStore } from "../server/postgres/store";
 import { postgresSql, type StoreDatabase } from "../server/postgres/database";
 import { DestinationAlerts, type PushMessage } from "../server/destination-alerts";
-import { SPOT_NOTICE_MS, SPOT_OPENING_KIND, SPOT_TTL_MS, SpotOpenings, spotNearDestination } from "../server/spot-openings";
+import { SPOT_ALERT_GAP_MS, SPOT_NOTICE_MS, SPOT_OPENING_KIND, SPOT_TTL_MS, SpotOpenings, spotNearDestination } from "../server/spot-openings";
 import { buildApp } from "../server/app";
 import { distanceMeters } from "../src/domain/parking";
-import { nextSpotShare } from "../src/domain/spot-openings";
+import * as spotDomain from "../src/domain/spot-openings";
+import * as sessionDomain from "../src/domain/parking-sessions";
+import * as serial from "../src/services/serial";
 import type { ParkingSession } from "../src/domain/parking-sessions";
 import type { Catalog, ParkingPlace } from "../src/domain/types";
 import seed from "../data/catalog.json";
+import vm from "node:vm";
+import ts from "typescript";
+
+const { nextSpotShare } = spotDomain;
 
 const catalog = seed as Catalog;
 const fcm = (token: string) => ({ type: "fcm" as const, token: `${token}:APA91b${"x".repeat(140)}` });
@@ -36,25 +42,93 @@ test("a spot matches the destination itself or public parking within about 300 m
   assert.equal(spotNearDestination(zone, place("beyond", 42.015, 21.43)), false);
 });
 
+async function openStore(backend: "sqlite" | "postgres") {
+  if (backend === "sqlite") return new ParkingStore(":memory:", catalog, Date.now, true);
+  const pg = await PGlite.create({ parsers: { 20: Number } });
+  await pg.exec(readdirSync("supabase/migrations").filter(file => file.endsWith(".sql")).sort().map(file => readFileSync(`supabase/migrations/${file}`, "utf8")).join("\n"));
+  await pg.exec("SET search_path TO parkskopje");
+  const db: StoreDatabase = {
+    prepare: sql => ({
+      run: async (...values) => pg.query(postgresSql(sql), values),
+      get: async (...values) => (await pg.query(postgresSql(sql), values)).rows[0],
+      all: async (...values) => (await pg.query(postgresSql(sql), values)).rows,
+    }),
+    transaction: async work => work(), close: async () => { await pg.close(); },
+  };
+  const store = new PostgresParkingStore(db, Date.now, true);
+  await store.seed(catalog);
+  return store;
+}
+
+/** Destination watches and spot openings on one store, with a test clock and a push log by token name. */
+async function spotAlerts(backend: "sqlite" | "postgres") {
+  const store = await openStore(backend), clock = { now: Date.now(), failures: 0 }, delivered: { to: string; message: PushMessage }[] = [];
+  const sender = async (target: object, message: PushMessage) => {
+    if (clock.failures > 0) { clock.failures--; throw Object.assign(new Error("provider"), { statusCode: 503 }); }
+    delivered.push({ to: String((target as { token: string }).token).split(":")[0], message });
+  };
+  const watches = new DestinationAlerts(store, sender, () => clock.now), spots = new SpotOpenings(store, sender, () => clock.now);
+  const [traveler, leaver, other] = await Promise.all([store.createSession(), store.createSession(), store.createSession()]);
+  return { store, clock, delivered, watches, spots, traveler: traveler.token, leaver: leaver.token, other: other.token };
+}
+
 for (const backend of ["sqlite", "postgres"] as const) {
+  test(`${backend}: a failed alert does not retry before an extended paid end comes due`, async () => {
+    const { store, clock, delivered, watches, spots, traveler, leaver, other } = await spotAlerts(backend);
+    try {
+      await watches.start(traveler, { placeId: destination.id, language: "en", target: fcm("traveler") });
+      const endsAt = clock.now + 30 * 60000;
+      await spots.open(leaver, { placeId: nearby.id, endsAt });
+      // Another driver's opening far away keeps the delivery pass running.
+      await spots.open(other, { placeId: far.id, endsAt });
+      clock.now = endsAt - SPOT_NOTICE_MS; clock.failures = 1;
+      await spots.flush();
+      await spots.open(leaver, { placeId: nearby.id, endsAt: endsAt + 3600000 });
+      clock.now += 31000;
+      await spots.flush();
+      assert.equal(delivered.length, 0, "the retry waits for the new notice time");
+      clock.now = endsAt + 3600000 - SPOT_NOTICE_MS;
+      await spots.flush();
+      assert.deepEqual(delivered.map(item => [item.to, item.message.data.endsAt]), [["traveler", endsAt + 3600000]]);
+    } finally { await store.close(); }
+  });
+
+  test(`${backend}: a destination watch gets at most one spot alert every 10 minutes, however openings move`, async () => {
+    const { store, clock, delivered, watches, spots, traveler, leaver, other } = await spotAlerts(backend);
+    try {
+      await watches.start(traveler, { placeId: destination.id, language: "en", target: fcm("traveler") });
+      const start = clock.now;
+      for (const placeId of [nearby.id, destination.id, nearby.id]) {
+        await spots.open(leaver, { placeId, leaving: true });
+        await spots.flush();
+        clock.now += 60000;
+      }
+      assert.equal(delivered.length, 1, "moving the opening between places does not alert again");
+      clock.now = start + SPOT_ALERT_GAP_MS;
+      await spots.open(leaver, { placeId: destination.id, leaving: true });
+      await spots.open(other, { placeId: nearby.id, leaving: true });
+      await Promise.all([spots.flush(), spots.flush()]);
+      assert.equal(delivered.length, 2, "10 minutes later one more, even with two openings and two workers");
+    } finally { await store.close(); }
+  });
+
+  test(`${backend}: a watch moved to a new destination is matched again against existing openings`, async () => {
+    const { store, delivered, watches, spots, traveler, leaver } = await spotAlerts(backend);
+    try {
+      await watches.start(traveler, { placeId: destination.id, language: "en", target: fcm("traveler") });
+      await spots.open(leaver, { placeId: nearby.id, leaving: true });
+      await spots.flush();
+      // The same account from another device (a new push token) now heads for the spot itself.
+      await watches.start(traveler, { placeId: nearby.id, language: "en", target: fcm("phone") });
+      await spots.flush();
+      await watches.start(traveler, { placeId: nearby.id, language: "en", target: fcm("rotated") });
+      await spots.flush();
+      assert.deepEqual(delivered.map(item => [item.to, item.message.data.destinationId]), [["traveler", destination.id], ["phone", nearby.id]], "a new token for the same destination is not a new alert");
+    } finally { await store.close(); }
+  });
+
   test(`${backend}: spot openings alert nearby destination watches 5 minutes early, once, and never the driver who shared`, async () => {
-    let store: ParkingStore | PostgresParkingStore;
-    if (backend === "sqlite") store = new ParkingStore(":memory:", catalog, Date.now, true);
-    else {
-      const pg = await PGlite.create({ parsers: { 20: Number } });
-      await pg.exec(readdirSync("supabase/migrations").filter(file => file.endsWith(".sql")).sort().map(file => readFileSync(`supabase/migrations/${file}`, "utf8")).join("\n"));
-      await pg.exec("SET search_path TO parkskopje");
-      const db: StoreDatabase = {
-        prepare: sql => ({
-          run: async (...values) => pg.query(postgresSql(sql), values),
-          get: async (...values) => (await pg.query(postgresSql(sql), values)).rows[0],
-          all: async (...values) => (await pg.query(postgresSql(sql), values)).rows,
-        }),
-        transaction: async work => work(), close: async () => { await pg.close(); },
-      };
-      store = new PostgresParkingStore(db, Date.now, true);
-      await store.seed(catalog);
-    }
+    const store = await openStore(backend);
     let now = Date.now(), failures = 0;
     const delivered: { target: { token?: string }; message: PushMessage }[] = [];
     const sender = async (target: { token?: string } | object, message: PushMessage) => {
@@ -93,6 +167,7 @@ for (const backend of ["sqlite", "postgres"] as const) {
       assert.equal(delivered[1].message.title, `Наскоро може да се ослободи место кај ${nearby.name}`);
       assert.match(delivered[1].message.body, /Друг возач заминува сега/);
 
+      now += SPOT_ALERT_GAP_MS;
       await spots.open(stranger.token, { placeId: destination.id, leaving: true });
       await watches.start(traveler.token, { placeId: nearby.id, language: "en", target: fcm("gone") });
       await spots.flush();
@@ -163,4 +238,42 @@ test("the phone shares a bought end time once, a stop SMS as leaving now, and no
   assert.deepEqual(nextSpotShare([{ ...startStop, stoppedAt: now - 60000 }], now, null), { session: "a", placeId: paid.placeId, endsAt: "left" });
   assert.equal(nextSpotShare([{ ...startStop, stoppedAt: now - 60000 }], now, { session: "a", endsAt: "left" }), null);
   assert.equal(nextSpotShare([{ ...startStop, stoppedAt: now - 20 * 60000 }], now, null), null, "an old stop is not news");
+  const extra: ParkingSession = { ...paid, id: "b", startedAt: now, paidHours: 1 };
+  assert.deepEqual(nextSpotShare([paid, extra], now, { session: "a", endsAt }), { session: "b", placeId: paid.placeId, endsAt }, "one more hour bought sooner keeps the later end");
+  assert.equal(nextSpotShare([paid, extra], now, { session: "b", endsAt }), null);
+});
+
+/** The phone's session log and spot sharing services over an in-memory AsyncStorage. */
+function phone(sharing: boolean) {
+  const storage = new Map<string, string>(sharing ? [] : [["spot-sharing-off-v1", "1"]]), requests: unknown[][] = [];
+  const AsyncStorage = { getItem: async (key: string) => storage.get(key) ?? null, setItem: async (key: string, value: string) => { storage.set(key, value); }, removeItem: async (key: string) => { storage.delete(key); } };
+  const load = (file: string, modules: Record<string, unknown>) => {
+    const module = { exports: {} as any };
+    vm.runInNewContext(ts.transpileModule(readFileSync(file, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText,
+      { module, exports: module.exports, require: (name: string) => modules[name] ?? assert.fail(`unexpected import ${name}`) });
+    return module.exports;
+  };
+  const shared = { "@react-native-async-storage/async-storage": { __esModule: true, default: AsyncStorage }, "../domain/parking-sessions": sessionDomain, "./serial": serial };
+  const sessions = load("src/services/parkingSessions.ts", shared);
+  const spots = load("src/services/spotOpenings.ts", { ...shared, "./parkingSessions": sessions, "../domain/spot-openings": spotDomain,
+    "./api": { api: { spotOpening: async (...args: unknown[]) => { requests.push(args); } } } });
+  return { sessions, spots, requests };
+}
+
+test("I'm leaving my spot stops the session, and that change shares it with exactly one request", async () => {
+  for (const sharing of [true, false]) {
+    const { sessions, spots, requests } = phone(sharing);
+    const session: ParkingSession = { id: "a", placeId: "gradski:zone:D42", zoneCode: "D42", zoneName: "MIDA", operator: "gradski", startedAt: Date.now() - 30 * 60000, stoppedAt: null, paidHours: 2, maxStayMinutes: null, firstHour: 40, nextHour: 40, car: null };
+    await sessions.saveParkingSession(session);
+    const stop = spots.watchSpotOpenings();
+    await spots.shareSpotOpening();
+    assert.deepEqual(requests.map(([, endsAt]) => endsAt), sharing ? [session.startedAt + 2 * 3600000] : [], "the paid end, shared once");
+    assert.equal(await spots.leaveSpot(session), sharing);
+    const [stored] = await sessions.listParkingSessions() as ParkingSession[];
+    assert.ok(stored.stoppedAt !== null && stored.stoppedAt >= session.startedAt, "the session stopped");
+    assert.equal(sessionDomain.activeSession([stored], Date.now()), null, "so the button hides");
+    await spots.shareSpotOpening();
+    assert.deepEqual(requests.slice(1), sharing ? [["gradski:zone:D42", "left"]] : [], sharing ? "one request for leaving" : "sharing off sends nothing");
+    stop();
+  }
 });

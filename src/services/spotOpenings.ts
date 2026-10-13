@@ -1,14 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "./api";
-import { listParkingSessions, onParkingSessionsChanged } from "./parkingSessions";
+import { listParkingSessions, onParkingSessionsChanged, updateParkingSession } from "./parkingSessions";
+import { serialQueue } from "./serial";
 import { nextSpotShare, type SpotShare } from "../domain/spot-openings";
 import type { ParkingSession } from "../domain/parking-sessions";
 
 const SHARED = "spot-opening-shared-v1", OFF = "spot-sharing-off-v1";
 const listeners = new Set<() => void>();
-let queue: Promise<unknown> = Promise.resolve();
 // One request at a time, so a payment and its stop recorded together cannot race each other.
-const serial = <T>(work: () => Promise<T>) => { const next = queue.then(work, work); queue = next.catch(() => {}); return next; };
+const serial = serialQueue();
 
 async function readShared(): Promise<Omit<SpotShare, "placeId"> | null> {
   try {
@@ -16,18 +16,14 @@ async function readShared(): Promise<Omit<SpotShare, "placeId"> | null> {
     return typeof value?.session === "string" && (value.endsAt === "left" || typeof value.endsAt === "number") ? value : null;
   } catch { return null; }
 }
-async function send(share: SpotShare) {
-  await api.spotOpening(share.placeId, share.endsAt);
-  await AsyncStorage.setItem(SHARED, JSON.stringify({ session: share.session, endsAt: share.endsAt }));
-  listeners.forEach(listener => listener());
-}
-
 export const spotSharingEnabled = async () => await AsyncStorage.getItem(OFF) !== "1";
 /** Shares the newest paid session's end once. A failed request is retried on the next session change or app start. */
 export const shareSpotOpening = () => serial(async () => {
   if (!await spotSharingEnabled()) return;
   const share = nextSpotShare(await listParkingSessions(), Date.now(), await readShared());
-  if (share) await send(share);
+  if (!share) return;
+  await api.spotOpening(share.placeId, share.endsAt);
+  await AsyncStorage.setItem(SHARED, JSON.stringify({ session: share.session, endsAt: share.endsAt }));
 });
 export async function setSpotSharing(enabled: boolean) {
   if (enabled) { await AsyncStorage.removeItem(OFF); void shareSpotOpening().catch(() => {}); }
@@ -38,9 +34,17 @@ export async function setSpotSharing(enabled: boolean) {
   }
   listeners.forEach(listener => listener());
 }
-/** "I'm leaving my spot": nearby drivers hear about it now instead of at the paid end. */
-export const leaveSpot = (session: ParkingSession) => serial(() => send({ session: session.id, placeId: session.placeId, endsAt: "left" }));
-export const spotLeft = async (sessionId: string) => { const shared = await readShared(); return shared?.session === sessionId && shared.endsAt === "left"; };
+/**
+ * "I'm leaving my spot": the session stops now, and that change shares it (watchSpotOpenings) with drivers
+ * heading nearby instead of at the paid end. True once shared; a failed share retries on the next change or start.
+ */
+export async function leaveSpot(session: ParkingSession) {
+  await updateParkingSession(session.id, value => ({ ...value, stoppedAt: Math.max(Date.now(), value.startedAt) }));
+  // Waits for the share the change queued, without sending again.
+  await serial(async () => {});
+  const shared = await readShared();
+  return shared?.session === session.id && shared.endsAt === "left";
+}
 export function onSpotSharingChanged(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; }
 export function watchSpotOpenings() {
   const share = () => { void shareSpotOpening().catch(() => {}); };

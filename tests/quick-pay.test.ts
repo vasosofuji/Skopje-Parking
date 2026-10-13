@@ -1,19 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { eligibleSmsZone, smsZoneChoices, ZonePaymentDwell } from "../src/domain/zone-payment";
+import { choiceKey, eligibleSmsZone, smsZoneChoices, ZonePaymentDwell } from "../src/domain/zone-payment";
 import { officialSmsPayment } from "../src/domain/skopje-rules";
-import { carPosition, carSession, paymentSession, sessionId } from "../src/domain/my-car";
+import { carPaidUntil, carPosition, carSession, paymentSession, sessionId } from "../src/domain/my-car";
 import { readSessions, validSession, type ParkingSession } from "../src/domain/parking-sessions";
-import { paymentFix, paymentNow, paymentZone } from "./fixtures/zone-payment";
+import { paymentFix, paymentNow, paymentZone, streetZone as street } from "./fixtures/zone-payment";
 import type { ParkingPlace } from "../src/domain/types";
 
 const ids = (places: ParkingPlace[]) => places.map(place => place.id);
-// Gradski street zones are catalog points; meters north of the driver at (42, 21).
-const street = (code: string, meters: number, east = 0): ParkingPlace => ({
-  ...paymentZone, id: `gradski:zone:${code}`, zoneCode: code, name: `Street ${code}`, geometry: undefined, locationPrecision: "area", access: "unknown",
-  coordinate: { latitude: 42 + meters / 111195, longitude: 21 + east / (111195 * Math.cos(42 * Math.PI / 180)) },
-  smsPayment: officialSmsPayment({ id: `gradski:zone:${code}`, kind: "zone" })!, tariff: { firstHour: 25, nextHour: 25, maxStayMinutes: null, evidence: "official", source: paymentZone.source },
-});
 const fix = (accuracy = 8, offset = 0) => ({ ...paymentFix(offset), accuracy });
 
 test("a stopped driver near a Gradski street point is offered that zone", () => {
@@ -66,6 +60,20 @@ test("the dwell offers street choices after 15 s, also without a saved plate", (
   assert.equal(detector.canPrompt(["gradski:zone:D42"], "SK1234FF", paymentNow + 1000), true);
 });
 
+test("GPS jitter between two similarly close zones keeps the dwell: the choices are a set", () => {
+  const detector = new ZonePaymentDwell(), places = [street("D42", 40), street("D62", -40)];
+  // 3 m north, then 3 m south: the nearest zone flips on every fix.
+  const jitter = (offset: number) => ({ ...fix(8, offset), latitude: 42 + (offset % 10000 ? 3 : -3) / 111195 });
+  const orders = new Set<string>();
+  let zones: ParkingPlace[] | null = null;
+  for (const offset of [0, 5000, 10000, 15000]) {
+    orders.add(ids(smsZoneChoices(jitter(offset), places, paymentNow + offset)).join(" "));
+    zones = detector.update(jitter(offset), places, null, true, paymentNow + offset);
+  }
+  assert.equal(orders.size, 2, "the display order follows distance");
+  assert.equal(choiceKey(ids(zones!)), "gradski:zone:D42 gradski:zone:D62");
+});
+
 test("the car position is the fix at payment time only when precise and fresh", () => {
   assert.deepEqual(carPosition(fix(30), paymentNow), { latitude: 42, longitude: 21 });
   assert.equal(carPosition(fix(31), paymentNow), null);
@@ -95,4 +103,8 @@ test("My car shows while a session runs and for 12 hours after it ends, not afte
   assert.equal(carSession([base], paymentNow + 11 * hour)?.id, base.id, "unknown end");
   assert.equal(carSession([base], paymentNow + 13 * hour), null);
   assert.equal(carSession([{ ...base, stoppedAt: paymentNow + hour }], paymentNow + 2 * hour), null);
+  const extra = { ...fixed, id: "extra", startedAt: paymentNow + hour, paidHours: 0.5 };
+  assert.equal(carPaidUntil([fixed, extra], extra), paymentNow + 2 * hour, "Paid until keeps the later end bought before");
+  assert.equal(carSession([fixed, extra], paymentNow + 13.5 * hour)?.id, "extra", "recalled 12 hours after that end");
+  assert.equal(carPaidUntil([base], base), null, "start-stop has no paid end");
 });

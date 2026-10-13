@@ -39,8 +39,11 @@ function useOperatorName() {
   return (operator: "gradski" | "poc" | undefined) => operator === "gradski" ? t("Gradski Parking (City of Skopje)", "Градски паркинг (Град Скопје)")
     : operator === "poc" ? t("POC, Centar municipality parking", "ПОЦ, Паркинзи на Општина Центар") : null;
 }
-/** Start/confirm one SMS payment. `manual` means the driver chose the zone instead of GPS dwell detection. */
-export default function ZonePaymentSheet({ place, validate, onClose, onInvalidated = onClose, manual = false, fix }: { place: ParkingPlace | null; validate: (id: string, places?: ParkingPlace[]) => ParkingPlace | null; onClose: () => void; onInvalidated?: () => void; manual?: boolean; fix?: Fix | null }) {
+/**
+ * Start/confirm one SMS payment for the zone the driver chose; without a saved plate it asks for one first.
+ * `running` names the zone of a payment still running, so a second one is not sent by accident.
+ */
+export default function ZonePaymentSheet({ place, validate, onClose, onInvalidated = onClose, fix, running = null }: { place: ParkingPlace | null; validate: (id: string, places?: ParkingPlace[]) => ParkingPlace | null; onClose: () => void; onInvalidated?: () => void; fix?: Fix | null; running?: string | null }) {
   const { t, now, language, latestCatalog } = useParking(), { colors } = useTheme(), account = useLicensePlate(), operatorName = useOperatorName();
   const invalidated = useRef(onInvalidated); useLayoutEffect(() => { invalidated.current = onInvalidated; });
   const { pay, busy, error } = useSmsPayment({ validate, fix, onOpened: onClose, onInvalidated: () => invalidated.current() });
@@ -79,7 +82,8 @@ export default function ZonePaymentSheet({ place, validate, onClose, onInvalidat
     ? checkedPlace.id === "gradski:zone:A0" ? t("Also on public holidays", "И на државни празници") : t("Free on Sundays and public holidays", "Бесплатно во недела и на државни празници") : null;
   const zoneLabel = checkedPlace?.zoneCode ?? protocol?.zoneCode ?? "";
   const help = operator ? OPERATOR_HELP[operator] : null;
-  return <Sheet visible={Boolean(place && protocol && (plate || manual))} title={t("Pay for parking by SMS", "Платете паркинг со SMS")} onClose={onClose} footer={plate ? <Button title={busy || !checkedPlace ? t("Checking…", "Се проверува…") : t("Open SMS", "Отвори SMS")} disabled={busy || !ready} onPress={open} /> : undefined}>
+  return <Sheet visible={Boolean(place && protocol)} title={t("Pay for parking by SMS", "Платете паркинг со SMS")} onClose={onClose} footer={plate ? <Button title={busy || !checkedPlace ? t("Checking…", "Се проверува…") : t("Open SMS", "Отвори SMS")} disabled={busy || !ready} onPress={open} /> : undefined}>
+    {running ? <Note>{t("A parking payment is still running: {zone}.", "Сè уште тече плаќање за паркинг: {zone}.").replace("{zone}", running)}</Note> : null}
     {!plate ? <>
       <Note>{t("Add your licence plate to pay by SMS. It stays on this device.", "Додајте ја регистарската табличка за плаќање со SMS. Се чува само на овој уред.")}</Note>
       <LicensePlateEditor key={account.accountId} onDone={() => {}} onCancel={onClose} />

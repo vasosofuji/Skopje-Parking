@@ -28,6 +28,8 @@ test("a monthly card is offered only when repeated paid visits project above its
   const sameDay = [0, 1, 2, 3].map(i => poc(`d${i}`, 0, { startedAt: now - (i + 1) * hour, paidHours: 4 }));
   assert.equal(cardOffer(sameDay, now, {}), null, "payments within hours of each other are one visit");
   assert.equal(cardOffer(week(4, { firstHour: null, nextHour: null }), now, {}), null, "unknown prices never invent a saving");
+  // Start-stop sessions 12, 36 and 60 hours old without a stop SMS count 12 hours each, not until now.
+  assert.equal((cardOffer(week(3, { paidHours: null }), now, {}) as { saving: number }).saving, Math.floor((3 * 12 * 70 * 30 / 7 - 2500) / 10) * 10);
   assert.equal(cardOffer([...week(2, { paidHours: 8 }), poc("old", 8, { paidHours: 8 })], now, {}), null, "only the past 7 days count");
   const gradski = week(5, { placeId: "gradski:zone:B12", zoneCode: "B12", operator: "gradski", paidHours: 6, firstHour: 30, nextHour: 30 });
   assert.deepEqual(cardOffer(gradski, now, {}), { operator: "gradski", zone: "B", kind: "paid", key: "gradski:B", visits: 5, price: 3500, saving: 350 });

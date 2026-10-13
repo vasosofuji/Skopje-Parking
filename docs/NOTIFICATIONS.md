@@ -8,7 +8,7 @@ Apply the new `destination_alerts` migration with the existing database migratio
 
 Set server-only `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY`, and `WEB_PUSH_SUBJECT` (a `mailto:` operator contact or HTTPS URL). Generate the VAPID pair once using `web-push.generateVAPIDKeys()`. Keep the private key stable and private. The API exposes only the public key. The site must serve `public/parking-sw.js` at `/parking-sw.js` over HTTPS. On iOS, install the website on the Home Screen before enabling notifications. Permission denial and missing server configuration are shown in the parking preview; directions still open.
 
-Web Push can deliver destination warnings while the page is suspended and another navigation app is open, subject to browser/OS permission, connectivity and notification policies. Arrival reminders use browser geolocation, which cannot reliably run after a tab is suspended or closed. Settings explicitly explain this distinction. No timer-based background guarantee is made.
+The service worker shows destination and spot pushes; tapping one opens the map on its place. Web Push can deliver them while the page is suspended and another navigation app is open, subject to browser/OS permission, connectivity and notification policies. Arrival reminders use browser geolocation, which cannot reliably run after a tab is suspended or closed. Settings explicitly explain this distinction. No timer-based background guarantee is made.
 
 ## Native (Android)
 
@@ -21,7 +21,7 @@ Phones register their FCM device token (`{ "type": "fcm", "token": ... }`) when 
 
 ## Spot openings
 
-When a driver pays by SMS in the app for a known number of hours, the phone sends `POST /v1/spot-openings` with only `{ placeId, endsAt }` (or `{ placeId, leaving: true }` for "I'm leaving my spot" and for a start-stop zone's stop SMS). About 5 minutes before the end, drivers whose active destination watch is that place, or public parking within about 300 m of it, get one push per opening. The sharer's own watch is never alerted. Openings expire 10 minutes after the end time; `DELETE /v1/spot-openings` withdraws one (Settings, "Share when my parking time ends", default on).
+When a driver pays by SMS in the app for a known number of hours, the phone sends `POST /v1/spot-openings` with only `{ placeId, endsAt }` (or `{ placeId, leaving: true }` for "I'm leaving my spot" and for a start-stop zone's stop SMS). About 5 minutes before the end, drivers whose active destination watch is that place, or public parking within about 300 m of it, get one push per opening, and at most one spot push per watch every 10 minutes, however openings move. A watch moved to another destination is matched again against open spots. The sharer's own watch is never alerted. "I'm leaving my spot" also stops the session on the phone; the opening is shared from that change. Openings expire 10 minutes after the end time; `DELETE /v1/spot-openings` withdraws one (Settings, "Share when my parking time ends", default on).
 
 ## Delivery operations
 

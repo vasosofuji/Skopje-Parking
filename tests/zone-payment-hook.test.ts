@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import ts from "typescript";
-import { ZonePaymentDwell } from "../src/domain/zone-payment";
-import { paymentFix, paymentNow, paymentZone } from "./fixtures/zone-payment";
+import { choiceKey, ZonePaymentDwell } from "../src/domain/zone-payment";
+import { paymentFix, paymentNow, paymentZone, streetZone } from "./fixtures/zone-payment";
 import type { ParkingPlace } from "../src/domain/types";
 
 function harness() {
@@ -27,7 +27,7 @@ function harness() {
   };
   const context = { exports: {} as { useZonePayment: (input: Input) => { choices: ParkingPlace[]; validate: (id: string) => ParkingPlace | null; dismiss: () => void } }, Date: { now: () => clock },
     setInterval: () => 0, clearInterval() {}, setTimeout(callback: () => void, delay: number) { const id = ++timerId; timers.set(id, { at: clock + delay, callback }); return id; }, clearTimeout(id: number) { timers.delete(id); },
-    require(name: string) { if (name === "react") return react; if (name === "react-native") return { AppState: app, Platform: { OS: "android" } }; if (name === "../domain/zone-payment") return { ZonePaymentDwell }; throw new Error(name); } };
+    require(name: string) { if (name === "react") return react; if (name === "react-native") return { AppState: app, Platform: { OS: "android" } }; if (name === "../domain/zone-payment") return { ZonePaymentDwell, choiceKey }; throw new Error(name); } };
   vm.runInNewContext(ts.transpileModule(readFileSync("src/hooks/useZonePayment.ts", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, context);
   let input: Input = { places: [paymentZone], fix: paymentFix(), plate: "SK1234FF", scope: "account", focused: true, blocked: true };
   const render = () => { let result!: ReturnType<typeof context.exports.useZonePayment>; for (let iteration = 0; iteration < 4; iteration++) { cursor = 0; result = context.exports.useZonePayment(input); layout.splice(0).forEach(fn => fn()); effects.splice(0).forEach(fn => fn()); } return result; };
@@ -79,4 +79,20 @@ test("normal ten-second GPS updates can complete stationary payment dwell", () =
   const view = harness(); view.change({ blocked: false }); view.advance(400, false);
   view.advance(10000);
   assert.equal(view.advance(20000).choices[0]?.id, "gradski:zone:D8");
+});
+
+test("GPS jitter between two similarly close zones keeps the card, its order and its payment check", () => {
+  const places = [streetZone("D42", 40), streetZone("D62", -40)];
+  // 3 m north, then 3 m south: the nearest zone flips on every fix.
+  const jitter = (offset: number) => ({ ...paymentFix(offset), accuracy: 8, latitude: 42 + (offset % 10000 ? 3 : -3) / 111195 });
+  const view = harness(), step = (offset: number) => { view.advance(offset, false); return view.change({ fix: jitter(offset) }); };
+  view.change({ places, fix: jitter(0), blocked: false }); view.advance(400, false);
+  for (const offset of [5000, 10000]) step(offset);
+  const shown = step(15000).choices.map(place => place.id);
+  assert.equal(shown.length, 2);
+  for (const offset of [20000, 25000, 30000]) {
+    const offer = step(offset);
+    assert.deepEqual(offer.choices.map(place => place.id), shown, "the card stays, in the order first shown");
+    assert.equal(offer.validate("gradski:zone:D62")?.id, "gradski:zone:D62", "paying mid-jitter still validates");
+  }
 });

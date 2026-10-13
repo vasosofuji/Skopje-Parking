@@ -8,7 +8,7 @@ import { distanceMeters } from "../src/domain/parking";
 import { distanceToParkingBoundary, insidePolygon } from "../src/domain/arrival";
 import type { Coordinate, ParkingPlace } from "../src/domain/types";
 
-export const SPOT_NOTICE_MS = 5 * 60000, SPOT_TTL_MS = 10 * 60000, SPOT_RADIUS_M = 300;
+export const SPOT_NOTICE_MS = 5 * 60000, SPOT_TTL_MS = 10 * 60000, SPOT_RADIUS_M = 300, SPOT_ALERT_GAP_MS = 10 * 60000;
 export const SPOT_OPENING_KIND = "parking-spot-opening";
 // Only the place and the time: no plate, car position or payment details leave the phone.
 const placeId = z.string().min(1).max(100);
@@ -27,7 +27,8 @@ export const spotNearDestination = (spot: ParkingPlace, destination: ParkingPlac
   (spot.access !== "restricted" && Math.min(reach(spot, destination.coordinate), reach(destination, spot.coordinate)) <= SPOT_RADIUS_M);
 
 /** Drivers say when their paid time ends; drivers heading nearby (an active destination watch) hear about it
- * about 5 minutes before, once per watch and opening. Delivery shares the destination alerts' push targets. */
+ * about 5 minutes before, once per watch and opening and at most once per watch every 10 minutes.
+ * Delivery shares the destination alerts' push targets. */
 export class SpotOpenings {
   constructor(private store: ParkingStore | PostgresParkingStore, private send: PushSender = sendDestinationPush, private now = Date.now) {
     if (store instanceof ParkingStore) store.db.exec(`CREATE TABLE IF NOT EXISTS spot_openings (
@@ -84,12 +85,18 @@ export class SpotOpenings {
           await db.prepare("INSERT OR IGNORE INTO spot_alerts(opening_id,session_id,place_id) VALUES (?,?,?)").run(opening.session_id, watch.session_id, watch.place_id);
       }
     }
-    // A watch that moved to another destination since matching, stopped or expired gets nothing.
+    // A watch that moved to another destination since matching, stopped or expired gets nothing, and an
+    // opening whose end moved later (paid time extended) waits for its new notice time, also on a retry.
+    const gap = now - SPOT_ALERT_GAP_MS;
     const rows = await db.prepare(`SELECT a.opening_id,a.session_id,a.place_id,o.place_id AS spot_id,o.ends_at,w.target,w.language FROM spot_alerts a
-      JOIN spot_openings o ON o.session_id=a.opening_id AND o.expires>?
-      JOIN destination_watches w ON w.session_id=a.session_id AND w.place_id=a.place_id AND w.expires>?
-      WHERE a.alerted=0 AND a.retry_at<=? AND a.attempts<5 LIMIT 20`).all(now, now, now) as Pending[];
+      JOIN spot_openings o ON o.session_id=a.opening_id AND o.notify_at<=? AND o.expires>?
+      JOIN destination_watches w ON w.session_id=a.session_id AND w.place_id=a.place_id AND w.expires>? AND w.spot_alerted_at<=?
+      WHERE a.alerted=0 AND a.retry_at<=? AND a.attempts<5 LIMIT 20`).all(now, now, now, gap, now) as Pending[];
     await Promise.all(rows.map(async row => {
+      // At most one alert per watch every 10 minutes, whatever the opening (an opening moved between places
+      // is a new one): a 30 s lease on the watch, held for the full 10 minutes once an alert is sent.
+      if (!await db.prepare("UPDATE destination_watches SET spot_alerted_at=? WHERE session_id=? AND spot_alerted_at<=? RETURNING session_id")
+        .get(gap + 30000, row.session_id, gap)) return;
       // Atomic lease prevents simultaneous API workers from sending the same alert.
       const claimed = await db.prepare("UPDATE spot_alerts SET retry_at=?,attempts=attempts+1 WHERE opening_id=? AND session_id=? AND alerted=0 AND retry_at<=? RETURNING opening_id")
         .get(now + 30000, row.opening_id, row.session_id, now);
@@ -107,6 +114,7 @@ export class SpotOpenings {
           channelId: "parking-spots", data: { kind: SPOT_OPENING_KIND, placeId: row.spot_id, destinationId: row.place_id, endsAt: row.ends_at },
         });
         await db.prepare("UPDATE spot_alerts SET alerted=1 WHERE opening_id=? AND session_id=?").run(row.opening_id, row.session_id);
+        await db.prepare("UPDATE destination_watches SET spot_alerted_at=? WHERE session_id=?").run(now, row.session_id);
       } catch (error) {
         const status = (error as { statusCode?: number }).statusCode;
         // The device is gone: drop its watch, as destination alerts do. Other failures retry later.

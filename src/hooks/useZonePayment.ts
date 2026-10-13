@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { AppState, Platform } from "react-native";
 import type { Fix } from "../domain/arrival";
 import type { ParkingPlace } from "../domain/types";
-import { ZonePaymentDwell } from "../domain/zone-payment";
+import { choiceKey, ZonePaymentDwell } from "../domain/zone-payment";
 
 type Input = { places: ParkingPlace[]; fix: Fix | null; plate: string | null; scope: string | null; focused: boolean; blocked: boolean };
 type Offer = { ids: string[]; scope: string | null };
@@ -39,7 +39,7 @@ export function useZonePayment(input: Input) {
   useEffect(() => {
     const ids = detector.current.update(input.fix, input.places, input.plate, foreground && input.focused, Date.now())?.map(place => place.id) ?? [];
     if (offered) {
-      if (JSON.stringify(ids) !== JSON.stringify(offered.ids) || offered.scope !== input.scope || input.blocked) setOffered(null);
+      if (choiceKey(ids) !== choiceKey(offered.ids) || offered.scope !== input.scope || input.blocked) setOffered(null);
       return;
     }
     // A missing plate is asked for in the offer itself.

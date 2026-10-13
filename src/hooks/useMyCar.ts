@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { activeSession, type ParkingSession } from "../domain/parking-sessions";
-import { carSession } from "../domain/my-car";
+import { carPaidUntil, carSession } from "../domain/my-car";
 import { listParkingSessions, onParkingSessionsChanged } from "../services/parkingSessions";
 
-/** The local parking session log: the session behind "My car" and whether one is still running. */
+/** The local parking session log: the session behind "My car", its paid end and whether one is still running. */
 export function useMyCar() {
   const [log, setLog] = useState<{ sessions: ParkingSession[]; at: number }>({ sessions: [], at: 0 });
   useEffect(() => {
@@ -15,5 +15,8 @@ export function useMyCar() {
     const timer = setInterval(() => setLog(value => ({ ...value, at: Date.now() })), 60_000);
     return () => { version = -1; stop(); clearInterval(timer); };
   }, []);
-  return useMemo(() => ({ session: carSession(log.sessions, log.at), active: activeSession(log.sessions, log.at) }), [log]);
+  return useMemo(() => {
+    const session = carSession(log.sessions, log.at);
+    return { session, paidUntil: carPaidUntil(log.sessions, session), active: activeSession(log.sessions, log.at) };
+  }, [log]);
 }

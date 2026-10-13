@@ -1,7 +1,7 @@
 import type { Fix } from "./arrival";
 import { usableFix } from "./location";
 import { parkingPrice } from "./parking";
-import { activeSession, sessionEndsAt, type ParkingSession } from "./parking-sessions";
+import { activeSession, latestSessionEnd, sessionEndsAt, type ParkingSession } from "./parking-sessions";
 import { skopjeTime } from "./skopje-rules";
 import type { Coordinate, ParkingPlace, VerifiedSmsPayment } from "./types";
 
@@ -23,11 +23,13 @@ export function paymentSession(place: ParkingPlace, protocol: VerifiedSmsPayment
     firstHour: rate(price?.firstHour), nextHour: rate(price?.nextHour), car,
   };
 }
+/** "Paid until" for the newest session: the latest end bought at its place. Start-stop sessions have none. */
+export const carPaidUntil = (sessions: ParkingSession[], session: ParkingSession | null) => session?.paidHours ? latestSessionEnd(sessions) : null;
 /** The session behind "My car": the latest one while it runs and for 12 hours after. A stop SMS means the car left. */
 export function carSession(sessions: ParkingSession[], now: number) {
   const latest = sessions.at(-1);
   if (!latest || latest.stoppedAt !== null) return null;
-  return activeSession(sessions, now) ?? (now - (sessionEndsAt(latest) ?? latest.startedAt) <= CAR_RECALL_MS ? latest : null);
+  return activeSession(sessions, now) ?? (now - (carPaidUntil(sessions, latest) ?? sessionEndsAt(latest) ?? latest.startedAt) <= CAR_RECALL_MS ? latest : null);
 }
 export function skopjeClock(at: number) {
   const { minute } = skopjeTime(at);

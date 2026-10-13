@@ -31,6 +31,7 @@ test("durations follow hours bought, the stop SMS, the zone limit or now", () =>
   assert.equal(sessionMinutes(session("b", start, { paidHours: null, stoppedAt: start + 80 * 60000 }), now), 80);
   assert.equal(sessionMinutes(session("c", start, { paidHours: null, maxStayMinutes: 240 }), now), 180, "still running");
   assert.equal(sessionMinutes(session("d", start, { paidHours: null, maxStayMinutes: 60 }), now), 60);
+  assert.equal(sessionMinutes(session("g", now - 30 * hour, { paidHours: null }), now), 12 * 60, "a stop SMS never sent counts 12 hours");
   assert.equal(sessionZoneLabel(session("e", start, { zoneName: "D42" })), "D42");
   assert.equal(sessionZoneLabel(session("f", start, { zoneName: "Zone D42 Karposh" })), "Zone D42 Karposh");
 });

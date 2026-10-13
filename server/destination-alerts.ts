@@ -60,21 +60,26 @@ export const sendDestinationPush: PushSender = async (target, message) => {
 
 export class DestinationAlerts {
   constructor(private store: ParkingStore | PostgresParkingStore, private send: PushSender = sendDestinationPush, private now = Date.now) {
-    if (store instanceof ParkingStore) store.db.exec(`CREATE TABLE IF NOT EXISTS destination_watches (
+    if (!(store instanceof ParkingStore)) return;
+    store.db.exec(`CREATE TABLE IF NOT EXISTS destination_watches (
       session_id TEXT PRIMARY KEY REFERENCES sessions(id) ON DELETE CASCADE,
       place_id TEXT NOT NULL REFERENCES places(id) ON DELETE CASCADE,
       target_key TEXT UNIQUE NOT NULL, target TEXT NOT NULL, language TEXT NOT NULL,
       expires BIGINT NOT NULL, pending BIGINT NOT NULL DEFAULT 0, alerted INTEGER NOT NULL DEFAULT 0,
       retry_at BIGINT NOT NULL DEFAULT 0, attempts INTEGER NOT NULL DEFAULT 0);
       CREATE INDEX IF NOT EXISTS destination_watches_place ON destination_watches(place_id,expires);`);
+    // Spot alerts' per-watch cap, as in migration 20261013120000_spot_openings.
+    if (!(store.db.prepare("PRAGMA table_info(destination_watches)").all() as { name: string }[]).some(column => column.name === "spot_alerted_at"))
+      store.db.exec("ALTER TABLE destination_watches ADD COLUMN spot_alerted_at BIGINT NOT NULL DEFAULT 0");
   }
   async start(token: string, input: z.infer<typeof destinationWatchSchema>) {
     const user = await this.store.session(token);
     await this.store.place(input.placeId);
     if (input.target.type === "web" && !validPushEndpoint(input.target.subscription.endpoint)) throw Object.assign(new Error("Unsupported push provider."), { statusCode: 400 });
     const key = createHash("sha256").update(input.target.type === "web" ? input.target.subscription.endpoint : input.target.token).digest("hex");
-    // A browser/device changing accounts must not retain the preceding account's destination.
-    await this.store.db.prepare("DELETE FROM destination_watches WHERE target_key=? OR expires<=?").run(key, this.now());
+    // A browser/device changing accounts must not retain the preceding account's destination. A new
+    // destination starts a new watch: its spot_alerts go with the old row, so existing openings match again.
+    await this.store.db.prepare("DELETE FROM destination_watches WHERE target_key=? OR expires<=? OR (session_id=? AND place_id<>?)").run(key, this.now(), user.id, input.placeId);
     const expires = this.now() + WATCH_DURATION_MS;
     await this.store.db.prepare(`INSERT INTO destination_watches(session_id,place_id,target_key,target,language,expires) VALUES (?,?,?,?,?,?)
       ON CONFLICT(session_id) DO UPDATE SET place_id=excluded.place_id,target_key=excluded.target_key,target=excluded.target,language=excluded.language,expires=excluded.expires,pending=0,alerted=0,retry_at=0,attempts=0`)

@@ -83,19 +83,20 @@ function harness(zoneOnly = false, restored = false) {
     offer: (next: ParkingPlace[]) => { offer = next; }, detect: (next: ParkingPlace[]) => { detected = next; }, dismissed: () => dismissed, park: (next: typeof car) => { car = next; }, priced, facility };
 }
 
-test("the widget's pay link opens that zone's SMS sheet once, and an unpayable zone falls back to the chooser", () => {
+test("the widget's pay link opens that zone's one-tap card once, and an unpayable zone falls back to the chooser", () => {
   const view = harness(); view.gps.arrival = null;
-  const sheet = (tree: Element) => nodes(tree).find(node => node.type === "ZonePaymentSheet" && node.props.manual)!;
+  const card = (tree: Element) => nodes(tree).find(node => node.type === "../components/QuickPayCard");
   view.params.pay = paymentZone.id;
   view.render(); view.runEffects();
   let tree = view.render();
-  assert.equal(sheet(tree).props.place?.id, paymentZone.id);
-  assert.equal(view.params.pay, undefined, "the link is consumed, so closing the sheet does not reopen it");
-  sheet(tree).props.onClose(); view.render(); view.runEffects();
-  assert.equal(sheet(view.render()).props.place, null);
+  assert.deepEqual(Array.from(card(tree)!.props.choices, (place: ParkingPlace) => place.id), [paymentZone.id]);
+  assert.equal(view.params.pay, undefined, "the link is consumed, so closing the card does not reopen it");
+  card(tree)!.props.onClose(); view.render(); view.runEffects();
+  assert.equal(card(view.render()), undefined);
+  assert.equal(view.dismissed(), 0, "closing the widget's card does not start the zone offer's cooldown");
   view.params.pay = "gradski:zone:removed";
   view.render(); view.runEffects(); tree = view.render();
-  assert.equal(sheet(tree).props.place, null);
+  assert.equal(card(tree), undefined);
   assert.equal(nodes(tree).find(node => node.type === "PayParkingChooser")!.props.visible, true);
   assert.deepEqual(view.widget.at(-1)?.slice(2), ["en", "SK1234FF"], "foreground fixes keep the widget current");
 });

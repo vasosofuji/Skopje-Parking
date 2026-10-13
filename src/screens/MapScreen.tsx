@@ -203,14 +203,17 @@ export default function MapScreen() {
   const payOrigin = fix && usableFix(fix, Math.max(now, fix.timestamp)) && fix.accuracy! <= 100 ? fix : center;
   const payNearby = useMemo(() => payableZones(catalog.places, payOrigin, now, 1, 1500).length > 0, [catalog.places, payOrigin, now]);
   // Both cards sit above the drawer without blocking the map; the car card replaces the offer while open.
-  const carShown = carCard && Boolean(myCar.session), quickPay = !paymentBlocked && payment.choices.length > 0;
+  // The widget's Pay names the zone already, so it goes straight to the one-tap card.
+  const [widgetPayId, setWidgetPayId] = useState<string | null>(null);
+  const widgetPay = widgetPayId ? payablePlace(widgetPayId, catalog.places) : null;
+  const carShown = carCard && Boolean(myCar.session), quickPay = Boolean(widgetPay) || (!paymentBlocked && payment.choices.length > 0);
   const clearSelection = useCallback(() => {
     setSelected(null);
     setAnchor(null);
     setSelectedPoint(null);
   }, [setSelected, setAnchor]);
   useEffect(() => { if (fix) showWidgetZone(fix, catalog.places, language, licensePlate.savedPlate); }, [fix, catalog.places, language, licensePlate.savedPlate]);
-  // The widget's Pay (`/?pay=<placeId>`) is consumed only here; switch this to quick pay when it lands.
+  // The widget's Pay (`/?pay=<placeId>`) is consumed only here.
   const { pay } = useLocalSearchParams<{ pay?: string }>();
   useEffect(() => {
     if (!pay || !focused) return;
@@ -220,7 +223,8 @@ export default function MapScreen() {
     const timer = setTimeout(() => {
       router.setParams({ pay: undefined });
       clearSelection();
-      if (place) setManualPayId(place.id); else setPayChooser(payOrigin);
+      setCarCard(false);
+      if (place) setWidgetPayId(place.id); else setPayChooser(payOrigin);
     }, 0);
     return () => clearTimeout(timer);
   }, [pay, focused, catalog.places, connected, clearSelection, payOrigin]);
@@ -863,6 +867,9 @@ export default function MapScreen() {
             ) : null}
             {drawerHeight <= 100 && !selectedPlace && !picking ? <View style={[s.pay, { bottom: drawerHeight + 14 }, (carShown || quickPay) && s.payCard]}>
               {carShown ? <MyCarCard session={myCar.session!} fix={gps.location} onClose={() => setCarCard(false)} />
+                : widgetPay ? <QuickPayCard key={`widget:${widgetPay.id}`} choices={[widgetPay]} validate={manualValidate} fix={gps.location}
+                  onClose={() => setWidgetPayId(null)} onPaid={() => setWidgetPayId(null)} onInvalidated={() => { setWidgetPayId(null); void refresh(); }}
+                  onOtherZone={() => { setWidgetPayId(null); setPayChooser(payOrigin); }} onAddPlate={place => { setWidgetPayId(null); setManualPayId(place.id); }} />
                 : quickPay ? <QuickPayCard key={payment.choices.map(place => place.id).join(" ")} choices={payment.choices} validate={payment.validate} fix={gps.location}
                   onClose={() => payment.dismiss()} onPaid={() => payment.dismiss()} onInvalidated={() => { payment.dismiss(false); void refresh(); }}
                   onOtherZone={() => setPayChooser(payOrigin)} onAddPlate={place => setManualPayId(place.id)} />

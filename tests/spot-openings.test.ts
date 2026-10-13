@@ -6,7 +6,7 @@ import { ParkingStore } from "../server/store";
 import { PostgresParkingStore } from "../server/postgres/store";
 import { postgresSql, type StoreDatabase } from "../server/postgres/database";
 import { DestinationAlerts, type PushMessage } from "../server/destination-alerts";
-import { SPOT_NOTICE_MS, SPOT_OPENING_KIND, SPOT_TTL_MS, SpotOpenings, spotNearDestination } from "../server/spot-openings";
+import { SPOT_ALERT_GAP_MS, SPOT_NOTICE_MS, SPOT_OPENING_KIND, SPOT_TTL_MS, SpotOpenings, spotNearDestination } from "../server/spot-openings";
 import { buildApp } from "../server/app";
 import { distanceMeters } from "../src/domain/parking";
 import * as spotDomain from "../src/domain/spot-openings";
@@ -93,6 +93,25 @@ for (const backend of ["sqlite", "postgres"] as const) {
     } finally { await store.close(); }
   });
 
+  test(`${backend}: a destination watch gets at most one spot alert every 10 minutes, however openings move`, async () => {
+    const { store, clock, delivered, watches, spots, traveler, leaver, other } = await spotAlerts(backend);
+    try {
+      await watches.start(traveler, { placeId: destination.id, language: "en", target: fcm("traveler") });
+      const start = clock.now;
+      for (const placeId of [nearby.id, destination.id, nearby.id]) {
+        await spots.open(leaver, { placeId, leaving: true });
+        await spots.flush();
+        clock.now += 60000;
+      }
+      assert.equal(delivered.length, 1, "moving the opening between places does not alert again");
+      clock.now = start + SPOT_ALERT_GAP_MS;
+      await spots.open(leaver, { placeId: destination.id, leaving: true });
+      await spots.open(other, { placeId: nearby.id, leaving: true });
+      await Promise.all([spots.flush(), spots.flush()]);
+      assert.equal(delivered.length, 2, "10 minutes later one more, even with two openings and two workers");
+    } finally { await store.close(); }
+  });
+
   test(`${backend}: a watch moved to a new destination is matched again against existing openings`, async () => {
     const { store, delivered, watches, spots, traveler, leaver } = await spotAlerts(backend);
     try {
@@ -148,6 +167,7 @@ for (const backend of ["sqlite", "postgres"] as const) {
       assert.equal(delivered[1].message.title, `Наскоро може да се ослободи место кај ${nearby.name}`);
       assert.match(delivered[1].message.body, /Друг возач заминува сега/);
 
+      now += SPOT_ALERT_GAP_MS;
       await spots.open(stranger.token, { placeId: destination.id, leaving: true });
       await watches.start(traveler.token, { placeId: nearby.id, language: "en", target: fcm("gone") });
       await spots.flush();

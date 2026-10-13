@@ -21,6 +21,8 @@ CREATE TABLE parkskopje.spot_alerts (
   PRIMARY KEY (opening_id, session_id)
 );
 CREATE INDEX spot_alerts_watch ON parkskopje.spot_alerts(session_id);
+-- At most one spot alert per destination watch every 10 minutes, whatever the opening: when the last one went out.
+ALTER TABLE parkskopje.destination_watches ADD COLUMN spot_alerted_at bigint NOT NULL DEFAULT 0;
 ALTER TABLE parkskopje.spot_openings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE parkskopje.spot_alerts ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON parkskopje.spot_openings, parkskopje.spot_alerts FROM PUBLIC;

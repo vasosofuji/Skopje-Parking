@@ -65,7 +65,7 @@ import { MARKER_COLORS } from "../domain/marker-appearance";
 import { arrivalQuestion } from "../domain/report-feedback";
 import { useContributionFeedback } from "../state/ContributionFeedback";
 import { usePocCards } from "../hooks/usePocCards";
-import { payableZones, smsZoneChoices } from "../domain/zone-payment";
+import { choiceKey, payableZones, smsZoneChoices } from "../domain/zone-payment";
 import { isVerifiedSmsPayment, smsZoneMatches } from "../domain/sms-payment";
 import { CURRENT_LOCATION_ZOOM } from "../domain/map-selection-camera";
 import PocCardSuggestion from "../components/PocCardSuggestion";
@@ -870,7 +870,7 @@ export default function MapScreen() {
                 : widgetPay ? <QuickPayCard key={`widget:${widgetPay.id}`} choices={[widgetPay]} validate={manualValidate} fix={gps.location}
                   onClose={() => setWidgetPayId(null)} onPaid={() => setWidgetPayId(null)} onInvalidated={() => { setWidgetPayId(null); void refresh(); }}
                   onOtherZone={() => { setWidgetPayId(null); setPayChooser(payOrigin); }} onAddPlate={place => { setWidgetPayId(null); setManualPayId(place.id); }} />
-                : quickPay ? <QuickPayCard key={payment.choices.map(place => place.id).join(" ")} choices={payment.choices} validate={payment.validate} fix={gps.location}
+                : quickPay ? <QuickPayCard key={choiceKey(payment.choices.map(place => place.id))} choices={payment.choices} validate={payment.validate} fix={gps.location}
                   onClose={() => payment.dismiss()} onPaid={() => payment.dismiss()} onInvalidated={() => { payment.dismiss(false); void refresh(); }}
                   onOtherZone={() => setPayChooser(payOrigin)} onAddPlate={place => setManualPayId(place.id)} />
                 : <>

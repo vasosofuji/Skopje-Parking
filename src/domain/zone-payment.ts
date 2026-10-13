@@ -118,7 +118,10 @@ export function smsZoneChoices(fix: Fix | null, places: ParkingPlace[], now: num
   const margin = 30 + 2 * fix.accuracy!;
   return streets.filter(row => row.distance - streets[0].distance <= margin).slice(0, MAX_CHOICES).map(row => row.place);
 }
-const identity = (zones: ParkingPlace[], plate: string | null) => JSON.stringify([zones.map(place => [place.id, place.geometry, place.smsPayment]), plate]);
+/** Choices are a set: GPS jitter between similarly close zones only reorders them. The order is for display. */
+export const choiceKey = (ids: string[]) => [...ids].sort().join(" ");
+const identity = (zones: ParkingPlace[], plate: string | null) =>
+  JSON.stringify([[...zones].sort((a, b) => a.id < b.id ? -1 : 1).map(place => [place.id, place.geometry, place.smsPayment]), plate]);
 const cooldownKey = (id: string, plate: string | null) => `${id}:${plate ?? ""}`;
 export class ZonePaymentDwell {
   private candidate: { key: string; since: number; last: number; count: number; anchor: Coordinate } | null = null;

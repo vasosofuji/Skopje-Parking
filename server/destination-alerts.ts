@@ -73,8 +73,9 @@ export class DestinationAlerts {
     await this.store.place(input.placeId);
     if (input.target.type === "web" && !validPushEndpoint(input.target.subscription.endpoint)) throw Object.assign(new Error("Unsupported push provider."), { statusCode: 400 });
     const key = createHash("sha256").update(input.target.type === "web" ? input.target.subscription.endpoint : input.target.token).digest("hex");
-    // A browser/device changing accounts must not retain the preceding account's destination.
-    await this.store.db.prepare("DELETE FROM destination_watches WHERE target_key=? OR expires<=?").run(key, this.now());
+    // A browser/device changing accounts must not retain the preceding account's destination. A new
+    // destination starts a new watch: its spot_alerts go with the old row, so existing openings match again.
+    await this.store.db.prepare("DELETE FROM destination_watches WHERE target_key=? OR expires<=? OR (session_id=? AND place_id<>?)").run(key, this.now(), user.id, input.placeId);
     const expires = this.now() + WATCH_DURATION_MS;
     await this.store.db.prepare(`INSERT INTO destination_watches(session_id,place_id,target_key,target,language,expires) VALUES (?,?,?,?,?,?)
       ON CONFLICT(session_id) DO UPDATE SET place_id=excluded.place_id,target_key=excluded.target_key,target=excluded.target,language=excluded.language,expires=excluded.expires,pending=0,alerted=0,retry_at=0,attempts=0`)

@@ -42,25 +42,74 @@ test("a spot matches the destination itself or public parking within about 300 m
   assert.equal(spotNearDestination(zone, place("beyond", 42.015, 21.43)), false);
 });
 
+async function openStore(backend: "sqlite" | "postgres") {
+  if (backend === "sqlite") return new ParkingStore(":memory:", catalog, Date.now, true);
+  const pg = await PGlite.create({ parsers: { 20: Number } });
+  await pg.exec(readdirSync("supabase/migrations").filter(file => file.endsWith(".sql")).sort().map(file => readFileSync(`supabase/migrations/${file}`, "utf8")).join("\n"));
+  await pg.exec("SET search_path TO parkskopje");
+  const db: StoreDatabase = {
+    prepare: sql => ({
+      run: async (...values) => pg.query(postgresSql(sql), values),
+      get: async (...values) => (await pg.query(postgresSql(sql), values)).rows[0],
+      all: async (...values) => (await pg.query(postgresSql(sql), values)).rows,
+    }),
+    transaction: async work => work(), close: async () => { await pg.close(); },
+  };
+  const store = new PostgresParkingStore(db, Date.now, true);
+  await store.seed(catalog);
+  return store;
+}
+
+/** Destination watches and spot openings on one store, with a test clock and a push log by token name. */
+async function spotAlerts(backend: "sqlite" | "postgres") {
+  const store = await openStore(backend), clock = { now: Date.now(), failures: 0 }, delivered: { to: string; message: PushMessage }[] = [];
+  const sender = async (target: object, message: PushMessage) => {
+    if (clock.failures > 0) { clock.failures--; throw Object.assign(new Error("provider"), { statusCode: 503 }); }
+    delivered.push({ to: String((target as { token: string }).token).split(":")[0], message });
+  };
+  const watches = new DestinationAlerts(store, sender, () => clock.now), spots = new SpotOpenings(store, sender, () => clock.now);
+  const [traveler, leaver, other] = await Promise.all([store.createSession(), store.createSession(), store.createSession()]);
+  return { store, clock, delivered, watches, spots, traveler: traveler.token, leaver: leaver.token, other: other.token };
+}
+
 for (const backend of ["sqlite", "postgres"] as const) {
+  test(`${backend}: a failed alert does not retry before an extended paid end comes due`, async () => {
+    const { store, clock, delivered, watches, spots, traveler, leaver, other } = await spotAlerts(backend);
+    try {
+      await watches.start(traveler, { placeId: destination.id, language: "en", target: fcm("traveler") });
+      const endsAt = clock.now + 30 * 60000;
+      await spots.open(leaver, { placeId: nearby.id, endsAt });
+      // Another driver's opening far away keeps the delivery pass running.
+      await spots.open(other, { placeId: far.id, endsAt });
+      clock.now = endsAt - SPOT_NOTICE_MS; clock.failures = 1;
+      await spots.flush();
+      await spots.open(leaver, { placeId: nearby.id, endsAt: endsAt + 3600000 });
+      clock.now += 31000;
+      await spots.flush();
+      assert.equal(delivered.length, 0, "the retry waits for the new notice time");
+      clock.now = endsAt + 3600000 - SPOT_NOTICE_MS;
+      await spots.flush();
+      assert.deepEqual(delivered.map(item => [item.to, item.message.data.endsAt]), [["traveler", endsAt + 3600000]]);
+    } finally { await store.close(); }
+  });
+
+  test(`${backend}: a watch moved to a new destination is matched again against existing openings`, async () => {
+    const { store, delivered, watches, spots, traveler, leaver } = await spotAlerts(backend);
+    try {
+      await watches.start(traveler, { placeId: destination.id, language: "en", target: fcm("traveler") });
+      await spots.open(leaver, { placeId: nearby.id, leaving: true });
+      await spots.flush();
+      // The same account from another device (a new push token) now heads for the spot itself.
+      await watches.start(traveler, { placeId: nearby.id, language: "en", target: fcm("phone") });
+      await spots.flush();
+      await watches.start(traveler, { placeId: nearby.id, language: "en", target: fcm("rotated") });
+      await spots.flush();
+      assert.deepEqual(delivered.map(item => [item.to, item.message.data.destinationId]), [["traveler", destination.id], ["phone", nearby.id]], "a new token for the same destination is not a new alert");
+    } finally { await store.close(); }
+  });
+
   test(`${backend}: spot openings alert nearby destination watches 5 minutes early, once, and never the driver who shared`, async () => {
-    let store: ParkingStore | PostgresParkingStore;
-    if (backend === "sqlite") store = new ParkingStore(":memory:", catalog, Date.now, true);
-    else {
-      const pg = await PGlite.create({ parsers: { 20: Number } });
-      await pg.exec(readdirSync("supabase/migrations").filter(file => file.endsWith(".sql")).sort().map(file => readFileSync(`supabase/migrations/${file}`, "utf8")).join("\n"));
-      await pg.exec("SET search_path TO parkskopje");
-      const db: StoreDatabase = {
-        prepare: sql => ({
-          run: async (...values) => pg.query(postgresSql(sql), values),
-          get: async (...values) => (await pg.query(postgresSql(sql), values)).rows[0],
-          all: async (...values) => (await pg.query(postgresSql(sql), values)).rows,
-        }),
-        transaction: async work => work(), close: async () => { await pg.close(); },
-      };
-      store = new PostgresParkingStore(db, Date.now, true);
-      await store.seed(catalog);
-    }
+    const store = await openStore(backend);
     let now = Date.now(), failures = 0;
     const delivered: { target: { token?: string }; message: PushMessage }[] = [];
     const sender = async (target: { token?: string } | object, message: PushMessage) => {

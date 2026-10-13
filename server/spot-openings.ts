@@ -84,11 +84,12 @@ export class SpotOpenings {
           await db.prepare("INSERT OR IGNORE INTO spot_alerts(opening_id,session_id,place_id) VALUES (?,?,?)").run(opening.session_id, watch.session_id, watch.place_id);
       }
     }
-    // A watch that moved to another destination since matching, stopped or expired gets nothing.
+    // A watch that moved to another destination since matching, stopped or expired gets nothing, and an
+    // opening whose end moved later (paid time extended) waits for its new notice time, also on a retry.
     const rows = await db.prepare(`SELECT a.opening_id,a.session_id,a.place_id,o.place_id AS spot_id,o.ends_at,w.target,w.language FROM spot_alerts a
-      JOIN spot_openings o ON o.session_id=a.opening_id AND o.expires>?
+      JOIN spot_openings o ON o.session_id=a.opening_id AND o.notify_at<=? AND o.expires>?
       JOIN destination_watches w ON w.session_id=a.session_id AND w.place_id=a.place_id AND w.expires>?
-      WHERE a.alerted=0 AND a.retry_at<=? AND a.attempts<5 LIMIT 20`).all(now, now, now) as Pending[];
+      WHERE a.alerted=0 AND a.retry_at<=? AND a.attempts<5 LIMIT 20`).all(now, now, now, now) as Pending[];
     await Promise.all(rows.map(async row => {
       // Atomic lease prevents simultaneous API workers from sending the same alert.
       const claimed = await db.prepare("UPDATE spot_alerts SET retry_at=?,attempts=attempts+1 WHERE opening_id=? AND session_id=? AND alerted=0 AND retry_at<=? RETURNING opening_id")

@@ -7,6 +7,8 @@ import type { ParkingPlace } from "../domain/types";
 export async function startDestinationAlerts(place: ParkingPlace, language: "en" | "mk") {
   const watcher = await api.destinationWatcher();
   await watcher.stop();
+  // Builds without Firebase cannot get an Android push token; navigation works without alerts.
+  if (Platform.OS === "android" && !Constants.expoConfig?.extra?.androidPush) return;
   if (isRunningInExpoGo() || !requireOptionalNativeModule("ExpoPushTokenManager")) throw new Error("Destination alerts need an updated development or production app build.");
   const Notifications = await import("expo-notifications");
   if (Platform.OS === "android") await Notifications.setNotificationChannelAsync("parking-destination", { name: "Destination availability", importance: Notifications.AndroidImportance.HIGH });

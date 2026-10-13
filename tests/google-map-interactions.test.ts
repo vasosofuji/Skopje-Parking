@@ -9,7 +9,7 @@ import vm from "node:vm";
 import ts from "typescript";
 import { readFileSync } from "node:fs";
 import { groupParking } from "../src/domain/clusters";
-import { parkingMarker } from "../src/domain/marker-appearance";
+import { MARKER_COLORS, parkingMarker } from "../src/domain/marker-appearance";
 import { createOverlayTapGate } from "../src/domain/map-interactions";
 import { SKOPJE } from "../src/domain/parking";
 import type { ParkingMapProps } from "../src/components/mapTypes";
@@ -43,7 +43,7 @@ function renderer() {
     if (name.endsWith("zone-interaction")) return zoneInteraction;
     if (name.endsWith("map-selection-camera")) return selectionCamera;
     if (name.endsWith("clusters")) return { groupParking };
-    if (name.endsWith("marker-appearance")) return { parkingMarker };
+    if (name.endsWith("marker-appearance")) return { MARKER_COLORS, parkingMarker };
     if (name.endsWith("map-interactions")) return { createOverlayTapGate };
     if (name.endsWith("parking")) return { SKOPJE };
     throw new Error(name);

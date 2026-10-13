@@ -12,7 +12,7 @@ import MapView, {
 import { canInteractWithZone, isPocSector, nativeRegionZoom } from "../domain/zone-interaction";
 import { mapCameraDeltas, parkingSelectionDeltas } from "../domain/map-selection-camera";
 import { groupParking } from "../domain/clusters";
-import { parkingMarker } from "../domain/marker-appearance";
+import { MARKER_COLORS, parkingMarker } from "../domain/marker-appearance";
 import { createOverlayTapGate } from "../domain/map-interactions";
 import type { ParkingMapProps } from "./mapTypes";
 export default function ParkingMap(props: ParkingMapProps) {
@@ -263,22 +263,26 @@ export default function ParkingMap(props: ParkingMapProps) {
               } else props.onSelect(place);
             }}
           >
-            <View style={s.markerFrame}>{place.id === props.selectedId ? <View style={[s.selectedFrame, { width: appearance.spaces ? 46 : 38, height: appearance.spaces ? 46 : 38, borderRadius: 23 }]} /> : null}<View
-              style={[
-                s.pin,
-                { backgroundColor: appearance.fill, borderColor: appearance.border },
-                appearance.spaces
-                  ? s.spaces
-                  : null,
-              ]}
-            >
-              <Text style={[s.pinText, { color: appearance.text }]}>
-                {appearance.label}
-              </Text>
-              {appearance.needsInfo ? <View style={s.reviewBadge}><Text style={[s.freeBadgeText, { color: "#65529A" }]}>?</Text></View> : null}
-              {appearance.badge ? <View style={s.freeBadge}><Text style={s.freeBadgeText}>0</Text></View> : null}
-              {appearance.stateBadge ? <View style={[s.stateBadge, { backgroundColor: appearance.stateColor }]}><Text style={[s.freeBadgeText, { color: "#fff" }]}>{appearance.stateBadge}</Text></View> : null}
-            </View></View>
+            <View style={s.markerFrame}>
+              {appearance.spaces ? <View style={[s.halo, { backgroundColor: appearance.state }]} /> : null}
+              {place.id === props.selectedId ? <View style={[s.ring, appearance.round ? { borderRadius: 22 } : null]} /> : null}
+              <View
+                style={[
+                  s.face,
+                  { backgroundColor: appearance.fill, borderColor: appearance.border },
+                  appearance.hollow ? s.hollow : null,
+                  appearance.round ? s.round : null,
+                  appearance.spaces ? s.spaces : null,
+                  appearance.cluster ? s.cluster : null,
+                  place.id === props.selectedId ? s.selected : null,
+                ]}
+              >
+                <Text style={[s.pinText, { color: appearance.text }, appearance.hollow ? { fontWeight: "700" } : null]}>
+                  {appearance.label}
+                </Text>
+                {appearance.badge ? <View style={s.freeBadge}><Text style={s.freeBadgeText}>0</Text></View> : null}
+              </View>
+            </View>
           </Marker>
         );
       })}
@@ -366,11 +370,17 @@ export default function ParkingMap(props: ParkingMapProps) {
 }
 const s = StyleSheet.create({
   markerFrame: { width: 60, height: 48, alignItems: "center", justifyContent: "center" },
-  selectedFrame: { position: "absolute", height: 40, borderRadius: 22, borderWidth: 3, borderColor: "#d9a48d" },
-  freeBadge: { position: "absolute", right: -7, top: -8, width: 17, height: 17, borderRadius: 9, backgroundColor: "#fff", borderColor: "#087184", borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  reviewBadge: { position: "absolute", right: -7, top: -8, width: 17, height: 17, borderRadius: 9, backgroundColor: "#fff", borderColor: "#65529A", borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  stateBadge: { position: "absolute", left: -7, bottom: -8, width: 17, height: 17, borderRadius: 9, borderColor: "#fff", borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  freeBadgeText: { color: "#07596A", fontSize: 10, fontWeight: "800" },
+  // Mirrors PARKING_PIN_CSS in marker-appearance.ts.
+  face: { width: 28, height: 28, borderWidth: 2, borderRadius: 9, alignItems: "center", justifyContent: "center", shadowColor: "#1D1613", shadowOpacity: 0.25, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
+  hollow: { borderWidth: 1.5, shadowOpacity: 0.14 },
+  round: { borderRadius: 16 },
+  spaces: { width: 32, height: 32 },
+  cluster: { width: undefined, minWidth: 30, height: 30, paddingHorizontal: 8, borderWidth: 1, borderRadius: 15 },
+  selected: { transform: [{ scale: 1.18 }], shadowOpacity: 0.4 },
+  ring: { position: "absolute", width: 42, height: 42, borderRadius: 14, borderWidth: 2.5, borderColor: "#1D1613" },
+  halo: { position: "absolute", width: 44, height: 44, borderRadius: 22, opacity: 0.2 },
+  freeBadge: { position: "absolute", right: -8, top: -7, minWidth: 16, height: 16, paddingHorizontal: 3, borderRadius: 8, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", elevation: 2 },
+  freeBadgeText: { color: MARKER_COLORS.free, fontSize: 10, fontWeight: "800" },
   pin: {
     minWidth: 28,
     height: 28,
@@ -381,14 +391,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 6,
   },
-  pinText: { color: "#fff", fontWeight: "800", fontSize: 12 },
-  spaces: {
-    width: 36,
-    minWidth: 36,
-    height: 36,
-    paddingHorizontal: 0,
-    borderRadius: 18,
-  },
+  pinText: { color: "#fff", fontWeight: "800", fontSize: 13 },
   userDot: {
     width: 18,
     height: 18,

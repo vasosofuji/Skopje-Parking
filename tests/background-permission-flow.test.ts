@@ -79,7 +79,7 @@ test("the background location task keeps the widget on the newest fix", async ()
   flow.appState.currentState = "background";
   const location = (timestamp: number, latitude: number) => ({ coords: { latitude, longitude: 21, accuracy: 5, speed: 0 }, timestamp });
   await flow.task()({ data: { locations: [location(2000, 42.002), location(1000, 42.001)] }, error: null, executionInfo: { appState: "background" } });
-  assert.deepEqual(JSON.parse(JSON.stringify(flow.widget)), [[{ latitude: 42.002, longitude: 21, accuracy: 5, speed: 0, timestamp: 2000 }, [], "en", null]]);
+  assert.deepEqual(JSON.parse(JSON.stringify(flow.widget)), [[{ latitude: 42.002, longitude: 21, accuracy: 5, speed: 0, timestamp: 2000 }, [], "en"]]);
 });
 
 test("whichever module installs the notification handler, the time-limit reminder and place pushes show over the open app", async () => {

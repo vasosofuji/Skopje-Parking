@@ -10,6 +10,6 @@ const scheme = [Constants.expoConfig?.scheme ?? "parkskopje"].flat()[0];
 const write = createWidgetWriter(state => { void updateParkingWidget(state); });
 
 /** Called with every foreground and background fix; throttled and written only on change. */
-export function showWidgetZone(fix: Fix, places: ParkingPlace[], language: Language, plate: string | null) {
-  write(() => parkingWidgetState(fix, places, language, plate, scheme));
+export function showWidgetZone(fix: Fix, places: ParkingPlace[], language: Language) {
+  write(() => parkingWidgetState(fix, places, language, scheme));
 }

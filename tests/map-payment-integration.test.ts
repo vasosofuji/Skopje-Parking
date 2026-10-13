@@ -29,7 +29,7 @@ function harness(zoneOnly = false, restored = false) {
   const facility: ParkingPlace = { ...priced, id: "facility", kind: "surface", name: "Parking" };
   const backHandlers: (() => boolean)[] = [];
   const state: unknown[] = [], effects: (() => void)[] = [], timers: (() => void)[] = [], payments: any[] = [], reports: string[] = [];
-  let cursor = 0, focused = true, offerPlate = false, accountId = "account", dismissed = 0, offer: ParkingPlace[] = [], detected: ParkingPlace[] | null = null;
+  let cursor = 0, focused = true, offerPlate = false, accountId = "account", dismissed = 0, offer: ParkingPlace[] = [], detected: ParkingPlace[] | null = null, pendingStop: { zoneName: string } | null = null;
   let car: { session: ParkingSession | null; active: ParkingSession | null } = { session: null, active: null };
   let resetNavigation: ((value: unknown) => void) | undefined;
   const params: { pay?: string } = {}, widget: unknown[][] = [];
@@ -48,7 +48,7 @@ function harness(zoneOnly = false, restored = false) {
     if (name === "../state/ThemeContext") return { useTheme: () => ({ colors: {}, dark: false }) };
     if (name === "../state/ContributionFeedback") return { useContributionFeedback: () => ({ thankYou() {} }) };
     if (name === "../state/SettingsLocationContext") return { useMapSettingsLocation() {} };
-    if (name === "../state/LicensePlateContext") return { useLicensePlate: () => ({ savedPlate: "SK1234FF", accountId, ready: true, offerPlate, pendingStop: null }) };
+    if (name === "../state/LicensePlateContext") return { useLicensePlate: () => ({ savedPlate: "SK1234FF", accountId, ready: true, offerPlate, pendingStop }) };
     if (name === "../hooks/useArrival") return { useArrival: () => gps };
     if (name === "../hooks/useMapNavigationState") return { useMapNavigationState: () => {
       const [value, update] = react.useState({ ...defaultMapNavigationState(), ...(restored ? { viewport: savedPoint } : {}) }) as [ReturnType<typeof defaultMapNavigationState>, (value: unknown) => void];
@@ -80,7 +80,7 @@ function harness(zoneOnly = false, restored = false) {
   vm.runInNewContext(ts.transpileModule(readFileSync("src/screens/MapScreen.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText, context);
   const render = () => { cursor = 0; effects.length = 0; return context.exports.default(); };
   return { render, gps, params, widget, savedPoint, back: () => backHandlers.at(-1)?.() ?? false, switchAccount: () => { accountId = "second"; restored = false; resetNavigation?.(defaultMapNavigationState()); }, payment: () => payments.at(-1), reports, runEffects: () => { effects.splice(0).forEach(fn => fn()); timers.splice(0).forEach(fn => fn()); }, plateOffer: () => { offerPlate = true; }, blur: () => { focused = false; },
-    offer: (next: ParkingPlace[]) => { offer = next; }, detect: (next: ParkingPlace[]) => { detected = next; }, dismissed: () => dismissed, park: (next: typeof car) => { car = next; }, priced, facility };
+    offer: (next: ParkingPlace[]) => { offer = next; }, detect: (next: ParkingPlace[]) => { detected = next; }, dismissed: () => dismissed, park: (next: typeof car) => { car = next; }, pendStop: (zoneName: string) => { pendingStop = { zoneName }; }, priced, facility };
 }
 
 test("the widget's pay link opens that zone's one-tap card once, and an unpayable zone falls back to the chooser", () => {
@@ -98,7 +98,22 @@ test("the widget's pay link opens that zone's one-tap card once, and an unpayabl
   view.render(); view.runEffects(); tree = view.render();
   assert.equal(card(tree), undefined);
   assert.equal(nodes(tree).find(node => node.type === "PayParkingChooser")!.props.visible, true);
-  assert.deepEqual(view.widget.at(-1)?.slice(2), ["en", "SK1234FF"], "foreground fixes keep the widget current");
+  assert.deepEqual(view.widget.at(-1)?.slice(2), ["en"], "foreground fixes keep the widget current");
+});
+
+test("while a payment runs, the widget's Pay opens the full sheet showing it instead of the one-tap card", () => {
+  for (const running of ["session", "stop"] as const) {
+    const view = harness(); view.gps.arrival = null;
+    const session = paymentSession(view.priced, view.priced.smsPayment!, null, null, paymentNow);
+    if (running === "session") view.park({ session, active: session }); else view.pendStop("Zone D8");
+    view.params.pay = paymentZone.id;
+    for (let step = 0; step < 3; step++) { view.render(); view.runEffects(); }
+    const tree = view.render();
+    assert.equal(nodes(tree).find(node => node.type === "../components/QuickPayCard"), undefined, running);
+    const sheet = nodes(tree).find(node => node.type === "ZonePaymentSheet")!;
+    assert.equal(sheet.props.place?.id, paymentZone.id, running);
+    assert.equal(sheet.props.running, running === "session" ? "D8" : "Zone D8");
+  }
 });
 
 test("actual MapScreen queues SMS while availability is open and releases it after a successful Yes report", async () => {

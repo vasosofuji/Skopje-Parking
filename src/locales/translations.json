@@ -2577,6 +2577,10 @@
     "tr": "Park yerimden ayrılıyorum",
     "sq": "Po largohem nga vendi im"
   },
+  "A parking payment is still running: {zone}.": {
+    "tr": "Bir park ödemesi hâlâ devam ediyor: {zone}.",
+    "sq": "Një pagesë parkimi është ende aktive: {zone}."
+  },
   "Share when my parking time ends": {
     "tr": "Park sürem bittiğinde paylaş",
     "sq": "Ndaj kur mbaron koha ime e parkimit"

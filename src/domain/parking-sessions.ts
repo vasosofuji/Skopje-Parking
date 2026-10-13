@@ -56,19 +56,18 @@ export function sessionEndsAt(session: ParkingSession) {
   return session.maxStayMinutes !== null ? session.startedAt + session.maxStayMinutes * 60000 : null;
 }
 
+/** The end so far: never after `now`, and without a known end the driver is assumed gone within 12 hours. */
+export const sessionEffectiveEnd = (session: ParkingSession, now = Infinity) => Math.min(sessionEndsAt(session) ?? session.startedAt + 12 * 3600000, now);
+
 /** The newest session still running, if any. */
 export function activeSession(sessions: ParkingSession[], now: number) {
   const latest = sessions.at(-1);
-  if (!latest || latest.stoppedAt !== null) return null;
-  const end = sessionEndsAt(latest);
-  // Without a known end, assume the driver left within 12 hours.
-  return (end ?? latest.startedAt + 12 * 3600000) > now ? latest : null;
+  return latest && latest.stoppedAt === null && sessionEffectiveEnd(latest) > now ? latest : null;
 }
 
 /** Estimated MKD: first hour, then the next-hour price per started hour. Null when the price is unknown. */
 export function sessionCost(session: ParkingSession, now: number) {
   if (session.firstHour === null) return null;
-  const end = Math.min(sessionEndsAt(session) ?? now, now);
-  const hours = session.paidHours ?? Math.max(1, Math.ceil((end - session.startedAt) / 3600000));
+  const hours = session.paidHours ?? Math.max(1, Math.ceil((sessionEffectiveEnd(session, now) - session.startedAt) / 3600000));
   return session.firstHour + Math.max(0, hours - 1) * (session.nextHour ?? session.firstHour);
 }

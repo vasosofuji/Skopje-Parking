@@ -1,13 +1,13 @@
-import { sessionCost, sessionEndsAt, type ParkingSession } from "./parking-sessions";
+import { sessionCost, sessionEffectiveEnd, type ParkingSession } from "./parking-sessions";
 import { skopjeTime } from "./skopje-rules";
 
 /** Estimated MKD; sessions without a known price are counted but never guessed. */
 export type SpendingTotal = { key: string; label: string; total: number; count: number; unknown: number };
 const monthOf = (time: number) => skopjeTime(time).date.slice(0, 7);
 export const sessionZoneLabel = (s: ParkingSession) => !s.zoneName || s.zoneName === s.zoneCode ? s.zoneCode : s.zoneName.includes(s.zoneCode) ? s.zoneName : `${s.zoneCode} · ${s.zoneName}`;
-/** Hours bought, else minutes until the stop SMS, the zone's limit or now, matching sessionCost. */
+/** Hours bought, else minutes until the session's effective end, matching sessionCost. */
 export const sessionMinutes = (s: ParkingSession, now: number) =>
-  s.paidHours !== null ? s.paidHours * 60 : Math.max(0, Math.round((Math.min(sessionEndsAt(s) ?? now, now) - s.startedAt) / 60000));
+  s.paidHours !== null ? s.paidHours * 60 : Math.max(0, Math.round((sessionEffectiveEnd(s, now) - s.startedAt) / 60000));
 
 /** Totals per Skopje calendar month (newest first) and per zone (highest first). */
 export function spendingSummary(sessions: ParkingSession[], now: number) {

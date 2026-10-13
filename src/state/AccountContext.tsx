@@ -6,8 +6,12 @@ import { credentials } from "../services/credentials";
 import { disableBackgroundArrival } from "../services/backgroundArrival";
 import { selectArrivalAccount } from "../services/arrivalStorage";
 import { deviceVehicle } from "../services/deviceVehicle";
+import { clearParkingSessions } from "../services/parkingSessions";
+import { clearSavedPlaces } from "../services/savedPlaces";
 import type { Profile } from "../domain/account";
 const CACHE = "parkskopje-profile";
+// Device-only driver data goes with the plate when nobody is signed in.
+const clearDriverData = () => Promise.all([clearParkingSessions(), clearSavedPlaces()]);
 type Account = {
   profile: Profile | null;
   ready: boolean;
@@ -33,7 +37,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     owner.current = next?.id ?? null;
     const vehicle = deviceVehicle.select(next?.id ?? null);
     setProfile(next);
-    await Promise.all([arrivalScope, vehicle, next ? AsyncStorage.setItem(CACHE, JSON.stringify(next)) : AsyncStorage.removeItem(CACHE)]);
+    await Promise.all([arrivalScope, vehicle, next ? AsyncStorage.setItem(CACHE, JSON.stringify(next)) : Promise.all([AsyncStorage.removeItem(CACHE), clearDriverData()])]);
   }, []);
   const refresh = useCallback(async () => {
     const version = generation.current;
@@ -67,7 +71,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
             setReady(true);
           }
           await refresh();
-        } else await Promise.all([disableBackgroundArrival().then(() => selectArrivalAccount(null)), deviceVehicle.select(null)]);
+        } else await Promise.all([disableBackgroundArrival().then(() => selectArrivalAccount(null)), deviceVehicle.select(null), clearDriverData()]);
       } catch {
         // Keep the last known profile available when offline.
       } finally {

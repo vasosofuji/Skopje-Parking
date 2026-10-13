@@ -154,6 +154,10 @@ export default function SettingsSheet({ visible, onClose, locationStatus, onRefr
         <SettingsRow title={titles.reader} value={reader ? PROVIDER_NAMES[reader.provider] : t("On this phone", "На телефонот")} icon="cpu" onPress={() => setSection("reader")} />
         <SettingsRow title={titles.location} icon="map-pin" last onPress={() => setSection("location")} />
       </SettingsCard>
+      <SettingsCard title={t("Parking", "Паркирање")}>
+        <SettingsRow title={t("Saved places", "Зачувани места")} icon="bookmark" onPress={() => go("/saved-places")} />
+        <SettingsRow title={t("Parking spending", "Трошоци за паркирање")} icon="credit-card" last onPress={() => go("/spending")} />
+      </SettingsCard>
       <SettingsCard title={t("Account", "Профил")}>
         <SettingsRow title={t("Rewards & appearance", "Награди и изглед")} icon="gift" onPress={() => go("/rewards")} />
         <SettingsRow title={t("Privacy & data", "Приватност и податоци")} icon="shield" last onPress={() => go("/privacy")} />

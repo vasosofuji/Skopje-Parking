@@ -51,7 +51,7 @@ function harness(zoneOnly = false, restored = false) {
       const setter = (field: string) => (next: unknown) => update((previous: Record<string, unknown>) => ({ ...previous, [field]: typeof next === "function" ? next(previous[field]) : next }));
       return { ...value, center: value.viewport, ready: true, restored, setCenter: setter("viewport"), rememberViewport: setter("viewport"), setDestination: setter("destination"), setSelected: setter("selected"), setAnchor: setter("anchor"), setSort: setter("sort"), setParkingFilters: setter("parkingFilters") };
     } };
-    if (name === "../hooks/usePocCards") return { usePocCards: () => ({ record() {}, zone: null, dismiss() {} }) };
+    if (name === "../hooks/usePocCards") return { usePocCards: () => ({ record() {}, offer: null, dismiss() {} }) };
     if (name === "../hooks/useZonePayment") return { useZonePayment: (input: unknown) => { payments.push(input); return { place: null, validate() {}, dismiss() {} }; } };
     if (name === "../domain/parking-filters") return filters;
     if (name === "../domain/parking") return parking;

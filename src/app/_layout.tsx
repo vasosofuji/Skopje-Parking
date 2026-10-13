@@ -53,6 +53,8 @@ function Navigator() {
           <Stack.Screen name="community" />
           <Stack.Screen name="account" />
           <Stack.Screen name="rewards" />
+          <Stack.Screen name="saved-places" />
+          <Stack.Screen name="spending" />
         </Stack.Protected>
         <Stack.Protected guard={Boolean(profile) && !accepted}>
           <Stack.Screen name="consent" />

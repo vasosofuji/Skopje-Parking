@@ -7,6 +7,7 @@ export const LANGUAGES = [
   { code: "sq", name: "Shqip", englishName: "Albanian", flag: "al" },
 ] as const;
 export type Language = (typeof LANGUAGES)[number]["code"];
+export const LOCALES: Record<Language, string> = { en: "en-GB", mk: "mk-MK", tr: "tr-TR", sq: "sq-AL" };
 export function isLanguage(value: unknown): value is Language {
   return LANGUAGES.some(({ code }) => code === value);
 }

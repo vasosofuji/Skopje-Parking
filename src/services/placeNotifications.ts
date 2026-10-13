@@ -10,16 +10,27 @@ const native = Platform.OS !== "web" && (Platform.OS !== "android" || Constants.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Notifications: typeof NotificationTypes | null = native ? require("expo-notifications") : null;
 
+const placeOf = (data: { kind?: unknown; placeId?: unknown } | null | undefined) =>
+  PLACE_PUSH_KINDS.includes(String(data?.kind)) && typeof data?.placeId === "string" ? data.placeId : null;
+
 /** Opens the app on the place a tapped push is about, including the tap that launched the app. */
 export function listenForPlaceNotifications(open: (placeId: string) => void) {
+  if (Platform.OS === "web") {
+    // The web push worker (public/parking-sw.js) hands a tap to an open page; otherwise it opens /?placeId=.
+    const worker = typeof navigator === "undefined" ? undefined : navigator.serviceWorker;
+    if (!worker) return () => {};
+    const message = (event: MessageEvent) => { const placeId = event.data?.type === "parking-notification" ? placeOf(event.data.data) : null; if (placeId) open(placeId); };
+    worker.addEventListener("message", message);
+    return () => worker.removeEventListener("message", message);
+  }
   if (!Notifications) return () => {};
   // backgroundArrival installs the same rule when its native modules exist; builds with push only need this one.
   Notifications.setNotificationHandler({ handleNotification: async notification => notificationBehavior(notification.request, AppState.currentState === "active") });
   const respond = (response: NotificationTypes.NotificationResponse) => {
-    const data = response.notification.request.content.data;
-    if (!PLACE_PUSH_KINDS.includes(String(data?.kind)) || typeof data?.placeId !== "string") return;
+    const placeId = placeOf(response.notification.request.content.data);
+    if (!placeId) return;
     void Notifications.clearLastNotificationResponseAsync().catch(() => {});
-    open(data.placeId);
+    open(placeId);
   };
   const last = Notifications.getLastNotificationResponse();
   if (last) respond(last);

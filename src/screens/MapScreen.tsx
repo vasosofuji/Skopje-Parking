@@ -66,6 +66,7 @@ import { eligibleSmsZone, payableZones } from "../domain/zone-payment";
 import { isVerifiedSmsPayment, smsZoneMatches } from "../domain/sms-payment";
 import { CURRENT_LOCATION_ZOOM } from "../domain/map-selection-camera";
 import PocCardSuggestion from "../components/PocCardSuggestion";
+import { SavedPlaceChips, SavePlaceButton } from "../components/SavedPlaces";
 
 type NewParking = {
   coordinate: Coordinate;
@@ -106,6 +107,7 @@ export default function MapScreen() {
     [searching, setSearching] = useState(false);
   const searchInput = useRef<TextInput>(null);
   const latestSearchFocus = useRef(0);
+  const [searchFocused, setSearchFocused] = useState(false);
   const [remote, setRemote] = useState<Destination[]>([]),
     searchVersion = useRef(0);
   const [selectedPoint, setSelectedPoint] = useState<{
@@ -662,7 +664,9 @@ export default function MapScreen() {
                 <Icon name="search" />
                 <TextInput
                   ref={searchInput}
-                  onFocus={() => { latestSearchFocus.current = Date.now(); }}
+                  onFocus={() => { latestSearchFocus.current = Date.now(); setSearchFocused(true); }}
+                  // Web blurs the field before a chip's press lands; keep the chips for that tap.
+                  onBlur={() => { setTimeout(() => setSearchFocused(false), 250); }}
                   style={s.input}
                   value={query}
                   placeholder={
@@ -682,6 +686,7 @@ export default function MapScreen() {
                     setMessage("");
                   }}
                 />
+                {destination && !query ? <SavePlaceButton destination={destination} /> : null}
                 {query || destination ? (
                   <IconButton
                     name="x"
@@ -698,6 +703,7 @@ export default function MapScreen() {
                   onPress={() => { Keyboard.dismiss(); router.push("/settings"); }}
                 />
               </View>
+              {searchFocused && !query.trim() ? <SavedPlaceChips onChoose={value => choose(value)} /> : null}
               {licensePlate.pendingStop ? <Button title={t("Parking SMS", "Паркинг SMS")} variant="secondary" icon="message-square" onPress={() => setStopSms(true)} /> : null}
               {locationWarning && locationDismissed !== locationWarningKey ? (
                 <View style={s.locationNotice}>
@@ -736,6 +742,7 @@ export default function MapScreen() {
                       <Text numberOfLines={2} style={s.suggestionName}>
                         {value.name}
                       </Text>
+                      <SavePlaceButton destination={value} />
                     </Pressable>
                   ))}
                   <Pressable
@@ -1057,7 +1064,7 @@ export default function MapScreen() {
       <PayParkingChooser visible={Boolean(payChooser) && !suspendSheets} places={catalog.places} origin={payChooser} onClose={() => setPayChooser(null)} onPick={place => { setPayChooser(null); setManualPayId(place.id); }} />
       <ZonePaymentSheet key={`manual:${manualPayId}`} manual place={!suspendSheets && manualPayId ? catalog.places.find(place => place.id === manualPayId) ?? null : null} validate={manualValidate} onClose={() => setManualPayId(null)}
         onInvalidated={() => { setManualPayId(null); setMessage(t("Payment details changed. Check the sign and try again.", "Податоците за плаќање се сменети. Проверете го знакот и обидете се повторно.")); void refresh(); }} />
-      {pocCards.zone ? <PocCardSuggestion zone={pocCards.zone} visible={focused && !suspendSheets && !mapBlockedBySheet && !arrivalPlace && !licensePlate.offerPlate && !selected && !payment.place && !stopSms} onClose={pocCards.dismiss} /> : null}
+      {pocCards.offer ? <PocCardSuggestion offer={pocCards.offer} visible={focused && !suspendSheets && !mapBlockedBySheet && !arrivalPlace && !licensePlate.offerPlate && !selected && !payment.place && !stopSms} onClose={pocCards.dismiss} /> : null}
       <ParkingSmsStopSheet visible={stopSms && !suspendSheets && !arrivalVisible && !detailsId && !legend && !proposal && !picking && !locationHelp} onClose={() => setStopSms(false)} />
       <Sheet visible={legend && !suspendSheets} title={t("Map legend", "Легенда на мапата")} onClose={() => setLegend(false)}>
         {filterOptions.slice(0, 5).map(renderFilter)}

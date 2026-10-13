@@ -26,6 +26,11 @@ export function updateParkingSession(id: string, change: (session: ParkingSessio
     changed();
   });
 }
+export const removeParkingSession = (id: string) => serial(async () => {
+  const now = Date.now();
+  await AsyncStorage.setItem(KEY, JSON.stringify(readSessions(await AsyncStorage.getItem(KEY), now).filter(session => session.id !== id)));
+  changed();
+});
 /** Sign-out and "delete my data" clear the log with the plate: it holds car locations. */
 export const clearParkingSessions = () => serial(async () => { await AsyncStorage.removeItem(KEY); changed(); });
 export function onParkingSessionsChanged(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; }

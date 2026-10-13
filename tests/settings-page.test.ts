@@ -195,7 +195,7 @@ test("navigation waits for persistence, locks choices while saving and keeps a f
 });
 
 test("profile and legal routes retain the opaque settings screen while child routes are above it", () => {
-  for (const [label, path] of [["Manage account", "/account"], ["Rewards & appearance", "/rewards"], ["Privacy & data", "/privacy"], ["Zones & sources", "/coverage"], ["Terms of service", "/terms"]]) {
+  for (const [label, path] of [["Manage account", "/account"], ["Rewards & appearance", "/rewards"], ["Saved places", "/saved-places"], ["Parking spending", "/spending"], ["Privacy & data", "/privacy"], ["Zones & sources", "/coverage"], ["Terms of service", "/terms"]]) {
     const view = settings(); let tree = view.render(); view.tap(tree, label); tree = view.render();
     assert.deepEqual(view.routeEvents, [path]); assert.equal(tree.type, "SettingsFrame");
     assert.equal(tree.props.title, "Settings");

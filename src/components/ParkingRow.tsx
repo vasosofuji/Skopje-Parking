@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { ParkingPlace } from "../domain/types";
 import { currentAvailability } from "../domain/parking";
 import { availabilityReportTime } from "../domain/report-feedback";
-import { parkingMarker } from "../domain/marker-appearance";
+import { MARKER_COLORS, parkingMarker } from "../domain/marker-appearance";
 import { useParking } from "../state/ParkingContext";
 export default function ParkingRow({
   place,
@@ -44,8 +44,8 @@ export default function ParkingRow({
       onPress={handlePress}
       style={[s.row, selected ? s.selected : null]}
     >
-      <View style={[s.symbol, { backgroundColor: marker.fill, borderColor: marker.border, borderWidth: 2 }]}>
-        <Text style={{ color: marker.text, fontWeight: "800", fontSize: 14 }}>{marker.needsInfo ? "?" : "P"}</Text>
+      <View style={[s.symbol, { backgroundColor: marker.fill, borderColor: marker.border, borderWidth: marker.hollow ? 1.5 : 2, borderRadius: marker.round ? 16 : 10 }]}>
+        <Text style={{ color: marker.text, fontWeight: marker.hollow ? "700" : "800", fontSize: 14 }}>{marker.label}</Text>
         {marker.freeOfCharge ? <View style={s.freeBadge}><Text style={s.freeBadgeText}>0</Text></View> : null}
       </View>
       <View style={s.main}>
@@ -107,14 +107,12 @@ const styles = (colors: ThemeColors) =>
     selected: { backgroundColor: colors.mint },
     symbol: {
       width: 32,
-      height: 36,
-      borderRadius: 10,
-      backgroundColor: colors.mint,
+      height: 32,
       alignItems: "center",
       justifyContent: "center",
     },
-    freeBadge: { position: "absolute", top: -6, right: -6, width: 16, height: 16, borderRadius: 8, backgroundColor: "#fff", borderColor: "#087184", borderWidth: 1, alignItems: "center", justifyContent: "center" },
-    freeBadgeText: { color: "#07596A", fontSize: 10, fontWeight: "800" },
+    freeBadge: { position: "absolute", top: -7, right: -8, minWidth: 16, height: 16, paddingHorizontal: 3, borderRadius: 8, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", elevation: 2 },
+    freeBadgeText: { color: MARKER_COLORS.free, fontSize: 10, fontWeight: "800" },
     main: { flex: 1, minWidth: 0, gap: 3 },
     name: { fontSize: 14, fontWeight: "700", color: colors.ink },
     meta: { fontSize: 12, color: colors.muted },

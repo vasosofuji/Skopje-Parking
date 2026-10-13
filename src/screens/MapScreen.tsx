@@ -142,17 +142,19 @@ export default function MapScreen() {
     gps.location,
     Math.max(now, gps.location?.timestamp ?? now),
   );
-  const filterOptions: { id: ActiveParkingFilter; color: string; symbol: string; label: string }[] = [
-    { id: "free", color: MARKER_COLORS.free, symbol: "0", label: t("Free of charge", "Бесплатно") },
-    { id: "reviewed", color: MARKER_COLORS.normal, symbol: "P", label: t("Reviewed parking", "Проверени паркинзи") },
-    { id: "unreviewed", color: MARKER_COLORS.needsInfo, symbol: "?", label: t("Unreviewed parking", "Непроверени паркинзи") },
-    { id: "spaces", color: MARKER_COLORS.spaces, symbol: "✓", label: t("Spaces recently reported", "Неодамна пријавени слободни места") },
-    { id: "full", color: MARKER_COLORS.full, symbol: "×", label: t("Recently reported full", "Неодамна пријавен полн паркинг") },
-    { id: "surface", color: MARKER_COLORS.normal, symbol: "P", label: t("Surface parking", "Отворен паркинг") },
-    { id: "garage", color: MARKER_COLORS.normal, symbol: "G", label: t("Garages", "Катни гаражи") },
-    { id: "underground", color: MARKER_COLORS.normal, symbol: "U", label: t("Underground parking", "Подземен паркинг") },
-    { id: "street", color: MARKER_COLORS.normal, symbol: "S", label: t("Street parking", "Уличен паркинг") },
-    { id: "zone", color: MARKER_COLORS.normal, symbol: "Z", label: t("Parking zones", "Паркинг зони") },
+  const solid = (fill: string) => ({ fill, text: "#FFFFFF", border: fill });
+  const hollow = { fill: MARKER_COLORS.needsInfo, text: MARKER_COLORS.needsInfoText, border: MARKER_COLORS.needsInfoBorder };
+  const filterOptions: { id: ActiveParkingFilter; swatch: { fill: string; text: string; border: string; round?: boolean }; symbol: string; label: string }[] = [
+    { id: "free", swatch: solid(MARKER_COLORS.free), symbol: "0", label: t("Free of charge", "Бесплатно") },
+    { id: "reviewed", swatch: solid(MARKER_COLORS.normal), symbol: "P", label: t("Reviewed parking", "Проверени паркинзи") },
+    { id: "unreviewed", swatch: hollow, symbol: "P", label: t("Unreviewed parking", "Непроверени паркинзи") },
+    { id: "spaces", swatch: { ...solid(MARKER_COLORS.spaces), round: true }, symbol: "P", label: t("Spaces recently reported", "Неодамна пријавени слободни места") },
+    { id: "full", swatch: solid(MARKER_COLORS.full), symbol: "P", label: t("Recently reported full", "Неодамна пријавен полн паркинг") },
+    { id: "surface", swatch: solid(MARKER_COLORS.normal), symbol: "P", label: t("Surface parking", "Отворен паркинг") },
+    { id: "garage", swatch: solid(MARKER_COLORS.normal), symbol: "G", label: t("Garages", "Катни гаражи") },
+    { id: "underground", swatch: solid(MARKER_COLORS.normal), symbol: "U", label: t("Underground parking", "Подземен паркинг") },
+    { id: "street", swatch: solid(MARKER_COLORS.normal), symbol: "S", label: t("Street parking", "Уличен паркинг") },
+    { id: "zone", swatch: solid(MARKER_COLORS.normal), symbol: "Z", label: t("Parking zones", "Паркинг зони") },
   ];
   const filteredPlaces = useMemo(() => catalog.places.filter(place => matchesParkingFilters(place, parkingFilters, now)), [catalog.places, parkingFilters, now]);
   const filterCounts = useMemo(() => Object.fromEntries((["all", "free", "reviewed", "unreviewed", "spaces", "full", "surface", "garage", "underground", "street", "zone"] as const).map(filter => [filter, catalog.places.filter(place => matchesParkingFilter(place, filter, now)).length])), [catalog.places, now]);
@@ -596,8 +598,8 @@ export default function MapScreen() {
       }}
       style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56, padding: 10, borderRadius: 12, borderWidth: 1, borderColor: parkingFilters.includes(item.id) ? colors.accentText : colors.line, backgroundColor: parkingFilters.includes(item.id) ? colors.mint : colors.paper }}
     >
-      <View style={{ width: 30, height: 30, backgroundColor: item.color, borderRadius: 15, alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ color: "#fff", fontWeight: "800" }}>{item.symbol}</Text>
+      <View style={{ width: 28, height: 28, backgroundColor: item.swatch.fill, borderColor: item.swatch.border, borderWidth: 1.5, borderRadius: item.swatch.round ? 14 : 9, alignItems: "center", justifyContent: "center" }}>
+        <Text style={{ color: item.swatch.text, fontWeight: "800" }}>{item.symbol}</Text>
       </View>
       <Text style={{ flex: 1, color: colors.ink }}>{item.label}</Text>
       <Text style={{ color: colors.muted }}>{filterCounts[item.id]}</Text>

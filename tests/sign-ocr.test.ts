@@ -63,3 +63,8 @@ test("real ML Kit output from the emulator for the Cyrillic Gradski sign", () =>
   assert.deepEqual([info.zoneCode, info.operator, info.firstHour, info.chargingHours, info.freeWeekends, info.maxStayMinutes],
     ["A3", "Gradski parking", 40, "Mon-Fri 07:00-21:00; Sat 07:00-14:00", "sunday", 120]);
 });
+test("a shop receipt with a denar total is not a parking sign", () => {
+  const receipt = ["VERO MARKET", "Bul. Partizanski odredi 42", "Datum: 06.10.2026 13:45", "Leb beli 500g 45,00", "Mleko 1L 72,00", "VKUPNO 795,00", "Plateno so karticka: 795,00 ден", "Vi blagodarime!"];
+  assert.equal(signFromText(receipt, ZONES).isParkingSign, false);
+  assert.equal(signFromText(["ПАРКИНГ", "60 ден/час"], ZONES).isParkingSign, true, "a parking word with a price is still a sign");
+});

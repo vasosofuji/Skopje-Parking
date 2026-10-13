@@ -9,7 +9,15 @@ import { createLayerCache } from "../domain/layer-cache";
 import { SKOPJE } from "../domain/parking";
 import { canInteractWithZone, isPocSector } from "../domain/zone-interaction";
 import { groupParking } from "../domain/clusters";
-import { parkingMarker, parkingMarkerHtml } from "../domain/marker-appearance";
+import { PARKING_PIN_CSS, parkingMarker, parkingMarkerHtml } from "../domain/marker-appearance";
+
+// The Android WebView map embeds the same pin styles in its page.
+if (typeof document !== "undefined" && !document.getElementById("parking-pin-css")) {
+  const style = document.createElement("style");
+  style.id = "parking-pin-css";
+  style.textContent = PARKING_PIN_CSS;
+  document.head.appendChild(style);
+}
 
 function moveCamera(map: L.Map, point: L.LatLngTuple, zoom: number, animate = true) {
   map.stop();

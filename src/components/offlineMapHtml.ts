@@ -3,6 +3,7 @@ import { BASEMAP_ATTRIBUTION, createBasemapStyle, OFFLINE_BASEMAP } from "../dom
 import { guardVectorLayerRemoval, installBasemap, registerOfflineBasemap } from "../domain/basemap-lifecycle";
 import { createLayerCache } from "../domain/layer-cache";
 import { parkingSelectionZoom } from "../domain/map-selection-camera";
+import { PARKING_PIN_CSS } from "../domain/marker-appearance";
 import { leafletScript, leafletStyles } from "../vendor/leaflet";
 const tileUrl =
   process.env.EXPO_PUBLIC_TILE_URL ??
@@ -11,16 +12,9 @@ export const mapHtml = `<!doctype html><html><head>
 <title>Skopje Parking map</title>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>${maplibreStyles}</style>
-<style>${leafletStyles}html,body,#map{height:100%;width:100%;margin:0}.leaflet-container{touch-action:none}.leaflet-bottom{bottom:2px}.leaflet-control-attribution{font-size:10px!important;background:rgba(255,255,255,.85)!important}.dark .leaflet-tile-pane{filter:invert(.88) hue-rotate(180deg) brightness(1.15) contrast(.8) saturate(.35)}.dark.leaflet-container{background:#42484b}</style>
-<style>
-.parking-pin{display:flex;align-items:center;justify-content:center;background:transparent;border:0}
-.parking-pin-face{position:relative;box-sizing:border-box;display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 5px;border:2px solid #fff;border-radius:16px;color:#fff;font:800 12px system-ui;box-shadow:0 2px 5px #173d3a35}
-.parking-pin.selected .parking-pin-face{outline:3px solid #d9a48d;outline-offset:2px}
-.parking-pin.spaces .parking-pin-face{width:36px;min-width:36px;height:36px;padding:0;flex-shrink:0;border-radius:50%;box-shadow:0 0 0 3px #26c77930}
-.parking-free-badge,.parking-state-badge{position:absolute;right:-7px;top:-8px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:17px;height:17px;border:1px solid #087184;border-radius:9px;background:#fff;color:#07596A;font:800 10px system-ui}
-.parking-state-badge{left:-7px;right:auto;top:auto;bottom:-8px;color:#fff;border-color:#fff}
+<style>${leafletStyles}html,body,#map{height:100%;width:100%;margin:0}.leaflet-container{background:#ede2d0;font-family:system-ui,sans-serif}.leaflet-container{touch-action:none}.leaflet-bottom{bottom:2px}.leaflet-control-attribution{font-size:10px!important;background:rgba(255,255,255,.85)!important}.dark .leaflet-tile-pane{filter:invert(.88) hue-rotate(180deg) brightness(1.15) contrast(.8) saturate(.35)}.dark.leaflet-container{background:#42484b}</style>
+<style>${PARKING_PIN_CSS}
 .zone-label{display:flex;align-items:center;justify-content:center}
-.parking-review-badge{position:absolute;right:-7px;top:-8px;width:17px;height:17px;box-sizing:border-box;text-align:center;border:1px solid #65529A;border-radius:9px;background:#fff;color:#65529A;font:800 10px/15px system-ui}
 .zone-vertex{display:flex;align-items:center;justify-content:center}.zone-vertex span{width:18px;height:18px;border:3px solid #fff;border-radius:50%;background:#962e2b;box-shadow:0 1px 5px #392c2570}
 .destination-pin span{display:block;width:28px;height:28px;border:3px solid #fff;border-radius:50% 50% 50% 0;background:#ce383e;transform:rotate(-45deg);box-shadow:-2px 2px 7px #50202050}.destination-pin span::after{content:'';display:block;width:9px;height:9px;border-radius:50%;background:#fff;margin:9px}
 .destination-label{border:none;border-radius:8px;color:#8e1822;padding:6px 10px;max-width:210px;overflow:hidden;text-overflow:ellipsis;font:700 12px system-ui;box-shadow:0 2px 8px #50202025}

@@ -6,6 +6,7 @@ import { PRICE_REPORT_TTL_MS } from "../src/domain/parking";
 import type { ParkingPlace, SignInfo } from "../src/domain/types";
 import { groupParking } from "../src/domain/clusters";
 import { createOverlayTapGate } from "../src/domain/map-interactions";
+import { leafletStyles } from "../src/vendor/leaflet";
 
 const now = Date.parse("2026-10-01T12:00:00Z");
 const parking: ParkingPlace = { id: "osm:1", name: "Imported parking", coordinate: { latitude: 42, longitude: 21.4 }, kind: "surface", operator: null, zoneCode: null, access: "public", tariff: null, capacity: null, openingHours: null, verification: "osm", source: { label: "OSM", url: "", retrievedAt: new Date(now).toISOString() } };
@@ -17,13 +18,13 @@ test("a label from OSM or an availability report alone cannot erase the needs-re
     const marker = parkingMarker(place, 1, now);
     assert.equal(marker.fill, MARKER_COLORS.needsInfo);
     assert.equal(marker.label, "P");
-    assert.match(parkingMarkerHtml(marker), /parking-review-badge/);
+    assert.match(parkingMarkerHtml(marker), /parking-pin-face hollow|parking-pin-face round hollow/);
     assert.equal(marker.needsInfo, true);
   }
   const spaces = parkingMarker({ ...parking, availability: available }, 1, now);
-  assert.equal(spaces.stateBadge, "✓"); assert.equal(spaces.stateColor, MARKER_COLORS.spaces);
+  assert.equal(spaces.hollow, true); assert.equal(spaces.round, true); assert.equal(spaces.text, MARKER_COLORS.spaces); assert.equal(spaces.border, MARKER_COLORS.spaces);
   const full = parkingMarker({ ...parking, availability: { ...available, status: "full" } }, 1, now);
-  assert.equal(full.fill, MARKER_COLORS.needsInfo); assert.equal(full.stateBadge, "×"); assert.equal(full.stateColor, MARKER_COLORS.full);
+  assert.equal(full.fill, MARKER_COLORS.needsInfo); assert.equal(full.hollow, true); assert.equal(full.text, MARKER_COLORS.full);
 });
 
 test("review evidence uses official data, real human edits and positive recent presence counts, without inventing pricing", () => {
@@ -46,7 +47,7 @@ test("free pricing remains separate from free spaces, full reports and cosmetic 
   const full = parkingMarker({ ...free, availability: { ...available, status: "full" } }, 1, now);
   assert.equal(full.fill, MARKER_COLORS.full); assert.equal(full.badge, "0"); assert.equal(full.border, neutral.border);
   const spaces = parkingMarker({ ...free, availability: available }, 1, now);
-  assert.equal(spaces.fill, MARKER_COLORS.spaces); assert.equal(spaces.label, "P ✓"); assert.equal(spaces.badge, "0");
+  assert.equal(spaces.fill, MARKER_COLORS.spaces); assert.equal(spaces.label, "P"); assert.equal(spaces.round, true); assert.equal(spaces.hollow, false); assert.equal(spaces.badge, "0");
   assert.equal(parkingMarker({ ...free, availability: { ...available, expiresAt: new Date(now).toISOString() } }, 1, now).fill, MARKER_COLORS.free);
   assert.equal(parkingMarker({ ...free, communityPrice: { ...price, nextHour: 40 } }, 1, now).freeOfCharge, false);
   assert.equal(parkingMarker({ ...free, access: "restricted", availability: available }, 1, now).spaces, false);
@@ -85,8 +86,8 @@ test("the same catalog changes marker and cluster appearance when the explicit c
   const places = [{ ...parking, availability: available }, { ...parking, id: "osm:2" }];
   assert.equal(groupParking(places, 1, 1, null, now).length, 2);
   assert.equal(groupParking(places, 1, 1, null, now + 1000).length, 1);
-  assert.equal(parkingMarker(places[0], 1, now).stateBadge, "✓");
-  assert.equal(parkingMarker(places[0], 1, now + 1000).stateBadge, null);
+  assert.equal(parkingMarker(places[0], 1, now).spaces, true);
+  assert.equal(parkingMarker(places[0], 1, now + 1000).spaces, false);
 });
 
 test("polygon presses do not become blank taps on Android or Apple Maps, while later blank/picking taps remain usable", () => {
@@ -117,4 +118,8 @@ test("named local zones join regular parking clusters from overview zoom", () =>
     assert.ok(groups.flat().some(place => place.id === named.id));
     assert.equal(groupParking([named, parking], 1, 1, named.id, now, filtered).length, 2);
   }
+});
+test("the Android map page has one source of pin styles", () => {
+  // A stale copy of the app CSS in the vendored Leaflet styles once overrode every WebView pin.
+  assert.doesNotMatch(leafletStyles, /parking-pin/);
 });

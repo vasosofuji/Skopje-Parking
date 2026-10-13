@@ -1,9 +1,13 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import { existsSync } from "node:fs";
 export default ({ config }: ConfigContext): ExpoConfig => {
   const testPackage = process.env.SKOPJE_PARKING_TEST_PACKAGE === "1" || process.env.SKOPJE_PARKING_DEVICE_TEST === "1";
   // Background location needs Google Play's declaration, a video and review, so store builds
   // ship without it until SKOPJE_PARKING_BACKGROUND_LOCATION=1 is set for an approved release.
   const backgroundLocation = process.env.SKOPJE_PARKING_BACKGROUND_LOCATION === "1";
+  // Android push tokens need Firebase. Without google-services.json (or an EAS file secret)
+  // the app skips remote destination alerts instead of failing on every navigation.
+  const googleServices = process.env.GOOGLE_SERVICES_JSON ?? (existsSync("google-services.json") ? "./google-services.json" : undefined);
   const plugins = (config.plugins ?? []).map(plugin => Array.isArray(plugin) && plugin[0] === "expo-location"
     ? ["expo-location", { ...plugin[1], isIosBackgroundLocationEnabled: backgroundLocation, isAndroidBackgroundLocationEnabled: backgroundLocation, isAndroidForegroundServiceEnabled: backgroundLocation }] as [string, Record<string, unknown>]
     : plugin);
@@ -21,6 +25,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   android: {
     ...config.android,
     ...(testPackage ? { package: "mk.parkskopje.app.dev" } : {}),
+    ...(googleServices ? { googleServicesFile: googleServices } : {}),
     // Template and library permissions the app never uses; keeping them out of the store
     // manifest avoids sensitive-permission declarations.
     blockedPermissions: [
@@ -38,6 +43,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     androidNativeMapsEnabled: Boolean(process.env.GOOGLE_MAPS_ANDROID_KEY),
     usbTest: process.env.SKOPJE_PARKING_DEVICE_TEST === "1",
     backgroundLocation,
+    androidPush: Boolean(googleServices),
   },
   plugins: [
     ...plugins,

@@ -130,7 +130,8 @@ export function signFromText(blocks: string[], knownZones: string[] = []): SignI
   const smsLine = lines.find((_, i) => /SMS|CMC|144\s*[- ]?\s*144|14\s*14\s*14|141414/.test(shaped[i]));
   const found = [zoneCode, firstHour, chargingHours, operator, maxStayMinutes].filter(value => value !== null).length;
   return {
-    isParkingSign: found > 0 || /PARK|NAPK/.test(all),
+    // A denar amount alone also fits a shop receipt; a sign needs parking-specific evidence.
+    isParkingSign: [zoneCode, operator, chargingHours, maxStayMinutes, smsLine ?? null].some(value => value !== null) || /PARK|NAPK/.test(all),
     // Plain OCR is never trusted as ready: the driver compares every field with the photo.
     confidence: Math.min(0.8, 0.4 + found * 0.1),
     zoneCode, operator, currency: firstHour !== null ? "MKD" : null, firstHour, nextHour, maxStayMinutes,

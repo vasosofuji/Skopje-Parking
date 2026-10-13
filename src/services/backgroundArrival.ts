@@ -16,7 +16,7 @@ import {
 import type { ParkingPlace } from "../domain/types";
 import { isLanguage, translate, placeName, type Language } from "../domain/language";
 import { startArrivalInForeground } from "./foregroundArrivalStart";
-import { PARKING_LIMIT_REMINDER } from "./parkingReminder";
+import { notificationBehavior } from "./notificationPresentation";
 import { showWidgetZone } from "./parkingWidget";
 import {
   arrivalTransaction,
@@ -54,14 +54,8 @@ async function dismissReminder(notificationId: string) {
   ]);
 }
 
-if (Notifications) Notifications.setNotificationHandler({
-  handleNotification: async (notification) => ({
-    shouldShowBanner: notification.request.content.data?.kind === "parking-destination-full" || notification.request.identifier === PARKING_LIMIT_REMINDER || AppState.currentState !== "active",
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+// placeNotifications installs the same rule; whichever runs last, every notification shows the same way.
+if (Notifications) Notifications.setNotificationHandler({ handleNotification: async notification => notificationBehavior(notification.request, AppState.currentState === "active") });
 
 if (Tasks && !Tasks.isTaskDefined(TASK)) {
   Tasks.defineTask<{ locations: Location.LocationObject[] }>(TASK, async ({ data, error, executionInfo }) => {

@@ -10,6 +10,7 @@ import { useNavigationReady } from "../services/navigation";
 import { ModalBackgroundProvider } from "../components/ModalBackdrop";
 import AppStyles from "../components/AppStyles";
 import { useArrivalNotifications } from "../hooks/useArrivalNotifications";
+import { usePlaceNotifications } from "../hooks/usePlaceNotifications";
 import { hasCurrentTerms } from "../domain/onboarding";
 import { ContributionFeedbackProvider } from "../state/ContributionFeedback";
 import { SettingsLocationProvider } from "../state/SettingsLocationContext";
@@ -21,6 +22,7 @@ function Navigator() {
   const { profile, ready } = useAccount();
   const accepted = hasCurrentTerms(profile);
   useArrivalNotifications(ready && navigationReady && accepted);
+  usePlaceNotifications(ready && navigationReady && accepted);
   if (!ready || !navigationReady)
     return (
       <View
@@ -53,6 +55,8 @@ function Navigator() {
           <Stack.Screen name="community" />
           <Stack.Screen name="account" />
           <Stack.Screen name="rewards" />
+          <Stack.Screen name="saved-places" />
+          <Stack.Screen name="spending" />
         </Stack.Protected>
         <Stack.Protected guard={Boolean(profile) && !accepted}>
           <Stack.Screen name="consent" />

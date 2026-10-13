@@ -6,6 +6,8 @@ import {
 export async function watchLocation(
   onFix: (fix: Fix) => void,
   onIssue: (issue: LocationIssue) => void,
+  // Same parameters as the native service; browsers report no approximate-only mode.
+  _onPrecision?: (precise: boolean) => void,
   geolocation = globalThis.navigator?.geolocation,
 ) {
   return startBrowserLocation(

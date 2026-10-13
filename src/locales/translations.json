@@ -1,4 +1,41 @@
 {
+  "Saved places": { "tr": "Kayıtlı yerler", "sq": "Vendet e ruajtura" },
+  "Saved places appear when you tap the search field. Save a search result or your destination with the bookmark. They stay on this phone and are cleared when you sign out.": { "tr": "Kayıtlı yerler arama alanına dokunduğunuzda görünür. Bir arama sonucunu veya varış noktanızı yer imi simgesiyle kaydedin. Bu telefonda kalır ve çıkış yaptığınızda silinir.", "sq": "Vendet e ruajtura shfaqen kur prekni fushën e kërkimit. Ruani një rezultat kërkimi ose destinacionin tuaj me shenjuesin. Mbeten në këtë telefon dhe fshihen kur dilni nga llogaria." },
+  "Name": { "tr": "Ad", "sq": "Emri" },
+  "Rename": { "tr": "Yeniden adlandır", "sq": "Riemërto" },
+  "Delete": { "tr": "Sil", "sq": "Fshi" },
+  "No saved places yet.": { "tr": "Henüz kayıtlı yer yok.", "sq": "Ende nuk ka vende të ruajtura." },
+  "{hours} h": { "tr": "{hours} sa", "sq": "{hours} orë" },
+  "{minutes} min": { "tr": "{minutes} dk", "sq": "{minutes} min" },
+  "{count} without a price": { "tr": "{count} fiyatsız", "sq": "{count} pa çmim" },
+  "Payments: {count}": { "tr": "Ödemeler: {count}", "sq": "Pagesa: {count}" },
+  "Could not delete. Try again.": { "tr": "Silinemedi. Tekrar deneyin.", "sq": "Nuk u fshi. Provoni përsëri." },
+  "Parking spending": { "tr": "Otopark harcamaları", "sq": "Shpenzimet për parkim" },
+  "Loading payments…": { "tr": "Ödemeler yükleniyor…", "sq": "Po ngarkohen pagesat…" },
+  "This month, estimated": { "tr": "Bu ay, tahmini", "sq": "Ky muaj, i vlerësuar" },
+  "Estimated from payments started in Skopje Parking, using the price shown when you paid. The app cannot see whether an SMS was sent or what the operator charged. Kept only on this phone and cleared when you sign out.": { "tr": "Skopje Parking'den başlatılan ödemelerden, ödeme sırasında gösterilen fiyatla tahmin edilir. Uygulama SMS'in gönderilip gönderilmediğini veya işletmecinin ne kadar ücret aldığını göremez. Yalnızca bu telefonda saklanır ve çıkış yaptığınızda silinir.", "sq": "Vlerësuar nga pagesat e nisura në Skopje Parking, me çmimin e shfaqur kur paguat. Aplikacioni nuk mund të shohë nëse SMS-ja u dërgua ose sa tarifoi operatori. Ruhet vetëm në këtë telefon dhe fshihet kur dilni nga llogaria." },
+  "Previous months": { "tr": "Önceki aylar", "sq": "Muajt e mëparshëm" },
+  "By zone": { "tr": "Bölgeye göre", "sq": "Sipas zonës" },
+  "Recent payments": { "tr": "Son ödemeler", "sq": "Pagesat e fundit" },
+  "Delete payment": { "tr": "Ödemeyi sil", "sq": "Fshi pagesën" },
+  "Clear all": { "tr": "Tümünü sil", "sq": "Fshi të gjitha" },
+  "No payments yet. Payments you start from the map appear here.": { "tr": "Henüz ödeme yok. Haritadan başlattığınız ödemeler burada görünür.", "sq": "Ende nuk ka pagesa. Pagesat që nisni nga harta shfaqen këtu." },
+  "Clear all payments?": { "tr": "Tüm ödemeler silinsin mi?", "sq": "Të fshihen të gjitha pagesat?" },
+  "This deletes the spending log on this phone. It does not stop or cancel any parking.": { "tr": "Bu, bu telefondaki harcama kaydını siler. Hiçbir park işlemini durdurmaz veya iptal etmez.", "sq": "Kjo fshin regjistrin e shpenzimeve në këtë telefon. Nuk ndalon dhe nuk anulon asnjë parkim." },
+  "You paid in {zone} {count} times in the past 7 days. A monthly card costs {price} MKD, about {saving} MKD less than paying each time.": { "tr": "Son 7 günde {zone} bölgesinde {count} kez ödeme yaptınız. Aylık kart {price} MKD; her seferinde ödemekten yaklaşık {saving} MKD daha az.", "sq": "Keni paguar në {zone} {count} herë në 7 ditët e fundit. Një kartë mujore kushton {price} MKD, rreth {saving} MKD më pak sesa të paguani çdo herë." },
+  "You paid in zone {zone} {count} times in the past 7 days. A monthly subscription for all of zone {zone} costs {price} MKD, about {saving} MKD less than paying each time.": { "tr": "Son 7 günde {zone} bölgesinde {count} kez ödeme yaptınız. {zone} bölgesinin tamamı için aylık abonelik {price} MKD; her seferinde ödemekten yaklaşık {saving} MKD daha az.", "sq": "Keni paguar në zonën {zone} {count} herë në 7 ditët e fundit. Një abonim mujor për gjithë zonën {zone} kushton {price} MKD, rreth {saving} MKD më pak sesa të paguani çdo herë." },
+  "A monthly card may save you money": { "tr": "Aylık kart size tasarruf sağlayabilir", "sq": "Një kartë mujore mund t'ju kursejë para" },
+  "Estimated from payments started in Skopje Parking and projected to a month. The app cannot see whether each SMS was sent.": { "tr": "Skopje Parking'den başlatılan ödemelerden tahmin edilip bir aya göre hesaplanır. Uygulama her SMS'in gönderilip gönderilmediğini göremez.", "sq": "Vlerësuar nga pagesat e nisura në Skopje Parking dhe e llogaritur për një muaj. Aplikacioni nuk mund të shohë nëse u dërgua çdo SMS." },
+  "Check eligibility and coverage with POC before buying. These are not reserved parking spaces.": { "tr": "Satın almadan önce POC ile uygunluk ve kapsamı kontrol edin. Bunlar rezerve park yerleri değildir.", "sq": "Para blerjes, kontrolloni kushtet dhe mbulimin me POC. Këto nuk janë vende parkimi të rezervuara." },
+  "Check eligibility and coverage with Gradski Parking before buying. This is not a reserved parking space.": { "tr": "Satın almadan önce Gradski Parking ile uygunluk ve kapsamı kontrol edin. Bu, rezerve bir park yeri değildir.", "sq": "Para blerjes, kontrolloni kushtet dhe mbulimin me Gradski Parking. Ky nuk është vend parkimi i rezervuar." },
+  "Source: JP Gradski Parking price list": { "tr": "Kaynak: JP Gradski Parking fiyat listesi", "sq": "Burimi: lista e çmimeve e JP Gradski Parking" },
+  "Home": { "tr": "Ev", "sq": "Shtëpia" },
+  "Work": { "tr": "İş", "sq": "Puna" },
+  "Other place": { "tr": "Başka bir yer", "sq": "Vend tjetër" },
+  "You can save up to 20 places. Delete one in Settings.": { "tr": "En fazla 20 yer kaydedebilirsiniz. Ayarlar'dan birini silin.", "sq": "Mund të ruani deri në 20 vende. Fshini një te Cilësimet." },
+  "Remove saved place": { "tr": "Kayıtlı yeri kaldır", "sq": "Hiq vendin e ruajtur" },
+  "Save place": { "tr": "Yeri kaydet", "sq": "Ruaj vendin" },
+  "This replaces the place saved as {name}.": { "tr": "Bu, {name} olarak kayıtlı yerin yerine geçer.", "sq": "Kjo zëvendëson vendin e ruajtur si {name}." },
   "{n} points to go": {
     "tr": "{n} puan kaldı",
     "sq": "Edhe {n} pikë"
@@ -462,6 +499,78 @@
   "Continue": {
     "tr": "Devam et",
     "sq": "Vazhdo"
+  },
+  "Pay": {
+    "tr": "Öde",
+    "sq": "Paguaj"
+  },
+  "Open": {
+    "tr": "Aç",
+    "sq": "Hap"
+  },
+  "No paid zone nearby": {
+    "tr": "Yakında ücretli bölge yok",
+    "sq": "Nuk ka zonë me pagesë afër"
+  },
+  "{price} MKD/h": {
+    "tr": "{price} MKD/sa",
+    "sq": "{price} MKD/orë"
+  },
+  "Parking reminders are on": {
+    "tr": "Otopark hatırlatıcıları açık",
+    "sq": "Kujtesat e parkimit janë aktive"
+  },
+  "Skopje Parking notices when you stop in a parking area. Turn this off anytime in Settings.": {
+    "tr": "Skopje Parking bir otopark alanında durduğunuzu fark eder. Bunu istediğiniz zaman Ayarlar'dan kapatabilirsiniz.",
+    "sq": "Skopje Parking e vëren kur ndaloni në një zonë parkimi. Mund ta çaktivizoni në çdo kohë te Cilësimet."
+  },
+  "Install the updated Skopje Parking app to enable background reminders.": {
+    "tr": "Arka plan hatırlatıcılarını açmak için güncel Skopje Parking uygulamasını yükleyin.",
+    "sq": "Instaloni versionin e përditësuar të Skopje Parking për të aktivizuar kujtesat në sfond."
+  },
+  "Turn on your phone's location services first.": {
+    "tr": "Önce telefonunuzun konum hizmetlerini açın.",
+    "sq": "Së pari aktivizoni shërbimet e vendndodhjes në telefon."
+  },
+  "Allow location access to use parking reminders.": {
+    "tr": "Otopark hatırlatıcıları için konum erişimine izin verin.",
+    "sq": "Lejoni qasjen në vendndodhje për kujtesat e parkimit."
+  },
+  "Turn on Precise location for Skopje Parking. Reminders cannot tell parking areas apart without it.": {
+    "tr": "Skopje Parking için Hassas konum'u açın. Hatırlatıcılar bu olmadan otoparkları ayırt edemez.",
+    "sq": "Aktivizoni Vendndodhjen e saktë për Skopje Parking. Pa të, kujtesat nuk mund t'i dallojnë parkingjet."
+  },
+  "Choose Allow all the time in the location settings for Skopje Parking.": {
+    "tr": "Skopje Parking konum ayarlarında Her zaman izin ver'i seçin.",
+    "sq": "Zgjidhni Lejo gjatë gjithë kohës te cilësimet e vendndodhjes për Skopje Parking."
+  },
+  "Parking arrival reminders": {
+    "tr": "Otoparka varış hatırlatıcıları",
+    "sq": "Kujtesa për mbërritjen në parking"
+  },
+  "Allow notifications to receive a reminder when the app is in the background.": {
+    "tr": "Uygulama arka plandayken hatırlatma almak için bildirimlere izin verin.",
+    "sq": "Lejoni njoftimet për të marrë një kujtesë kur aplikacioni është në sfond."
+  },
+  "Parking reminders could not start. Check location permissions and try again.": {
+    "tr": "Otopark hatırlatıcıları başlatılamadı. Konum izinlerini kontrol edip tekrar deneyin.",
+    "sq": "Kujtesat e parkimit nuk u nisën. Kontrolloni lejet e vendndodhjes dhe provoni përsëri."
+  },
+  "Allow location all the time?": {
+    "tr": "Konuma her zaman izin verilsin mi?",
+    "sq": "Të lejohet vendndodhja gjatë gjithë kohës?"
+  },
+  "Skopje Parking collects location data to notice when you stop in a parking area, ask if it has free spaces, and keep the home screen widget on your current zone, even when the app is closed or not in use.": {
+    "tr": "Skopje Parking, bir otopark alanında durduğunuzu fark etmek, boş yer olup olmadığını sormak ve ana ekran widget'ında bulunduğunuz bölgeyi göstermek için uygulama kapalıyken veya kullanılmıyorken bile konum verilerini toplar.",
+    "sq": "Skopje Parking mbledh të dhëna vendndodhjeje për të vënë re kur ndaloni në një zonë parkimi, për të pyetur nëse ka vende të lira dhe për të mbajtur widget-in e ekranit kryesor te zona juaj aktuale, edhe kur aplikacioni është i mbyllur ose nuk përdoret."
+  },
+  "Your location stays on this device. Only your answers are shared.": {
+    "tr": "Konumunuz bu cihazda kalır. Yalnızca yanıtlarınız paylaşılır.",
+    "sq": "Vendndodhja juaj mbetet në këtë pajisje. Ndahen vetëm përgjigjet tuaja."
+  },
+  "On the next screen, choose Allow all the time.": {
+    "tr": "Sonraki ekranda Her zaman izin ver'i seçin.",
+    "sq": "Në ekranin tjetër zgjidhni Lejo gjatë gjithë kohës."
   },
   "Use phone setting": {
     "tr": "Telefon ayarını kullan",
@@ -2123,6 +2232,23 @@
     "tr": "Park ücreti öde",
     "sq": "Paguaj parkimin"
   },
+  "Pay for parking here?": { "tr": "Burada park ücretini ödemek ister misiniz?", "sq": "Të paguani parkimin këtu?" },
+  "Which zone is on the sign?": { "tr": "Tabelada hangi bölge yazıyor?", "sq": "Cila zonë shkruhet në tabelë?" },
+  "{price} MKD per hour": { "tr": "Saatlik {price} MKD", "sq": "{price} MKD në orë" },
+  "{first} MKD first hour, then {next} MKD": { "tr": "İlk saat {first} MKD, sonra {next} MKD", "sq": "Ora e parë {first} MKD, pastaj {next} MKD" },
+  "Pay {zone} by SMS": { "tr": "{zone} için SMS ile öde", "sq": "Paguaj {zone} me SMS" },
+  "Add licence plate": { "tr": "Plaka ekle", "sq": "Shto targën" },
+  "Check that the sign at your car shows {zone}.": { "tr": "Aracınızın yanındaki tabelada {zone} yazdığını kontrol edin.", "sq": "Kontrolloni që tabela pranë makinës tregon {zone}." },
+  "Other zone": { "tr": "Başka bölge", "sq": "Zonë tjetër" },
+  "My car": { "tr": "Aracım", "sq": "Makina ime" },
+  "Walk to car": { "tr": "Araca yürü", "sq": "Ec deri te makina" },
+  "Car is here": { "tr": "Araç burada", "sq": "Makina është këtu" },
+  "Clear location": { "tr": "Konumu sil", "sq": "Fshi vendndodhjen" },
+  "Paid until {time}": { "tr": "{time} saatine kadar ödendi", "sq": "Paguar deri në {time}" },
+  "Parked since {time}": { "tr": "{time} saatinden beri park halinde", "sq": "Parkuar që nga {time}" },
+  "No precise location was saved for your car.": { "tr": "Aracınız için kesin konum kaydedilmedi.", "sq": "Nuk u ruajt vendndodhje e saktë për makinën tuaj." },
+  "Stand next to your car with precise location on to save it.": { "tr": "Kaydetmek için kesin konum açıkken aracınızın yanında durun.", "sq": "Qëndroni pranë makinës me vendndodhjen e saktë të aktivizuar për ta ruajtur." },
+  "Waiting for a precise location.": { "tr": "Kesin konum bekleniyor.", "sq": "Në pritje të vendndodhjes së saktë." },
   "Payment details changed. Check the sign and try again.": {
     "tr": "Ödeme bilgileri değişti. Tabelayı kontrol edip tekrar deneyin.",
     "sq": "Të dhënat e pagesës ndryshuan. Kontrolloni tabelën dhe provoni përsëri."
@@ -2442,5 +2568,31 @@
   "Guest contributions and points stay with this device until you create an account. Your username, contributions and points belong to your account. Save your password to sign in after reinstalling; email password reset is not available yet. Existing device accounts need to add a password in Account first. You can delete your account, sign details and reports in Privacy. Published parking locations and boundaries remain on the shared map. Contribution points have no monetary value.": {
     "tr": "Misafir katkıları ve puanları hesap oluşturana kadar bu cihazda kalır. Kullanıcı adınız, katkılarınız ve puanlarınız hesabınıza aittir. Yeniden yükledikten sonra giriş yapabilmek için şifrenizi saklayın; e-postayla şifre sıfırlama henüz yoktur. Mevcut cihaz hesapları önce Hesap bölümünden şifre eklemelidir. Hesabınızı, tabela bilgilerinizi ve bildirimlerinizi Gizlilik bölümünden silebilirsiniz. Yayımlanan otopark konumları ve sınırları ortak haritada kalır. Katkı puanlarının parasal değeri yoktur.",
     "sq": "Kontributet dhe pikët e vizitorit mbeten në këtë pajisje derisa të krijoni llogari. Emri, kontributet dhe pikët i përkasin llogarisë suaj. Ruani fjalëkalimin për t'u identifikuar pas riinstalimit; rivendosja me email ende nuk ofrohet. Llogaritë ekzistuese të pajisjes duhet së pari të shtojnë fjalëkalim te Llogaria. Mund të fshini llogarinë, të dhënat e tabelave dhe raportimet te Privatësia. Vendndodhjet dhe kufijtë e publikuar mbeten në hartën e përbashkët. Pikët e kontributeve nuk kanë vlerë monetare."
-  }
+  },
+  "Spots opening nearby": {
+    "tr": "Yakında boşalan park yerleri",
+    "sq": "Vende që lirohen afër"
+  },
+  "I'm leaving my spot": {
+    "tr": "Park yerimden ayrılıyorum",
+    "sq": "Po largohem nga vendi im"
+  },
+  "A parking payment is still running: {zone}.": {
+    "tr": "Bir park ödemesi hâlâ devam ediyor: {zone}.",
+    "sq": "Një pagesë parkimi është ende aktive: {zone}."
+  },
+  "Share when my parking time ends": {
+    "tr": "Park sürem bittiğinde paylaş",
+    "sq": "Ndaj kur mbaron koha ime e parkimit"
+  },
+  "Could not withdraw your parking end time. Try again online.": {
+    "tr": "Park bitiş saatiniz geri çekilemedi. İnternete bağlıyken tekrar deneyin.",
+    "sq": "Ora e mbarimit të parkimit nuk u tërhoq. Provoni përsëri me internet."
+  },
+  "When you pay in the app, drivers heading nearby are told 5 minutes before your paid time ends. Only the parking place and the time are shared, never your plate or position.": {
+    "tr": "Uygulamadan ödeme yaptığınızda, yakına gelen sürücülere ücretli süreniz bitmeden 5 dakika önce haber verilir. Yalnızca otopark ve saat paylaşılır, plakanız veya konumunuz asla paylaşılmaz.",
+    "sq": "Kur paguani në aplikacion, shoferët që vijnë afër njoftohen 5 minuta para se t'ju mbarojë koha e paguar. Ndahen vetëm parkingu dhe ora, kurrë targa apo pozicioni juaj."
+  },
+  "Saved places, your log of parking payments with estimated costs, and the spot where you paid (shown as My car) stay only on this device. The home-screen widget keeps the last zone you were in. Signing out or deleting your data clears saved places and the payment log.": { "tr": "Kayıtlı yerler, tahmini maliyetleriyle park ödemeleri kaydınız ve ödeme yaptığınız yer (Aracım olarak gösterilir) yalnızca bu cihazda kalır. Ana ekran widget'ı en son bulunduğunuz bölgeyi saklar. Oturumu kapatmak veya verilerinizi silmek kayıtlı yerleri ve ödeme kaydını temizler.", "sq": "Vendet e ruajtura, regjistri i pagesave të parkimit me kosto të vlerësuara dhe vendi ku keni paguar (i shfaqur si Makina ime) mbeten vetëm në këtë pajisje. Widget-i në ekranin kryesor ruan zonën e fundit ku keni qenë. Dalja nga llogaria ose fshirja e të dhënave i fshin vendet e ruajtura dhe regjistrin e pagesave." },
+  "When you pay for parking through the app, the server receives that parking place and when your paid time ends, so drivers heading there can be told a spot may open. Your plate and car position are never sent, and the record is deleted 10 minutes after the time ends. You can turn this off in Settings. Alerts reach your phone through Google's Firebase Cloud Messaging, which receives a device token and the alert text.": { "tr": "Uygulama üzerinden park ücreti ödediğinizde sunucu, oraya giden sürücülere bir yerin boşalabileceğini bildirmek için o park yerini ve ödenen sürenin ne zaman bittiğini alır. Plakanız ve aracınızın konumu asla gönderilmez; kayıt, süre bittikten 10 dakika sonra silinir. Bunu Ayarlar'dan kapatabilirsiniz. Bildirimler, telefonunuza bir cihaz belirteci ve bildirim metnini alan Google Firebase Cloud Messaging üzerinden ulaşır.", "sq": "Kur paguani parkimin përmes aplikacionit, serveri merr atë vend parkimi dhe kur mbaron koha e paguar, që shoferët që shkojnë atje të njoftohen se mund të lirohet një vend. Targa dhe vendndodhja e makinës nuk dërgohen kurrë, dhe regjistrimi fshihet 10 minuta pasi mbaron koha. Këtë mund ta çaktivizoni te Cilësimet. Njoftimet arrijnë në telefon përmes Google Firebase Cloud Messaging, i cili merr një token të pajisjes dhe tekstin e njoftimit." }
 }

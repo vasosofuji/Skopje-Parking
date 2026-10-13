@@ -44,6 +44,7 @@ test("browser GPS requests fresh high accuracy fixes, forwards errors and stops 
   const stop = await watchLocation(
     (fix) => seen.push(fix),
     (error) => errors.push(error),
+    undefined,
     geolocation,
   );
   const fix = {

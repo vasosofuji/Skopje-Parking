@@ -8,6 +8,7 @@ import * as plates from "../src/domain/license-plate";
 type Element = { type: unknown; props: Record<string, unknown>; children: unknown[] };
 const transpile = (file: string) => ts.transpileModule(readFileSync(file, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText;
 const flush = () => new Promise<void>(resolve => setImmediate(resolve));
+let driverDataClears = 0;
 function elements(tree: unknown): Element[] {
   if (Array.isArray(tree)) return tree.flatMap(elements);
   if (!tree || typeof tree !== "object" || !("children" in tree)) return [];
@@ -72,7 +73,7 @@ for (const mode of ["register", "guest"] as const) test(`${mode} cannot restore 
     if (name === "../services/api") return { api: { register: async (...args: unknown[]) => { apiCalls.push(args); return profile; }, guest: async (...args: unknown[]) => { apiCalls.push(args); return profile; } } };
     if (name === "../services/credentials") return { credentials: {} };
     if (name === "../services/arrivalStorage") return { selectArrivalAccount: async () => {} };
-    if (name === "../services/backgroundArrival") return { disableBackgroundArrival: async () => {} };
+    if (name === "../services/backgroundArrival") return { disableBackgroundArrival: async () => {} }; if (name === "../services/parkingSessions") return { clearParkingSessions: async () => { driverDataClears++; } }; if (name === "../services/savedPlaces") return { clearSavedPlaces: async () => { driverDataClears++; } };
     throw new Error(`Unexpected account dependency: ${name}`);
   } };
   runInNewContext(transpile("src/state/AccountContext.tsx"), module);
@@ -96,7 +97,7 @@ test("a delayed logout cannot erase a newer login or its device-only plate", asy
     if (name === "../services/api") return { api: { login: async (username: string) => ({ id: username, username, secured: true }), logout: () => new Promise<void>(resolve => { finishLogout = resolve; }) } };
     if (name === "../services/credentials") return { credentials: {} };
     if (name === "../services/arrivalStorage") return { selectArrivalAccount: async () => {} };
-    if (name === "../services/backgroundArrival") return { disableBackgroundArrival: async () => {} };
+    if (name === "../services/backgroundArrival") return { disableBackgroundArrival: async () => {} }; if (name === "../services/parkingSessions") return { clearParkingSessions: async () => { driverDataClears++; } }; if (name === "../services/savedPlaces") return { clearSavedPlaces: async () => { driverDataClears++; } };
     throw new Error(`Unexpected account dependency: ${name}`);
   } };
   runInNewContext(transpile("src/state/AccountContext.tsx"), module);
@@ -120,17 +121,20 @@ for (const nextId of ["new", "original"]) test(`delete completion cannot clear a
     if (name === "../services/api") return { api: { login: async (username: string) => ({ id: username, username, secured: true }) } };
     if (name === "../services/credentials") return { credentials: {} };
     if (name === "../services/arrivalStorage") return { selectArrivalAccount: async () => {} };
-    if (name === "../services/backgroundArrival") return { disableBackgroundArrival: async () => {} };
+    if (name === "../services/backgroundArrival") return { disableBackgroundArrival: async () => {} }; if (name === "../services/parkingSessions") return { clearParkingSessions: async () => { driverDataClears++; } }; if (name === "../services/savedPlaces") return { clearSavedPlaces: async () => { driverDataClears++; } };
     throw new Error(`Unexpected account dependency: ${name}`);
   } };
   runInNewContext(transpile("src/state/AccountContext.tsx"), module);
   const render = () => { hooks.start(); return module.exports.AccountProvider({ children: null }).props.value as Account; };
   await render().login("original", "password", true);
   const finishDeletion = render().captureClear();
+  const clearsBefore = driverDataClears;
   await render().login(nextId, "password", true); await store.savePlate("GV5678CD"); await finishDeletion();
+  assert.equal(driverDataClears, clearsBefore, "a stale delete keeps the new login's sessions and saved places");
   assert.equal(render().profile?.id, nextId); assert.equal(store.getSnapshot().savedPlate, "GV5678CD");
   const finishCurrentDeletion = render().captureClear(); await finishCurrentDeletion();
   assert.equal(render().profile, null); assert.equal(store.getSnapshot().savedPlate, null);
+  assert.equal(driverDataClears, clearsBefore + 2, "deleting clears the session log and saved places with the plate");
 });
 
 test("saving a guest account or renewing consent does not re-offer a plate the same driver skipped", async () => {
@@ -147,7 +151,7 @@ test("saving a guest account or renewing consent does not re-offer a plate the s
     if (name === "../services/api") return { api: { guest: async () => guest, register: async () => ({ ...guest, username: "driver", secured: true, guest: false }) } };
     if (name === "../services/credentials") return { credentials: {} };
     if (name === "../services/arrivalStorage") return { selectArrivalAccount: async () => {} };
-    if (name === "../services/backgroundArrival") return { disableBackgroundArrival: async () => {} };
+    if (name === "../services/backgroundArrival") return { disableBackgroundArrival: async () => {} }; if (name === "../services/parkingSessions") return { clearParkingSessions: async () => { driverDataClears++; } }; if (name === "../services/savedPlaces") return { clearSavedPlaces: async () => { driverDataClears++; } };
     throw new Error(`Unexpected account dependency: ${name}`);
   } };
   runInNewContext(transpile("src/state/AccountContext.tsx"), module);

@@ -5,20 +5,30 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import ts from "typescript";
-import { isOfficialProtocol, isVerifiedSmsPayment } from "../src/domain/sms-payment";
+import { isOfficialProtocol, isVerifiedSmsPayment, smsMessage } from "../src/domain/sms-payment";
 import * as skopjeRules from "../src/domain/skopje-rules";
 import * as zonePayment from "../src/domain/zone-payment";
+import * as myCar from "../src/domain/my-car";
 import { parkingPrice } from "../src/domain/parking";
 import { paymentZone, verified } from "./fixtures/zone-payment";
 import type { ParkingPlace } from "../src/domain/types";
+import type { Fix } from "../src/domain/arrival";
+import type { ParkingSession } from "../src/domain/parking-sessions";
 
 type Element = { type: string; props: Record<string, any>; children: unknown[] };
 const nodes = (value: unknown): Element[] => Array.isArray(value) ? value.flatMap(nodes) : value && typeof value === "object" && "children" in value ? [value as Element, ...(value as Element).children.flatMap(nodes)] : [];
 const flush = () => new Promise<void>(resolve => setImmediate(resolve));
 const now = Date.parse("2026-10-05T10:00:00Z");
-function harness(stop = false, manual = false) {
+const load = (file: string, context: object) => {
+  const module = { exports: {} as any };
+  vm.runInNewContext(ts.transpileModule(readFileSync(file, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText, { ...context, module, exports: module.exports });
+  return module.exports;
+};
+function harness(stop = false, card = false) {
   const state: any[] = [], effects: (() => void)[] = [], layout: (() => void)[] = [], calls: { recipient: string; body: string; guard: () => boolean }[] = [], stored: unknown[] = [], reminders: unknown[][] = [];
-  let cursor = 0, valid = true, closed = 0, invalidated = 0, result = "opened", place: ParkingPlace | null = paymentZone;
+  const sessions: ParkingSession[] = [], updates: [string, (value: ParkingSession) => ParkingSession][] = [];
+  let cursor = 0, valid = true, closed = 0, invalidated = 0, result = "opened", place: ParkingPlace | null = paymentZone, fix: Fix | null = { latitude: 42, longitude: 21, accuracy: 8, speed: 0, timestamp: now - 2000 };
+  let choices: ParkingPlace[] = [paymentZone];
   let account = { accountId: "account", ready: true, savedPlate: "SK1234FF", pendingStop: { zoneId: "gradski:zone:D8", zoneName: "Zone D8", recipient: "144144", stopMessage: "S", photoId: "official:gradski", protocolExpiresAt: verified.expiresAt, openedAt: 0, plate: "SK1234FF" }, setPendingStop: async (value: unknown) => { stored.push(value); }, clearPendingStop: async () => { stored.push("cleared"); } };
   const requests: { resolve: (value: { place: ParkingPlace; protocol: typeof verified }) => void; reject: (reason: unknown) => void }[] = [];
   const translate = (en: string) => en, latestCatalog = async () => ({ places: place ? [place] : [] });
@@ -32,9 +42,12 @@ function harness(stop = false, manual = false) {
     if (name === "../state/LicensePlateContext") return { useLicensePlate: () => account };
     if (name === "../state/ParkingContext") return { useParking: () => ({ t: translate, now, latestCatalog }) };
     if (name === "../state/ThemeContext") return { useTheme: () => ({ colors: { ink: "black", green: "green" } }) };
-    if (name === "./ui") return { Sheet: "Sheet", Button: "Button", Note: "Note", Icon: "Icon" };
+    if (name === "./ui") return { Sheet: "Sheet", Button: "Button", Note: "Note", Icon: "Icon", IconButton: "IconButton" };
     if (name === "./LicensePlateEditor") return { default: "LicensePlateEditor", __esModule: true };
-    if (name === "../domain/sms-payment") return { isOfficialProtocol, isVerifiedSmsPayment: (value: typeof verified) => isVerifiedSmsPayment(value, now) };
+    if (name === "../domain/sms-payment") return { isOfficialProtocol, smsMessage, isVerifiedSmsPayment: (value: typeof verified) => isVerifiedSmsPayment(value, now) };
+    if (name === "../domain/my-car") return myCar;
+    if (name === "../hooks/useSmsPayment") return load("src/hooks/useSmsPayment.ts", context);
+    if (name === "../services/parkingSessions") return { saveParkingSession: async (value: ParkingSession) => { sessions.push(value); }, updateParkingSession: async (id: string, change: (value: ParkingSession) => ParkingSession) => { updates.push([id, change]); } };
     if (name === "../domain/skopje-rules") return skopjeRules;
     if (name === "../domain/zone-payment") return zonePayment;
     if (name === "../services/parkingReminder") return { scheduleParkingLimitReminder: async (...args: unknown[]) => { reminders.push(args); return true; }, cancelParkingLimitReminder: async () => { reminders.push(["cancel"]); } };
@@ -44,13 +57,13 @@ function harness(stop = false, manual = false) {
     if (name === "../services/smsComposer") return { openSmsComposer: async (recipient: string, body: string, guard: () => boolean) => { calls.push({ recipient, body, guard }); return guard() ? result : "cancelled"; } };
     throw new Error(name);
   } };
-  vm.runInNewContext(ts.transpileModule(readFileSync("src/components/ZonePaymentSheet.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText, context);
-  const validate = () => valid ? place : null, onClose = () => { closed++; valid = false; };
+  vm.runInNewContext(ts.transpileModule(readFileSync(card ? "src/components/QuickPayCard.tsx" : "src/components/ZonePaymentSheet.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText, context);
+  const validate = (id: string) => valid ? (card ? choices.find(value => value.id === id) ?? null : place) : null, onClose = () => { closed++; valid = false; };
   const onInvalidated = () => { invalidated++; valid = false; };
-  const render = () => { cursor = 0; const tree = stop ? context.exports.ParkingSmsStopSheet({ visible: true, onClose }) : context.exports.default({ place, validate, onClose, onInvalidated, manual }); layout.splice(0).forEach(fn => fn()); effects.splice(0).forEach(fn => fn()); return tree; };
+  const render = () => { cursor = 0; const tree = stop ? context.exports.ParkingSmsStopSheet({ visible: true, onClose }) : card ? context.exports.default({ choices, validate, fix, onClose, onPaid: onClose, onInvalidated, onOtherZone() {}, onAddPlate() {} }) : context.exports.default({ place, validate, onClose, onInvalidated, fix }); layout.splice(0).forEach(fn => fn()); effects.splice(0).forEach(fn => fn()); return tree; };
   /** The driver ticks "the sign at my car shows zone ..." before Open SMS is enabled. */
   const confirmSign = () => { nodes(render()).find(node => node.type === "Pressable" && node.props.accessibilityRole === "checkbox")!.props.onPress(); return render(); };
-  return { render, confirmSign, reminders, calls, stored, requests, setPlate: (value: string | null) => { account = { ...account, savedPlate: value as string }; }, closed: () => closed, invalidated: () => invalidated, hide: () => { place = null; }, invalidate: () => { valid = false; }, changePlate: () => { account = { ...account, savedPlate: "SK9999FF" }; }, protocol: (next: typeof verified) => { place = { ...paymentZone, smsPayment: next }; }, respond: async (protocol = place!.smsPayment!) => { requests.shift()!.resolve({ place: place!, protocol }); await flush(); }, fail: async () => { requests.shift()!.reject(new Error("Network unavailable")); await flush(); }, unsupported: () => { result = "unsupported"; } };
+  return { render, confirmSign, reminders, calls, stored, requests, sessions, updates, setChoices: (next: ParkingPlace[]) => { choices = next; place = next[0]; }, payFor: (next: ParkingPlace) => { place = next; }, setFix: (next: Fix | null) => { fix = next; }, setPlate: (value: string | null) => { account = { ...account, savedPlate: value as string }; }, closed: () => closed, invalidated: () => invalidated, hide: () => { place = null; }, invalidate: () => { valid = false; }, changePlate: () => { account = { ...account, savedPlate: "SK9999FF" }; }, protocol: (next: typeof verified) => { place = { ...paymentZone, smsPayment: next }; }, respond: async (protocol = place!.smsPayment!) => { requests.shift()!.resolve({ place: place!, protocol }); await flush(); }, fail: async () => { requests.shift()!.reject(new Error("Network unavailable")); await flush(); }, unsupported: () => { result = "unsupported"; } };
 }
 
 test("the actual initial map render without a payment place stays hidden and never reads null choice/proof", () => {
@@ -71,12 +84,15 @@ test("payment exposes no recipient/message until fresh proof, then opens only th
   tree.props.footer.props.onPress(); await view.respond(); tree = view.render();
   assert.equal(view.calls.length, 1); assert.equal(view.calls[0].recipient, "144144"); assert.equal(view.calls[0].body, "D8 SK1234FF");
   assert.equal((view.stored[0] as any).stopMessage, "S"); assert.equal(view.closed(), 1);
+  assert.equal(view.sessions.length, 1, "the shared session log records every opened payment");
+  assert.equal(view.sessions[0].id, myCar.sessionId("gradski:zone:D8", (view.stored[0] as any).openedAt), "the stop SMS can find its session");
+  assert.deepEqual(view.sessions[0].car, { latitude: 42, longitude: 21 });
 });
 
 test("stale leave/close before fresh send validation cannot open SMS", async () => {
   const view = harness(); view.render(); await view.respond(); const tree = view.confirmSign();
   tree.props.footer.props.onPress(); view.invalidate(); await view.respond();
-  assert.equal(view.calls.length, 0); assert.equal(view.stored.length, 0);
+  assert.equal(view.calls.length, 0); assert.equal(view.stored.length, 0); assert.equal(view.sessions.length, 0);
 });
 
 test("fixed-hours choices are explicit and do not carry across a changed protocol", async () => {
@@ -93,6 +109,8 @@ test("stop SMS uses the original parked plate after edits and retains reminder a
   const view = harness(true); view.changePlate(); const tree = view.render();
   tree.props.footer.props.onPress(); await view.respond();
   assert.equal(view.calls.length, 1); assert.equal(view.calls[0].body, "S"); assert.equal(view.stored.length, 0, "opening a composer does not claim parking stopped");
+  assert.equal(view.updates.length, 1); assert.equal(view.updates[0][0], "gradski:zone:D8@0");
+  assert.equal(view.updates[0][1]({ startedAt: 0, stoppedAt: null } as ParkingSession).stoppedAt, now, "the session log marks the stop");
 });
 
 test("a failed payment check keeps the prompt open with retry instead of consuming its cooldown", async () => {
@@ -134,9 +152,58 @@ test("official Gradski rules show the operator instead of a photo, need the sign
   assert.equal(view.reminders[0][0], (view.stored[0] as any).openedAt + 105 * 60_000, "reminds 15 minutes before the limit");
 });
 
-test("manual payment without a saved plate asks for one on the device before any SMS", () => {
-  const view = harness(false, true); view.setPlate(null); const tree = view.render();
+test("the payment sheet without a saved plate asks for one on the device before any SMS", () => {
+  const view = harness(); view.setPlate(null); const tree = view.render();
   assert.equal(tree.props.visible, true); assert.equal(tree.props.footer, undefined);
   assert.ok(nodes(tree).some(node => node.type === "LicensePlateEditor"));
   assert.equal(view.calls.length, 0);
+});
+
+const payButton = (tree: Element) => nodes(tree).find(node => node.type === "Button" && /^Pay .+ by SMS$/.test(node.props.title));
+test("the quick pay card pays the detected zone in one tap with the same fresh check, then records session, stop and car", async () => {
+  const view = harness(false, true); const tree = view.render();
+  assert.equal(payButton(tree)!.props.title, "Pay D8 by SMS"); assert.equal(view.requests.length, 0, "no network until the driver taps");
+  assert.match(JSON.stringify(tree), /Check that the sign at your car shows D8/);
+  payButton(tree)!.props.onPress(); await view.respond();
+  assert.deepEqual(view.calls.map(call => [call.recipient, call.body]), [["144144", "D8 SK1234FF"]]);
+  assert.equal((view.stored[0] as any).stopMessage, "S"); assert.equal(view.closed(), 1);
+  assert.equal(view.sessions.length, 1); assert.deepEqual(view.sessions[0].car, { latitude: 42, longitude: 21 });
+  assert.equal(view.sessions[0].id, myCar.sessionId("gradski:zone:D8", (view.stored[0] as any).openedAt));
+});
+
+test("the quick pay card keeps no car position from an imprecise fix and opens nothing for changed rules", async () => {
+  const view = harness(false, true); view.setFix({ latitude: 42, longitude: 21, accuracy: 45, speed: 0, timestamp: now - 2000 });
+  payButton(view.render())!.props.onPress(); await view.respond();
+  assert.equal(view.sessions[0].car, null);
+  const changed = harness(false, true);
+  payButton(changed.render())!.props.onPress(); await changed.respond({ ...verified, photoId: "new-proof" });
+  assert.equal(changed.invalidated(), 1); assert.equal(changed.calls.length, 0); assert.equal(changed.sessions.length, 0);
+});
+
+test("with two similar zones the card asks which is on the sign and never preselects one", async () => {
+  const d5: ParkingPlace = { ...paymentZone, id: "gradski:zone:D5", zoneCode: "D5", smsPayment: skopjeRules.officialSmsPayment({ id: "gradski:zone:D5", kind: "zone" })! };
+  const view = harness(false, true); view.setChoices([paymentZone, d5]);
+  let tree = view.render();
+  assert.equal(payButton(tree), undefined); assert.match(JSON.stringify(tree), /Which zone is on the sign\?/);
+  nodes(tree).find(node => node.type === "Button" && node.props.title === "D5")!.props.onPress(); tree = view.render();
+  assert.equal(payButton(tree)!.props.title, "Pay D5 by SMS");
+  view.payFor(d5); payButton(tree)!.props.onPress(); await view.respond();
+  assert.deepEqual(view.calls.map(call => call.body), ["D5 SK1234FF"]);
+});
+
+test("fixed-hours zones show hour chips in the card; no stop SMS is kept", async () => {
+  const sector: ParkingPlace = { ...paymentZone, id: "poc:zone:1:9", zoneCode: "POC 1", operator: "poc", smsPayment: skopjeRules.officialSmsPayment({ id: "poc:zone:1:9", kind: "zone" })! };
+  const view = harness(false, true); view.setChoices([sector]); let tree = view.render();
+  assert.equal(payButton(tree)!.props.disabled, true, "hours first");
+  nodes(tree).find(node => node.type === "Button" && node.props.title === "2 hours")!.props.onPress(); tree = view.render();
+  assert.equal(payButton(tree)!.props.disabled, false);
+  payButton(tree)!.props.onPress(); await view.respond();
+  assert.deepEqual(view.calls.map(call => [call.recipient, call.body]), [["141414", "1 SK1234FF 2"]]);
+  assert.deepEqual([view.sessions[0].paidHours, view.sessions[0].operator, view.stored.length], [2, "poc", 0]);
+});
+
+test("without a plate the card asks for one instead of offering SMS", () => {
+  const view = harness(false, true); view.setPlate(null); const tree = view.render();
+  assert.equal(payButton(tree), undefined);
+  assert.ok(nodes(tree).some(node => node.type === "Button" && node.props.title === "Add licence plate"));
 });

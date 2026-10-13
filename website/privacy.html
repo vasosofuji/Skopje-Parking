@@ -22,7 +22,7 @@
 </header>
 <main class="wrap">
   <h1 class="display">Privacy policy</h1>
-  <p class="updated">Last updated 9 October 2026</p>
+  <p class="updated">Last updated 13 October 2026</p>
   <p>This policy covers the Skopje Parking app for Android and this website. Skopje Parking is an independent parking app for Skopje.</p>
 
   <h2>Location</h2>
@@ -35,16 +35,20 @@
 
   <h2>What stays on your phone</h2>
   <p>Your optional licence plate is saved only on this device and cleared when you sign out. SMS parking opens your messaging app with the parking operator's number and message, taken from Gradski Parking's or POC's published rules; you choose whether to send it. A reminder before a zone's time limit is scheduled only on this device, if you allow notifications.</p>
+  <p>Saved places, your log of parking payments with estimated costs, and the spot where you paid (shown as My car) also stay only on this device. The home-screen widget keeps the last zone you were in. Signing out or deleting your data clears saved places and the payment log.</p>
 
   <h2>What the server stores</h2>
   <p>The server stores your username, a salted password hash if you set a password, hashed sign-in tokens, contribution points and history, parking reports, confirmed sign details, prices, coordinates, boundaries and confirmations. Your password is never stored as plain text.</p>
   <p>Price reports and location confirmations are displayed for 90 days. Availability reports expire after 15 minutes. Shared parking details and confirmation counts are public. Do not include names, registration plates or other personal information in notes. Your account data is kept until you delete it.</p>
 
+  <h2>Spot alerts</h2>
+  <p>When you pay for parking through the app, the server receives that parking place and when your paid time ends, so drivers heading there can be told a spot may open. Tapping "I'm leaving my spot" shares the same thing right away. Your plate and car position are never sent, and the record is deleted 10 minutes after the time ends. You can turn this off in Settings.</p>
+
   <h2>Services Skopje Parking uses</h2>
   <ul>
     <li>Supabase hosts the database and the app's server, in London, United Kingdom.</li>
     <li>Address searches you submit are looked up through OpenStreetMap's Nominatim service. The search text is sent from Skopje Parking's server, not from your phone.</li>
-    <li>If you turn on destination alerts, the alert is delivered through Expo's push notification service using your phone's push token.</li>
+    <li>Destination and spot alerts reach your phone through Google's Firebase Cloud Messaging, which receives your phone's push token and the alert text.</li>
     <li>When you tap Go, the route opens in your navigation app, which follows its own privacy policy.</li>
   </ul>
   <p>The map is stored inside the app, so it normally opens without contacting a map server. Skopje Parking shows no ads, and apart from ML Kit's diagnostics it collects no usage analytics.</p>

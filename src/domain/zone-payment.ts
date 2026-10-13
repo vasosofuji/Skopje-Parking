@@ -56,12 +56,24 @@ export function safelyInsideZone(fix: Fix, place: ParkingPlace) {
   }
   return true;
 }
+/** A recent, precise fix from a driver who is not moving. */
+const steadyFix = (fix: Fix | null, now: number): fix is Fix => Boolean(fix && usableFix(fix, now) && now - fix.timestamp <= 20_000 && fix.accuracy! <= 20 &&
+  (fix.speed === null || (Number.isFinite(fix.speed) && fix.speed >= 0 && fix.speed <= 0.8)));
+const verifiedPayment = (place: ParkingPlace, now: number) => Boolean(place.smsPayment && isVerifiedSmsPayment(place.smsPayment, now) && smsZoneMatches(place.zoneCode, place.smsPayment.zoneCode));
+const nearGradskiStreet = (fix: Fix, places: ParkingPlace[], zone: ParkingPlace) =>
+  places.some(other => other.id !== zone.id && officialZoneRules(other)?.operator === "gradski" && !polygonUsable(other) && distanceMeters(fix, other.coordinate) <= GRADSKI_STREET_RADIUS_M);
 export function eligibleSmsZone(fix: Fix | null, places: ParkingPlace[], plate: string | null, now: number) {
-  if (!isCompactLicensePlate(plate) || !fix || !usableFix(fix, now) || now - fix.timestamp > 20_000 || fix.accuracy! > 20 || (fix.speed !== null && (!Number.isFinite(fix.speed) || fix.speed < 0 || fix.speed > 0.8))) return null;
+  if (!isCompactLicensePlate(plate) || !steadyFix(fix, now)) return null;
+  const zone = outlineSmsZone(fix, places, now);
+  // Published rules are not a photo of this street: stay quiet where a Gradski street zone may run through the sector.
+  return zone && !(isOfficialProtocol(zone.smsPayment) && nearGradskiStreet(fix, places, zone)) ? zone : null;
+}
+/** The one payable outline a steady fix is clearly inside. */
+function outlineSmsZone(fix: Fix, places: ParkingPlace[], now: number) {
   // A photographed payment rule can belong to a drawn parking area, not just a tariff zone.
   const overlapping = places.filter(place => polygonUsable(place) && containsParkingFix(fix, place.access === "restricted" ? { ...place, access: "public" } : place));
   const exact = overlapping.filter(place => insidePolygon(fix, place.geometry!));
-  const verified = (place: ParkingPlace) => place.smsPayment && isVerifiedSmsPayment(place.smsPayment, now) && smsZoneMatches(place.zoneCode, place.smsPayment.zoneCode);
+  const verified = (place: ParkingPlace) => verifiedPayment(place, now);
   const physicalPaymentAreas = overlapping.filter(place => !isPocSector(place) && verified(place));
   const exactPaymentAreas = exact.filter(place => !isPocSector(place) && verified(place));
   const candidates = exactPaymentAreas.length ? exactPaymentAreas : physicalPaymentAreas.length ? physicalPaymentAreas : overlapping.filter(place => verified(place));
@@ -73,34 +85,66 @@ export function eligibleSmsZone(fix: Fix | null, places: ParkingPlace[], plate: 
     !(isPocSector(other) && smsZoneMatches(other.zoneCode, protocol?.zoneCode) && (!other.smsPayment || (isVerifiedSmsPayment(other.smsPayment, now) && paymentRule(other) === paymentRule(zone)))));
   if (conflicts.length || zone.capacity === 0) return null;
   if (zone.access === "restricted" || !safelyInsideZone(fix, zone) || !protocol || !isVerifiedSmsPayment(protocol, now) || !smsZoneMatches(zone.zoneCode, protocol.zoneCode) || knownFreeTime(zone, now)) return null;
-  // Published rules are not a photo of this street: stay quiet where a Gradski
-  // street zone may run through the sector, and when hours are unknown at night.
-  if (isOfficialProtocol(protocol) && (
-    places.some(other => other.id !== zone.id && officialZoneRules(other)?.operator === "gradski" && !polygonUsable(other) && distanceMeters(fix, other.coordinate) <= GRADSKI_STREET_RADIUS_M) ||
-    (officiallyCharging(zone, now) === null && quietHours(now)))) return null;
+  // Unknown official hours at night are not worth an SMS prompt.
+  if (isOfficialProtocol(protocol) && officiallyCharging(zone, now) === null && quietHours(now)) return null;
   return zone;
 }
-const identity = (place: ParkingPlace, plate: string) => JSON.stringify([place.id, plate, place.geometry, place.smsPayment]);
+/** Gradski street zones are catalog points near the middle of their street; a parked car can be this far from one. */
+export const STREET_ZONE_REACH_M = 150;
+const MAX_CHOICES = 3;
+const offerable = (place: ParkingPlace, now: number) => place.access !== "restricted" && place.capacity !== 0 && verifiedPayment(place, now) &&
+  !knownFreeTime(place, now) && !(officiallyCharging(place, now) === null && quietHours(now));
+const streetZonesNear = (fix: Fix, places: ParkingPlace[], now: number, radius: number) => places
+  .flatMap(place => place.kind === "zone" && !polygonUsable(place) && offerable(place, now) ? [{ place, distance: distanceMeters(fix, place.coordinate) }] : [])
+  .filter(row => row.distance <= radius).sort((a, b) => a.distance - b.distance);
+/**
+ * Zones a stopped driver may be parked in, for a one-tap payment offer. An outline the fix is
+ * clearly inside keeps the exact checks above; street zones are matched by distance. Several
+ * similarly close zones are all returned so the driver picks the one on the sign.
+ */
+export function smsZoneChoices(fix: Fix | null, places: ParkingPlace[], now: number): ParkingPlace[] {
+  if (!steadyFix(fix, now)) return [];
+  const zone = outlineSmsZone(fix, places, now);
+  if (zone) {
+    if (!isOfficialProtocol(zone.smsPayment) || !nearGradskiStreet(fix, places, zone)) return [zone];
+    // A Gradski street may run through the sector: offer both, never one silently.
+    const streets = streetZonesNear(fix, places, now, GRADSKI_STREET_RADIUS_M);
+    return streets.length ? [zone, ...streets.map(row => row.place)].slice(0, MAX_CHOICES) : [];
+  }
+  // Inside a parking lot, or an outline the exact checks could not settle: no guess.
+  if (places.some(place => containsParkingFix(fix, { ...place, access: "public" }) && (place.kind === "surface" || place.kind === "garage" || place.kind === "underground" || (polygonUsable(place) && verifiedPayment(place, now))))) return [];
+  const streets = streetZonesNear(fix, places, now, STREET_ZONE_REACH_M + fix.accuracy!);
+  // GPS error moves both distances, and the catalog points are approximate.
+  const margin = 30 + 2 * fix.accuracy!;
+  return streets.filter(row => row.distance - streets[0].distance <= margin).slice(0, MAX_CHOICES).map(row => row.place);
+}
+/** Choices are a set: GPS jitter between similarly close zones only reorders them. The order is for display. */
+export const choiceKey = (ids: string[]) => [...ids].sort().join(" ");
+const identity = (zones: ParkingPlace[], plate: string | null) =>
+  JSON.stringify([[...zones].sort((a, b) => a.id < b.id ? -1 : 1).map(place => [place.id, place.geometry, place.smsPayment]), plate]);
+const cooldownKey = (id: string, plate: string | null) => `${id}:${plate ?? ""}`;
 export class ZonePaymentDwell {
-  private candidate: { key: string; id: string; since: number; last: number; count: number; anchor: Coordinate } | null = null;
+  private candidate: { key: string; since: number; last: number; count: number; anchor: Coordinate } | null = null;
   private cooldown = new Map<string, number>();
   reset() { this.candidate = null; }
-  update(fix: Fix | null, places: ParkingPlace[], plate: string | null, foreground: boolean, now = Date.now()) {
-    const place = foreground ? eligibleSmsZone(fix, places, plate, now) : null;
-    if (!place || !fix || !plate) { this.reset(); return null; }
-    const key = identity(place, plate), previous = this.candidate;
+  /** The zone choices once the driver has stayed put long enough, else null. */
+  update(fix: Fix | null, places: ParkingPlace[], plate: string | null, foreground: boolean, now = Date.now()): ParkingPlace[] | null {
+    const zones = foreground ? smsZoneChoices(fix, places, now) : [];
+    if (!zones.length || !fix) { this.reset(); return null; }
+    const key = identity(zones, plate), previous = this.candidate;
     if (!previous || previous.key !== key || fix.timestamp - previous.last > 25000 || fix.timestamp < previous.last || distanceMeters(fix, previous.anchor) > 15) {
-      this.candidate = { key, id: place.id, since: fix.timestamp, last: fix.timestamp, count: 1, anchor: fix };
+      this.candidate = { key, since: fix.timestamp, last: fix.timestamp, count: 1, anchor: fix };
       return null;
     }
     if (fix.timestamp > previous.last) { previous.last = fix.timestamp; previous.count++; }
-    return previous.count >= 3 && previous.last - previous.since >= PAYMENT_DWELL_MS ? place : null;
+    return previous.count >= 3 && previous.last - previous.since >= PAYMENT_DWELL_MS ? zones : null;
   }
-  canPrompt(place: ParkingPlace, plate: string, now = Date.now()) { return now - (this.cooldown.get(`${place.id}:${plate}`) ?? -Infinity) >= PAYMENT_COOLDOWN_MS; }
-  prompted(place: ParkingPlace, plate: string, now = Date.now()) {
-    this.cooldown.set(`${place.id}:${plate}`, now);
+  /** A dismissed zone stays quiet for an hour, also when offered alongside another. */
+  canPrompt(ids: string[], plate: string | null, now = Date.now()) { return ids.every(id => now - (this.cooldown.get(cooldownKey(id, plate)) ?? -Infinity) >= PAYMENT_COOLDOWN_MS); }
+  prompted(ids: string[], plate: string | null, now = Date.now()) {
+    for (const id of ids) this.cooldown.set(cooldownKey(id, plate), now);
     for (const [key, at] of this.cooldown) if (now - at >= PAYMENT_COOLDOWN_MS) this.cooldown.delete(key);
-    if (this.cooldown.size > 128) this.cooldown.delete(this.cooldown.keys().next().value!);
+    while (this.cooldown.size > 128) this.cooldown.delete(this.cooldown.keys().next().value!);
   }
 }
 /** Zones a driver can pay by SMS near a point, nearest first; the driver picks the one on the sign. */

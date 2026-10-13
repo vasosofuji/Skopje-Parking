@@ -38,7 +38,13 @@
       ],
       "expo-font",
       "expo-system-ui",
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#962E2B"
+        }
+      ]
     ],
     "scheme": "parkskopje",
     "extra": {

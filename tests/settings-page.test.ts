@@ -63,12 +63,12 @@ function settings(guest = false, platform = "android") {
   const runtime = hooks(), exports = {} as { default: Component };
   let pathname = "/settings";
   let visible = true, mode = "system", language = "en", navigation = "default", closes = 0, refreshes = 0, gps = 0, permissions = 0;
-  const preferenceCalls: string[][] = [], routeEvents: string[] = [];
+  const preferenceCalls: string[][] = [], routeEvents: string[] = [], sharingCalls: boolean[] = [];
   const navigationWrites: { value: string; resolve: () => void; reject: () => void }[] = [];
   const refresh = async () => { refreshes++; };
   vm.runInNewContext(transpile("src/components/SettingsSheet.tsx"), { exports, require(name: string) {
     if (name === "react") return { ...runtime.react, default: runtime.react, __esModule: true };
-    if (name === "react-native") return { Pressable: "Pressable", Text: "Text", View: "View", Platform: { OS: platform }, Linking: { openSettings: async () => {}, openURL: async () => {} }, TextInput: "TextInput", StyleSheet: { create: (value: unknown) => value } };
+    if (name === "react-native") return { Pressable: "Pressable", Switch: "Switch", Text: "Text", View: "View", Platform: { OS: platform }, Linking: { openSettings: async () => {}, openURL: async () => {} }, TextInput: "TextInput", StyleSheet: { create: (value: unknown) => value } };
     if (name === "expo-router") return { usePathname: () => pathname, router: { push(path: string) { pathname = path; routeEvents.push(path); } } };
     if (name === "../state/ThemeContext") return { useTheme: () => ({ colors: palette, mode, setMode(value: string) { preferenceCalls.push(["theme", value]); mode = value; } }) };
     if (name === "../state/ParkingContext") return { useParking: () => ({ language, t: (en: string, mk: string) => translate(language as Language, en, mk), setLanguage(value: string) { preferenceCalls.push(["language", value]); language = value; } }) };
@@ -80,6 +80,7 @@ function settings(guest = false, platform = "android") {
     if (name === "./SettingsFrame") return { __esModule: true, default: "SettingsFrame" };
     if (name === "./BackgroundArrivalSettings") return { __esModule: true, default: "BackgroundArrivalSettings" };
     if (name === "../services/backgroundArrival") return { backgroundLocationBuild: true };
+    if (name === "../services/spotOpenings") return { spotSharingEnabled: async () => true, setSpotSharing: async (value: boolean) => { sharingCalls.push(value); }, onSpotSharingChanged: () => () => {} };
     if (name === "../domain/language") return { LANGUAGES };
     if (name === "./LanguagePicker") {
       const picker = { default: undefined as unknown as Component };
@@ -104,7 +105,7 @@ function settings(guest = false, platform = "android") {
     const value = elements(tree, true).find(element => (element.type === "Pressable" || element.type === "Button") && [element.props.accessibilityLabel, element.props.title].some(text => typeof text === "string" && (text === label || text.startsWith(label + ","))));
     assert.ok(value, `Missing settings action: ${label}`); return value;
   };
-  return { render, actionable, tap(tree: Element, label: string) { const node = actionable(tree, label); assert.notEqual(node.props.disabled, true, `${label} disabled`); invoke(node); }, preferenceCalls, navigationWrites, routeEvents, returnToSettings: () => { pathname = "/settings"; }, reopen: () => { visible = true; }, stats: () => ({ closes, refreshes, gps, permissions }) };
+  return { render, actionable, sharingCalls, tap(tree: Element, label: string) { const node = actionable(tree, label); assert.notEqual(node.props.disabled, true, `${label} disabled`); invoke(node); }, preferenceCalls, navigationWrites, routeEvents, returnToSettings: () => { pathname = "/settings"; }, reopen: () => { visible = true; }, stats: () => ({ closes, refreshes, gps, permissions }) };
 }
 
 test("full-page Sheet applies every safe edge and Android Back honors its current action/disabled state", () => {
@@ -195,7 +196,7 @@ test("navigation waits for persistence, locks choices while saving and keeps a f
 });
 
 test("profile and legal routes retain the opaque settings screen while child routes are above it", () => {
-  for (const [label, path] of [["Manage account", "/account"], ["Rewards & appearance", "/rewards"], ["Privacy & data", "/privacy"], ["Zones & sources", "/coverage"], ["Terms of service", "/terms"]]) {
+  for (const [label, path] of [["Manage account", "/account"], ["Rewards & appearance", "/rewards"], ["Saved places", "/saved-places"], ["Parking spending", "/spending"], ["Privacy & data", "/privacy"], ["Zones & sources", "/coverage"], ["Terms of service", "/terms"]]) {
     const view = settings(); let tree = view.render(); view.tap(tree, label); tree = view.render();
     assert.deepEqual(view.routeEvents, [path]); assert.equal(tree.type, "SettingsFrame");
     assert.equal(tree.props.title, "Settings");
@@ -222,6 +223,11 @@ test("location and notification permissions share a section without a reminder i
   assert.ok(!elements(tree, true).some(node => node.props.title === "About reminders"));
   const reminders = elements(tree).find(node => node.type === "BackgroundArrivalSettings")!;
   assert.equal(reminders.props.onInfo, undefined);
+  const sharing = elements(tree, true).find(node => node.type === "Switch")!;
+  assert.equal(sharing.props.accessibilityLabel, "Share when my parking time ends");
+  assert.equal(sharing.props.value, true, "spot sharing is on by default");
+  (sharing.props.onValueChange as (value: boolean) => void)(false);
+  assert.deepEqual(view.sharingCalls, [false]);
   invoke(tree, "onBack"); tree = view.render(); assert.equal(tree.props.title, "Settings");
   assert.deepEqual([view.stats().gps, view.stats().permissions, view.stats().closes], [1, 2, 0]);
 });
@@ -232,6 +238,7 @@ test("web keeps notification permissions visibly unavailable without invoking a 
   const notification = view.actionable(tree, "Notification permissions");
   assert.equal(notification.props.disabled, true);
   assert.equal(notification.props.accessibilityLabel, "Notification permissions, Phone app");
+  assert.ok(!elements(tree, true).some(node => node.type === "Switch"), "no parking payments on the web, nothing to share");
   view.tap(tree, "Location permissions");
   assert.equal(view.stats().permissions, 1);
 });

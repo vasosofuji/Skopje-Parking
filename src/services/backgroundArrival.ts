@@ -14,8 +14,10 @@ import {
   openArrivalNotification,
 } from "../domain/backgroundArrival";
 import type { ParkingPlace } from "../domain/types";
-import { isLanguage, translate, placeName } from "../domain/language";
+import { isLanguage, translate, placeName, type Language } from "../domain/language";
 import { startArrivalInForeground } from "./foregroundArrivalStart";
+import { notificationBehavior } from "./notificationPresentation";
+import { showWidgetZone } from "./parkingWidget";
 import {
   arrivalTransaction,
   backgroundArrivalEnabled,
@@ -42,6 +44,7 @@ const Notifications: typeof NotificationTypes | null = nativeAvailable ? require
 const promptListeners = new Set<() => void>();
 const settingsListeners = new Set<() => void>();
 let preferenceGeneration = 0;
+const savedLanguage = async (): Promise<Language> => { const saved = await AsyncStorage.getItem("parkskopje-language"); return isLanguage(saved) ? saved : "mk"; };
 
 async function dismissReminder(notificationId: string) {
   if (!Notifications) return;
@@ -51,14 +54,8 @@ async function dismissReminder(notificationId: string) {
   ]);
 }
 
-if (Notifications) Notifications.setNotificationHandler({
-  handleNotification: async (notification) => ({
-    shouldShowBanner: notification.request.content.data?.kind === "parking-destination-full" || AppState.currentState !== "active",
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+// placeNotifications installs the same rule; whichever runs last, every notification shows the same way.
+if (Notifications) Notifications.setNotificationHandler({ handleNotification: async notification => notificationBehavior(notification.request, AppState.currentState === "active") });
 
 if (Tasks && !Tasks.isTaskDefined(TASK)) {
   Tasks.defineTask<{ locations: Location.LocationObject[] }>(TASK, async ({ data, error, executionInfo }) => {
@@ -68,14 +65,14 @@ if (Tasks && !Tasks.isTaskDefined(TASK)) {
       const places = await readArrivalCatalog();
       const before = await readArrivalState();
       const fixes = data.locations.map((location) => ({ ...location.coords, timestamp: location.timestamp }));
+      const language = await savedLanguage();
+      showWidgetZone(fixes.reduce((latest, fix) => fix.timestamp > latest.timestamp ? fix : latest), places, language);
       const result = advanceArrival(before, fixes, places, true);
       await saveArrivalState(result.state);
       if (before.pending && before.pending.notificationId !== result.state.pending?.notificationId)
         await dismissReminder(before.pending.notificationId);
       if (!result.place || !result.state.pending || !await backgroundArrivalEnabled()) return;
       const pending = result.state.pending;
-      const saved = await AsyncStorage.getItem("parkskopje-language");
-      const language = isLanguage(saved) ? saved : "mk";
       try {
         await Notifications.scheduleNotificationAsync({
           identifier: pending.notificationId,
@@ -111,10 +108,13 @@ export async function getBackgroundArrivalStatus() {
 }
 
 async function startMonitoring(generation: number) {
+  const language = await savedLanguage();
   return startArrivalInForeground({
     active: () => AppState.currentState === "active",
     allowed: () => generation === preferenceGeneration,
-    running: () => Location.hasStartedLocationUpdatesAsync(TASK),
+    // Register again on every activation: that restarts a foreground service the OS dropped
+    // (a killed process gets back only throttled updates) and refreshes its language.
+    running: async () => false,
     start: () => Location.startLocationUpdatesAsync(TASK, {
     accuracy: Location.Accuracy.High,
     timeInterval: 5000,
@@ -123,39 +123,53 @@ async function startMonitoring(generation: number) {
     pausesUpdatesAutomatically: false,
     showsBackgroundLocationIndicator: true,
     foregroundService: {
-      notificationTitle: "Parking reminders are on",
-      notificationBody: "Looking for arrivals nearby. Turn off anytime in Parking settings.",
+      notificationTitle: translate(language, "Parking reminders are on", "Потсетниците за паркирање се вклучени"),
+      notificationBody: translate(language, "Skopje Parking notices when you stop in a parking area. Turn this off anytime in Settings.", "Skopje Parking забележува кога ќе застанете на паркинг. Исклучете го ова во секое време во Поставки."),
       notificationColor: "#25785B",
-      killServiceOnDestroy: true,
+      // Keep watching after the app is swiped away from Recents; only the opt-out stops it.
+      killServiceOnDestroy: false,
     },
     }),
   });
 }
 
-/** Call only from the settings opt-in, after explaining Android's Always location setting. */
-export async function enableBackgroundArrival() {
+/**
+ * Settings opt-in. Android order: location, then `explain` (Play's prominent disclosure) before
+ * "Allow all the time", which Android 11+ grants only on its settings page, then notifications.
+ * Returns without enabling when the driver declines the explanation.
+ */
+export async function enableBackgroundArrival(explain: () => Promise<boolean> = async () => true) {
   const generation = ++preferenceGeneration;
+  const language = await savedLanguage(), t = (en: string, mk: string) => translate(language, en, mk);
   if (!Notifications || !Tasks || !await Tasks.isAvailableAsync())
-    throw new Error("Install the updated Parking app to enable background reminders.");
-  if (!await Location.hasServicesEnabledAsync()) throw new Error("Turn on your phone's location services first.");
+    throw new Error(t("Install the updated Skopje Parking app to enable background reminders.", "Инсталирајте ја ажурираната Skopje Parking апликација за потсетници во заднина."));
+  if (!await Location.hasServicesEnabledAsync()) throw new Error(t("Turn on your phone's location services first.", "Прво вклучете ја локацијата на телефонот."));
   const foreground = await Location.requestForegroundPermissionsAsync();
-  if (!foreground.granted) throw new Error("Allow location access to use parking reminders.");
-  const background = await Location.requestBackgroundPermissionsAsync();
-  if (!background.granted) throw new Error("Choose Allow all the time / Always in the phone's location settings.");
+  if (!foreground.granted) throw new Error(t("Allow location access to use parking reminders.", "Дозволете пристап до локацијата за потсетниците за паркирање."));
+  // Arrivals need a fix within 25 m; approximate location never gives one.
+  if (foreground.android?.accuracy === "coarse") throw new Error(t("Turn on Precise location for Skopje Parking. Reminders cannot tell parking areas apart without it.", "Вклучете Прецизна локација за Skopje Parking. Без неа потсетниците не можат да ги разликуваат паркинзите."));
+  if (!(await Location.getBackgroundPermissionsAsync()).granted) {
+    if (!await explain() || generation !== preferenceGeneration) return;
+    const background = await Location.requestBackgroundPermissionsAsync();
+    if (!background.granted) throw new Error(t("Choose Allow all the time in the location settings for Skopje Parking.", "Изберете Дозволи цело време во поставките за локација за Skopje Parking."));
+  }
   if (Platform.OS === "android") await Notifications.setNotificationChannelAsync(CHANNEL, {
-    name: "Parking arrival reminders",
+    name: t("Parking arrival reminders", "Потсетници при пристигнување на паркинг"),
     importance: Notifications.AndroidImportance.DEFAULT,
     sound: null,
   });
   const permission = await Notifications.requestPermissionsAsync({ ios: { allowAlert: true, allowBadge: false, allowSound: false } });
   if (!permission.granted && permission.ios?.status !== Notifications.IosAuthorizationStatus.PROVISIONAL)
-    throw new Error("Allow notifications to receive a reminder when the app is in the background.");
+    throw new Error(t("Allow notifications to receive a reminder when the app is in the background.", "Дозволете известувања за да добиете потсетник кога апликацијата е во заднина."));
   await arrivalTransaction(async () => {
     // Logout/opt-out may have happened while the OS permission screens were open.
     if (generation !== preferenceGeneration) return;
     await saveBackgroundArrivalEnabled(true);
     try { await startMonitoring(generation); }
-    catch (error) { await saveBackgroundArrivalEnabled(false); throw error; }
+    catch {
+      await saveBackgroundArrivalEnabled(false);
+      throw new Error(t("Parking reminders could not start. Check location permissions and try again.", "Потсетниците не можеа да започнат. Проверете ги дозволите за локација и обидете се повторно."));
+    }
   });
   settingsListeners.forEach((listener) => listener());
 }

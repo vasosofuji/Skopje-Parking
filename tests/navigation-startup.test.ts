@@ -45,6 +45,7 @@ function startup() {
     if (name === "../components/LoadingIndicator" || name === "../components/AppStyles") return { default: name, __esModule: true };
     if (name === "../domain/onboarding") return { hasCurrentTerms: () => true };
     if (name === "../hooks/useArrivalNotifications") return { useArrivalNotifications: (enabled: boolean) => notifications.push(enabled) };
+    if (name === "../hooks/usePlaceNotifications") return { usePlaceNotifications() {} };
     if (name === "../services/navigation") return service.exports;
     throw new Error(`Unexpected layout dependency: ${name}`);
   } };

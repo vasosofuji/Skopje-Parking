@@ -1,24 +1,25 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { placeName } from "../domain/language";
 import { AppState, Linking, Pressable, Text, View } from "react-native";
+import type { Fix } from "../domain/arrival";
 import type { Coordinate, ParkingPlace } from "../domain/types";
 import { api } from "../services/api";
 import { openSmsComposer } from "../services/smsComposer";
-import { cancelParkingLimitReminder, scheduleParkingLimitReminder } from "../services/parkingReminder";
+import { cancelParkingLimitReminder } from "../services/parkingReminder";
+import { updateParkingSession } from "../services/parkingSessions";
+import { useSmsPayment } from "../hooks/useSmsPayment";
 import { useLicensePlate } from "../state/LicensePlateContext";
 import { useParking } from "../state/ParkingContext";
 import { useTheme } from "../state/ThemeContext";
 import { Button, Icon, Note, Sheet } from "./ui";
 import LicensePlateEditor from "./LicensePlateEditor";
-import { isOfficialProtocol, isVerifiedSmsPayment } from "../domain/sms-payment";
+import { isOfficialProtocol, isVerifiedSmsPayment, smsMessage } from "../domain/sms-payment";
 import { parkingPrice } from "../domain/parking";
-import { OPERATOR_HELP, officialChargingHours, officialZoneRules, skopjeTime } from "../domain/skopje-rules";
+import { OPERATOR_HELP, officialChargingHours, officialZoneRules } from "../domain/skopje-rules";
 import { localHours } from "../domain/payment-hours";
 import { knownFreeTime, payableZones } from "../domain/zone-payment";
+import { sessionId } from "../domain/my-car";
 
-export function smsMessage(template: string, zone: string, plate: string, hours: number | null) {
-  return template.replaceAll("{zone}", zone).replaceAll("{plate}", plate).replaceAll("{hours}", String(hours));
-}
 function ZoneOutline({ place }: { place: ParkingPlace }) {
   const { colors } = useTheme();
   const ring = place.geometry?.coordinates[0] ?? [];
@@ -38,19 +39,20 @@ function useOperatorName() {
   return (operator: "gradski" | "poc" | undefined) => operator === "gradski" ? t("Gradski Parking (City of Skopje)", "Градски паркинг (Град Скопје)")
     : operator === "poc" ? t("POC, Centar municipality parking", "ПОЦ, Паркинзи на Општина Центар") : null;
 }
-/** Start/confirm one SMS payment. `manual` means the driver chose the zone instead of GPS dwell detection. */
-export default function ZonePaymentSheet({ place, validate, onClose, onInvalidated = onClose, manual = false }: { place: ParkingPlace | null; validate: (id: string, places?: ParkingPlace[]) => ParkingPlace | null; onClose: () => void; onInvalidated?: () => void; manual?: boolean }) {
+/**
+ * Start/confirm one SMS payment for the zone the driver chose; without a saved plate it asks for one first.
+ * `running` names the zone of a payment still running, so a second one is not sent by accident.
+ */
+export default function ZonePaymentSheet({ place, validate, onClose, onInvalidated = onClose, fix, running = null }: { place: ParkingPlace | null; validate: (id: string, places?: ParkingPlace[]) => ParkingPlace | null; onClose: () => void; onInvalidated?: () => void; fix?: Fix | null; running?: string | null }) {
   const { t, now, language, latestCatalog } = useParking(), { colors } = useTheme(), account = useLicensePlate(), operatorName = useOperatorName();
-  const latestAccount = useRef(account); useLayoutEffect(() => { latestAccount.current = account; });
   const invalidated = useRef(onInvalidated); useLayoutEffect(() => { invalidated.current = onInvalidated; });
-  const mounted = useRef(true);
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-  const [choice, setChoice] = useState<{ signature: string; hours: number } | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState("");
+  const { pay, busy, error } = useSmsPayment({ validate, fix, onOpened: onClose, onInvalidated: () => invalidated.current() });
+  const [choice, setChoice] = useState<{ signature: string; hours: number } | null>(null);
   const [checked, setChecked] = useState<{ signature: string; place: ParkingPlace } | null>(null);
   const [checkAttempt, setCheckAttempt] = useState(0), [checkError, setCheckError] = useState("");
   const [signConfirmed, setSignConfirmed] = useState("");
   const protocol = place?.smsPayment, plate = account.savedPlate;
-  const signature = protocol ? JSON.stringify(protocol) : "", accountId = account.accountId, placeId = place?.id;
+  const signature = protocol ? JSON.stringify(protocol) : "", placeId = place?.id;
   const hours = choice && choice.signature === signature ? choice.hours : null;
   const checkedPlace = checked && checked.signature === signature && checked.place.id === placeId ? checked.place : null;
   // The driver compares the zone with the sign at their car; GPS cannot tell two operators' streets apart.
@@ -66,41 +68,13 @@ export default function ZonePaymentSheet({ place, validate, onClose, onInvalidat
       if (!active) return;
       const places = catalog.places.map(value => value.id === placeId ? { ...fresh.place, smsPayment: fresh.protocol ?? undefined } : value);
       if (!validate(placeId, places) || JSON.stringify(fresh.protocol) !== signature) { invalidated.current(); return; }
-      setChecked({ signature, place: { ...fresh.place, smsPayment: fresh.protocol! } }); setError("");
+      setChecked({ signature, place: { ...fresh.place, smsPayment: fresh.protocol! } });
       setCheckError("");
     }).catch(cause => { if (active) setCheckError(cause instanceof Error ? cause.message : t("Could not check payment details. Try again.", "Податоците за плаќање не се проверени. Обидете се повторно.")); });
     return () => { active = false; };
   }, [placeId, signature, validate, checkAttempt, t, latestCatalog]);
-  const ready = Boolean(checkedPlace && plate && matchesSign && (protocol?.mode !== "fixed-hours" || protocol.allowedHours?.includes(duration!)));
-  async function open() {
-    if (!ready || !checkedPlace || !place || !protocol || !plate || busy) return;
-    setBusy(true); setError("");
-    try {
-      // Catalog overlap and immutable photo status both have to be current at send time.
-      const [catalog, fresh] = await Promise.all([latestCatalog(), api.smsPayment(place.id)]);
-      const places = catalog.places.map(value => value.id === place.id ? { ...fresh.place, smsPayment: fresh.protocol ?? undefined } : value);
-      const valid = validate(place.id, places);
-      if (!valid || JSON.stringify(fresh.protocol) !== signature) { invalidated.current(); return; }
-      const stillValid = () => mounted.current && Boolean(validate(place.id)) && isVerifiedSmsPayment(fresh.protocol) && latestAccount.current.accountId === accountId && latestAccount.current.savedPlate === plate;
-      const result = await openSmsComposer(protocol.destination, body, stillValid);
-      if (result === "opened") {
-        if (protocol.mode === "start-stop" && protocol.stopTemplate) {
-          const openedAt = Date.now(), stopMessage = smsMessage(protocol.stopTemplate, protocol.zoneCode, plate, null);
-          await account.setPendingStop({ zoneId: place.id, zoneName: place.name, recipient: protocol.destination, stopMessage, photoId: protocol.photoId, protocolExpiresAt: protocol.expiresAt, openedAt, plate });
-          if (protocol.maxStayMinutes) {
-            const end = skopjeTime(openedAt + protocol.maxStayMinutes * 60_000);
-            const clock = `${String(Math.floor(end.minute / 60)).padStart(2, "0")}:${String(end.minute % 60).padStart(2, "0")}`;
-            void scheduleParkingLimitReminder(openedAt + (protocol.maxStayMinutes - 15) * 60_000, t("Parking time limit", "Ограничување на паркирањето"),
-              t("Parking time ends soon", "Времето за паркирање истекува наскоро"),
-              t("Zone {zone} allows parking until {time}. Send {stop} to {number} when you leave.", "Зоната {zone} дозволува паркирање до {time}. Кога ќе заминете, испратете {stop} на {number}.")
-                .replace("{zone}", protocol.zoneCode).replace("{time}", clock).replace("{stop}", stopMessage).replace("{number}", protocol.destination));
-          }
-        }
-        onClose();
-      } else if (result !== "cancelled") setError(t("SMS is unavailable here. Use the number and message shown.", "SMS не е достапна. Користете ги прикажаните број и порака."));
-    } catch (cause) { setError(cause instanceof Error ? cause.message : t("Could not open SMS. Try again.", "SMS не се отвори. Обидете се повторно.")); }
-    finally { setBusy(false); }
-  }
+  const ready = Boolean(checkedPlace && place && plate && matchesSign && (protocol?.mode !== "fixed-hours" || protocol.allowedHours?.includes(duration!)));
+  const open = () => { if (ready) void pay(place!, duration); };
   const sign = checkedPlace?.signInfo;
   const price = checkedPlace ? parkingPrice(checkedPlace, now) : null;
   const chargingHours = sign?.chargingHours ?? checkedPlace?.paymentSchedule?.chargingHours ?? (checkedPlace ? officialChargingHours(checkedPlace, now) : null);
@@ -108,7 +82,8 @@ export default function ZonePaymentSheet({ place, validate, onClose, onInvalidat
     ? checkedPlace.id === "gradski:zone:A0" ? t("Also on public holidays", "И на државни празници") : t("Free on Sundays and public holidays", "Бесплатно во недела и на државни празници") : null;
   const zoneLabel = checkedPlace?.zoneCode ?? protocol?.zoneCode ?? "";
   const help = operator ? OPERATOR_HELP[operator] : null;
-  return <Sheet visible={Boolean(place && protocol && (plate || manual))} title={t("Pay for parking by SMS", "Платете паркинг со SMS")} onClose={onClose} footer={plate ? <Button title={busy || !checkedPlace ? t("Checking…", "Се проверува…") : t("Open SMS", "Отвори SMS")} disabled={busy || !ready} onPress={() => void open()} /> : undefined}>
+  return <Sheet visible={Boolean(place && protocol)} title={t("Pay for parking by SMS", "Платете паркинг со SMS")} onClose={onClose} footer={plate ? <Button title={busy || !checkedPlace ? t("Checking…", "Се проверува…") : t("Open SMS", "Отвори SMS")} disabled={busy || !ready} onPress={open} /> : undefined}>
+    {running ? <Note>{t("A parking payment is still running: {zone}.", "Сè уште тече плаќање за паркинг: {zone}.").replace("{zone}", running)}</Note> : null}
     {!plate ? <>
       <Note>{t("Add your licence plate to pay by SMS. It stays on this device.", "Додајте ја регистарската табличка за плаќање со SMS. Се чува само на овој уред.")}</Note>
       <LicensePlateEditor key={account.accountId} onDone={() => {}} onCancel={onClose} />
@@ -178,7 +153,12 @@ export function ParkingSmsStopSheet({ visible, onClose }: { visible: boolean; on
       const valid = () => Boolean(mounted.current && AppState.currentState === "active" && latest.current.visible && latest.current.account.accountId === account.accountId && latest.current.account.pendingStop === session && protocol && isVerifiedSmsPayment(protocol) && protocol.photoId === session.photoId && protocol.destination === session.recipient && protocol.mode === "start-stop" && protocol.stopTemplate && smsMessage(protocol.stopTemplate, protocol.zoneCode, session.plate, null) === session.stopMessage);
       if (!valid()) throw new Error(t("Parking details changed. Review them again.", "Податоците се сменети. Проверете ги повторно."));
       const result = await openSmsComposer(session.recipient, session.stopMessage, valid);
-      if (result === "opened") { void cancelParkingLimitReminder(); onClose(); }
+      if (result === "opened") {
+        void cancelParkingLimitReminder();
+        const stoppedAt = Date.now();
+        void updateParkingSession(sessionId(session.zoneId, session.openedAt), value => ({ ...value, stoppedAt: Math.max(stoppedAt, value.startedAt) })).catch(() => {});
+        onClose();
+      }
       else if (result !== "cancelled") setError(t("SMS is unavailable here. Use the number and message shown.", "SMS не е достапна. Користете ги прикажаните број и порака."));
     } catch (cause) { setError(cause instanceof Error ? cause.message : t("Could not open SMS. Try again.", "SMS не се отвори. Обидете се повторно.")); }
     finally { setBusy(false); }

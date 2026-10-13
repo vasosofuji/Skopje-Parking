@@ -2,17 +2,24 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import vm from "node:vm";
 import { mapHtml } from "../src/components/offlineMapHtml";
+import { clusterMarker } from "../src/domain/marker-appearance";
 
 type Callback = (value?: unknown) => void;
 function bridge(reducedMotion = false) {
   const messages: { type: string; sentAt: number; selectionId?: string; anchor?: number[]; point?: unknown }[] = [];
   const mapEvents = new Map<string, Callback>(), windowEvents = new Map<string, Callback>();
-  const markers: { options: Record<string, unknown>; events: Map<string, Callback> }[] = [];
-  const polygons: { options: Record<string, unknown>; events: Map<string, Callback> }[] = [];
+  const markers: { options: Record<string, unknown>; events: Map<string, Callback>; layer: unknown }[] = [];
+  const polygons: { options: Record<string, unknown>; events: Map<string, Callback>; layer: unknown }[] = [];
+  const attached = new Set<unknown>();
   const panes = new Map<string, { style: { zIndex: string } }>();
   const invalidations: unknown[] = [];
   const transitions: { kind: string; point: number[]; zoom: number; options?: Record<string, unknown> }[] = [];
   let center = [42, 21], zoom = 15, stops = 0;
+  type Box = { south: number; west: number; north: number; east: number };
+  let view: Box = { south: 41.9, west: 20.9, north: 42.1, east: 21.1 };
+  const bounds = (b: Box) => ({ ...b, intersects: () => true,
+    pad(ratio: number) { const dy = (b.north - b.south) * ratio, dx = (b.east - b.west) * ratio; return bounds({ south: b.south - dy, west: b.west - dx, north: b.north + dy, east: b.east + dx }); },
+    contains: (x: number[] | Box) => Array.isArray(x) ? x[0] >= b.south && x[0] <= b.north && x[1] >= b.west && x[1] <= b.east : x.south >= b.south && x.north <= b.north && x.west >= b.west && x.east <= b.east });
   let flight: { point: number[]; zoom: number } | null = null;
   let motionChanged: ((event: { matches: boolean }) => void) | undefined;
   const motion = { matches: reducedMotion, addEventListener(_event: string, callback: typeof motionChanged) { motionChanged = callback; } };
@@ -24,7 +31,7 @@ function bridge(reducedMotion = false) {
   };
   const layer = () => {
     const events = new Map<string, Callback>();
-    return { events, on(name: string, fn: Callback) { events.set(name, fn); return this; }, off() {}, addTo() { return this; }, remove() {}, bringToFront() {}, setLatLng() { moves++; return this; }, setRadius() { return this; }, setLatLngs() {}, bindTooltip() { return this; } };
+    return { events, on(name: string, fn: Callback) { events.set(name, fn); return this; }, off() {}, addTo() { attached.add(this); return this; }, remove() {}, bringToFront() {}, setLatLng() { moves++; return this; }, setRadius() { return this; }, setLatLngs() {}, bindTooltip() { return this; } };
   };
   const map = {
     createPane(name: string) { const pane = { style: { zIndex: "" } }; panes.set(name, pane); return pane; },
@@ -32,27 +39,32 @@ function bridge(reducedMotion = false) {
     stop() { stops++; const moving = Boolean(flight); flight = null; if (moving) mapEvents.get("moveend")?.(); return this; },
     setView(point: number[], nextZoom: number, options?: Record<string, unknown>) { transitions.push({ kind: "setView", point, zoom: nextZoom, options }); mapEvents.get("movestart")?.(); center = point; zoom = nextZoom; mapEvents.get("moveend")?.(); return this; },
     flyTo(point: number[], nextZoom: number, options?: Record<string, unknown>) { transitions.push({ kind: "flyTo", point, zoom: nextZoom, options }); flight = { point, zoom: nextZoom }; mapEvents.get("movestart")?.(); return this; },
-    getZoom: () => zoom, getCenter: () => ({ lat: center[0], lng: center[1] }), latLngToContainerPoint: (p: number[]) => ({ x: p[1] * 10, y: p[0] * 10 }), invalidateSize(options: unknown) { invalidations.push(options); }, getBounds: () => ({ intersects: () => true }),
+    getZoom: () => zoom, getCenter: () => ({ lat: center[0], lng: center[1] }), latLngToContainerPoint: (p: number[]) => ({ x: p[1] * 10, y: p[0] * 10 }), invalidateSize(options: unknown) { invalidations.push(options); }, getBounds: () => bounds(view),
   };
-  const window = { matchMedia: () => motion, ReactNativeWebView: { postMessage: (value: string) => messages.push(JSON.parse(value)) }, addEventListener: (name: string, fn: Callback) => windowEvents.set(name, fn) } as unknown as { renderParking: (next: object) => void; updateUserLocation: (point: number[] | null, accuracy: number | null) => void };
+  const window = { matchMedia: () => motion, ReactNativeWebView: { postMessage: (value: string) => messages.push(JSON.parse(value)) }, addEventListener: (name: string, fn: Callback) => windowEvents.set(name, fn) } as unknown as { renderParking: (next: object) => void; setParkingPins: (next: object) => void; updateUserLocation: (point: number[] | null, accuracy: number | null) => void };
   const L = {
-    map: () => map, tileLayer: layer, layerGroup: () => ({ ...layer(), getLayers: () => [], removeLayer() {}, clearLayers() { clears++; } }),
-    marker: (_point: unknown, options: Record<string, unknown>) => { const next = layer(); markers.push({ options, events: next.events }); return next; },
-    polygon: (_rings: unknown, options: Record<string, unknown>) => { const next = layer(); polygons.push({ options, events: next.events }); return next; }, polyline: layer, circle: layer, circleMarker: () => { userDots++; return layer(); }, divIcon: (value: unknown) => value, latLngBounds: () => ({}), DomEvent: { stopPropagation() {} },
+    map: () => map, tileLayer: layer, layerGroup: () => ({ ...layer(), getLayers: () => [], removeLayer(value: unknown) { attached.delete(value); }, clearLayers() { clears++; } }),
+    marker: (_point: unknown, options: Record<string, unknown>) => { const next = layer(); markers.push({ options, events: next.events, layer: next }); return next; },
+    polygon: (_rings: unknown, options: Record<string, unknown>) => { const next = layer(); polygons.push({ options, events: next.events, layer: next }); return next; }, polyline: layer, circle: layer, circleMarker: () => { userDots++; return layer(); }, divIcon: (value: unknown) => value, latLngBounds: () => ({}), DomEvent: { stopPropagation() {} },
   };
   const document = { getElementById: () => ({ classList: { toggle() {} } }), createElement: () => ({ textContent: "", style: { cssText: "" } }) };
   const script = mapHtml.split("</script><script>")[1].split("</script>")[0];
   vm.runInNewContext(script, { window, document, L });
   return { window, messages, markers, polygons, panes, mapEvents, windowEvents, invalidations, doubleClickZoom, transitions,
     setZoom(value: number) { zoom = value; mapEvents.get("zoomend")?.(); },
+    pinch(value: number) { zoom = value; mapEvents.get("zoom")?.(); mapEvents.get("move")?.(); },
+    pan(next: Box) { view = next; mapEvents.get("move")?.(); },
+    shown: (layer: { layer?: unknown }) => attached.has(layer.layer),
     finishFlight() { assert.ok(flight); center = flight.point; zoom = flight.zoom; flight = null; mapEvents.get("moveend")?.(); },
     motion(value: boolean) { motion.matches = value; motionChanged?.({ matches: value }); },
     counts: () => ({ userDots, moves, clears, stops, flying: Boolean(flight) }) };
 }
-const payload = { pins: [{ id: "one", point: [42, 21], title: "Parking", html: "<span>?</span>", selected: true }], zones: [], destination: [42, 21], selectedId: "one", selectedAnchor: [42, 21], picking: false, draft: [] };
+const payload = { zones: [], destination: [42, 21], selectedId: "one", selectedAnchor: [42, 21], picking: false, draft: [] };
+const pins = { filtered: false, clusterMarker: clusterMarker(0), pins: [{ id: "one", point: [42, 21], title: "Parking", html: "<span>?</span>" }] };
 
 test("the native Leaflet bridge tags projections and avoids automatic marker focus or resize panning", () => {
   const view = bridge();
+  view.window.setParkingPins(pins);
   view.window.renderParking(payload);
   assert.equal(view.markers[0].options.autoPanOnFocus, false);
   assert.deepEqual(view.invalidations, []);
@@ -83,13 +95,16 @@ test("blank taps and boundary picks stay separate; one-second GPS updates move t
 
 test("cluster and destination taps send explicit interaction events, while programmatic camera updates do not", () => {
   const view = bridge();
-  view.window.renderParking({ ...payload, pins: [{ ...payload.pins[0], cluster: true }], destinationMarker: [42, 21] });
+  view.window.setParkingPins({ ...pins, pins: [{ ...pins.pins[0], id: "two" }, { ...pins.pins[0], id: "three" }] });
+  view.window.renderParking({ ...payload, destinationMarker: [42, 21] });
   assert.ok(!view.messages.some(message => message.type === "interaction"));
-  view.markers[0].events.get("click")?.();
+  const cluster = view.markers.find(marker => (marker.options.icon as { className: string }).className.includes("cluster"))!;
+  const destination = view.markers.find(marker => (marker.options.icon as { className: string }).className === "destination-pin")!;
+  cluster.events.get("click")?.();
   assert.equal(view.messages.filter(message => message.type === "interaction").length, 1);
   assert.ok(view.messages.findIndex(message => message.type === "pan") < view.messages.findIndex(message => message.type === "interaction"), "cluster intent precedes native keyboard gating");
   assert.ok(Number.isFinite(view.messages.at(-1)?.sentAt));
-  view.markers[1].events.get("click")?.();
+  destination.events.get("click")?.();
   assert.equal(view.messages.filter(message => message.type === "interaction").length, 2);
 });
 
@@ -186,14 +201,16 @@ test("boundary drawing disables double-click zoom across corner updates and rest
 
 test("native map reuses unchanged marker instances while current interaction flags and appearance still update", () => {
   const view = bridge();
+  view.window.setParkingPins(pins);
   view.window.renderParking(payload);
   const first = view.markers[0], count = view.markers.length;
-  view.window.renderParking({ ...payload, pins: payload.pins.map(pin => ({ ...pin })), selectionEnabled: false });
+  view.window.setParkingPins({ ...pins, pins: pins.pins.map(pin => ({ ...pin })) });
+  view.window.renderParking({ ...payload, selectionEnabled: false });
   assert.equal(view.markers.length, count, "catalog refresh does not replace identical pins");
   const before = view.messages.filter(message => message.type === "select").length;
   first.events.get("click")?.();
   assert.equal(view.messages.filter(message => message.type === "select").length, before, "cached handler reads current selection gate");
-  view.window.renderParking({ ...payload, pins: [{ ...payload.pins[0], html: "<span>Full</span>" }] });
+  view.window.setParkingPins({ ...pins, pins: [{ ...pins.pins[0], html: "<span>Full</span>" }] });
   assert.equal(view.markers.length, count + 1, "report expiry/appearance changes replace only that marker");
 });
 
@@ -201,6 +218,7 @@ test("POC bridge boundaries and 44px labels stay tappable at street zoom", () =>
   const view = bridge();
   const sector = { id: "poc:zone:1:0", pocSector: true, rings: [[[42, 21], [42, 21.1], [42.1, 21]]], point: [42, 21], title: "POC", label: "POC 1" };
   const next = { ...payload, selectedId: null, selectedAnchor: null, zones: [sector], zoneLabels: [sector] };
+  view.window.setParkingPins(pins);
   view.window.renderParking(next);
   const oldPolygon = view.polygons[0], oldLabel = view.markers.find(marker => marker.options.title === "POC")!;
   assert.equal(oldPolygon.options.interactive, true);
@@ -221,13 +239,56 @@ test("POC bridge boundaries and 44px labels stay tappable at street zoom", () =>
 
 test("tariff region redraws cannot cover parking footprint tap targets", () => {
   const view = bridge();
+  view.setZoom(17);
   const area = { id: "parking", rings: [[[42,21],[42,21.1],[42.1,21]]] };
   const zone = { ...area, id: "tariff", pocSector: true };
   const next = { ...payload, footprints: [area], zones: [zone] };
   view.window.renderParking(next);
   view.window.renderParking({ ...next, zones: [{ ...zone, rings: [[[42,21],[42,21.2],[42.2,21]]] }] });
-  const footprint = view.polygons[0], tariffs = view.polygons.slice(1);
+  const footprint = view.polygons.find(polygon => polygon.options.color === "#962E2B")!, tariffs = view.polygons.filter(polygon => polygon !== footprint);
+  assert.equal(tariffs.length, 2);
   assert.equal(footprint.options.pane, undefined, "footprints retain Leaflet's default overlay pane at z-index400");
   assert.ok(tariffs.every(polygon => polygon.options.pane === "tariff-regions"));
   assert.equal(view.panes.get("tariff-regions")?.style.zIndex, "390", "tariffs remain below footprints regardless of redraw order");
+});
+
+test("pins regroup inside the page on every zoom step, so a pinch never waits for a new payload", () => {
+  const view = bridge();
+  const near = [0, 1, 2].map(i => ({ ...pins.pins[0], id: "p" + i, title: "P" + i, point: [42.001 + i * 0.0003, 21.001] }));
+  const area = { id: "p0", selected: false, rings: [[[42, 21], [42, 21.001], [42.001, 21]]] };
+  view.window.setParkingPins({ ...pins, pins: near });
+  view.window.renderParking({ ...payload, selectedId: null, selectedAnchor: null, footprints: [area] });
+  const icon = (marker: { options: Record<string, unknown> }) => marker.options.icon as { className: string; html: string };
+  const shownPins = () => view.markers.filter(marker => view.shown(marker) && icon(marker).className.startsWith("parking-pin"))
+    .map(marker => icon(marker).className.includes("cluster") ? "cluster:" + icon(marker).html.match(/>(\d+)</)![1] : marker.options.title);
+  const footprint = () => view.polygons.some(polygon => polygon.options.color === "#962E2B" && view.shown(polygon));
+  assert.deepEqual(shownPins(), ["cluster:3"]); assert.equal(footprint(), false);
+  const sent = view.messages.length;
+  view.pinch(17.8);
+  assert.deepEqual(shownPins(), ["P0", "P1", "P2"], "street zoom splits the cluster mid-gesture");
+  assert.equal(footprint(), true);
+  const created = view.markers.length;
+  view.pinch(15.1);
+  assert.deepEqual(shownPins(), ["cluster:3"]); assert.equal(footprint(), false);
+  assert.equal(view.markers.length, created, "zooming back reattaches the cached cluster");
+  assert.equal(view.messages.length, sent, "no round trip through React Native");
+  view.window.renderParking({ ...payload, selectedId: "p1", selectedAnchor: [42.0013, 21.001] });
+  assert.deepEqual(shownPins().sort(), ["P1", "cluster:2"], "the selected place leaves its cluster");
+});
+
+test("pins stay ahead of a pan: the page draws half a screen beyond the view and redraws before reaching that edge", () => {
+  const view = bridge();
+  const town = [[42, 21], [42.15, 21], [42.27, 21]].map((point, i) => ({ ...pins.pins[0], id: "t" + i, title: "T" + i, point }));
+  view.window.setParkingPins({ ...pins, pins: town });
+  view.window.renderParking({ ...payload, selectedId: null, selectedAnchor: null });
+  const shown = () => view.markers.filter(marker => view.shown(marker) && marker.options.title !== undefined).map(marker => marker.options.title).sort();
+  assert.deepEqual(shown(), ["T0", "T1"], "the margin holds the next pins, distant ones wait");
+  const created = view.markers.length;
+  view.pan({ south: 41.98, west: 20.9, north: 42.18, east: 21.1 });
+  assert.equal(view.markers.length, created, "moving inside the margin does no marker work");
+  view.pan({ south: 42.35, west: 20.9, north: 42.55, east: 21.1 });
+  assert.deepEqual(shown(), ["T2"]);
+  view.pan({ south: 41.9, west: 20.9, north: 42.1, east: 21.1 });
+  assert.deepEqual(shown(), ["T0", "T1"]);
+  assert.equal(view.markers.length, created + 1, "returning reuses the cached markers");
 });

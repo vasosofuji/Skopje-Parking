@@ -68,8 +68,20 @@ export default function Privacy() {
         </Note>
         <Note>
           {t(
+            "Saved places, your log of parking payments with estimated costs, and the spot where you paid (shown as My car) stay only on this device. The home-screen widget keeps the last zone you were in. Signing out or deleting your data clears saved places and the payment log.",
+            "Зачуваните места, евиденцијата на плаќања за паркинг со проценети трошоци и местото каде што сте платиле (прикажано како Моето возило) остануваат само на овој уред. Виџетот на почетниот екран ја памети последната зона во која сте биле. Одјавувањето или бришењето на податоците ги брише зачуваните места и евиденцијата на плаќања.",
+          )}
+        </Note>
+        <Note>
+          {t(
             "The server stores your username, a salted password hash if you set a password, hashed sign-in tokens, contribution points and history, parking reports, confirmed sign details, prices, coordinates, boundaries and confirmations. Your password is never stored as plain text. Price reports and location confirmations are displayed for 90 days. Shared parking details and confirmation counts are public. Do not include names, registration plates or other personal information in notes. Availability reports expire after 15 minutes.",
             "Серверот зачувува корисничко име, безбедно хеширана лозинка ако ја поставите, хеширани токени за најава, поени и историја на придонеси, пријави, потврдени податоци од табли, цени, координати, граници и потврди. Лозинката не се чува како обичен текст. Цените и потврдите се прикажуваат 90 дена. Деталите за паркинзи и бројот на потврди се јавни. Не внесувајте имиња, регистарски таблички или лични податоци. Пријавите за достапност истекуваат по 15 минути.",
+          )}
+        </Note>
+        <Note>
+          {t(
+            "When you pay for parking through the app, the server receives that parking place and when your paid time ends, so drivers heading there can be told a spot may open. Your plate and car position are never sent, and the record is deleted 10 minutes after the time ends. You can turn this off in Settings. Alerts reach your phone through Google's Firebase Cloud Messaging, which receives a device token and the alert text.",
+            "Кога плаќате паркинг преку апликацијата, серверот го добива паркингот и времето кога истекува платеното време, за возачите што одат таму да дознаат дека може да се ослободи место. Регистарската табличка и локацијата на возилото никогаш не се испраќаат, а записот се брише 10 минути по истекот. Ова може да го исклучите во Поставки. Известувањата стигнуваат преку Google Firebase Cloud Messaging, кој добива токен на уредот и текстот на известувањето.",
           )}
         </Note>
         <Text style={s.subhead}>

@@ -33,6 +33,9 @@ export function smsZoneMatches(label: string | null | undefined, token: string |
   const normalized = normalizeZoneCode(label), printed = normalizeZoneCode(token);
   return normalized === printed || (/^POC\s*\d+$/i.test(label.trim()) && normalized.slice(3) === printed);
 }
+export function smsMessage(template: string, zone: string, plate: string, hours: number | null) {
+  return template.replaceAll("{zone}", zone).replaceAll("{plate}", plate).replaceAll("{hours}", String(hours));
+}
 /** What a driver's phone would send: everything except evidence and provenance. */
 export const smsRuleKey = (p: SmsPaymentCandidate) => JSON.stringify([p.mode, p.destination, p.zoneCode, p.plateFormat, p.startTemplate, p.stopTemplate, p.allowedHours ? [...p.allowedHours].sort((a, b) => a - b) : null, p.maxStayMinutes]);
 export const isOfficialProtocol = (value: Pick<VerifiedSmsPayment, "photoId"> | null | undefined) => typeof value?.photoId === "string" && value.photoId.startsWith("official:");

@@ -25,12 +25,15 @@ import MapDrawer from "../components/MapDrawer";
 import LocationHelp from "../components/LocationHelp";
 import LoadingIndicator from "../components/LoadingIndicator";
 import ParkingPreview from "../components/ParkingPreview";
-import { router, useIsFocused } from "expo-router";
+import { router, useIsFocused, useLocalSearchParams } from "expo-router";
 import { useMapSettingsLocation } from "../state/SettingsLocationContext";
 import { useLicensePlate } from "../state/LicensePlateContext";
 import { useZonePayment } from "../hooks/useZonePayment";
+import { useMyCar } from "../hooks/useMyCar";
 import { usePriceCheck } from "../hooks/usePriceCheck";
 import ZonePaymentSheet, { ParkingSmsStopSheet, PayParkingChooser } from "../components/ZonePaymentSheet";
+import QuickPayCard from "../components/QuickPayCard";
+import MyCarCard from "../components/MyCarCard";
 import { useTheme, type ThemeColors } from "../state/ThemeContext";
 import { zoneGeometry, validZone, MAX_BOUNDARY_VERTICES } from "../domain/geometry";
 import { containsParkingFix, distanceToParkingBoundary, insidePolygon } from "../domain/arrival";
@@ -62,10 +65,13 @@ import { MARKER_COLORS } from "../domain/marker-appearance";
 import { arrivalQuestion } from "../domain/report-feedback";
 import { useContributionFeedback } from "../state/ContributionFeedback";
 import { usePocCards } from "../hooks/usePocCards";
-import { eligibleSmsZone, payableZones } from "../domain/zone-payment";
+import { choiceKey, payableZones, smsZoneChoices } from "../domain/zone-payment";
 import { isVerifiedSmsPayment, smsZoneMatches } from "../domain/sms-payment";
 import { CURRENT_LOCATION_ZOOM } from "../domain/map-selection-camera";
 import PocCardSuggestion from "../components/PocCardSuggestion";
+import { SavedPlaceChips, SavePlaceButton } from "../components/SavedPlaces";
+import LeavingSpotButton from "../components/LeavingSpotButton";
+import { showWidgetZone } from "../services/parkingWidget";
 
 type NewParking = {
   coordinate: Coordinate;
@@ -90,6 +96,8 @@ export default function MapScreen() {
   const [stopSms, setStopSms] = useState(false);
   const checkPrice = usePriceCheck(t);
   const [payChooser, setPayChooser] = useState<Coordinate | null>(null), [manualPayId, setManualPayId] = useState<string | null>(null);
+  const [widgetPayId, setWidgetPayId] = useState<string | null>(null);
+  const myCar = useMyCar(), [carCard, setCarCard] = useState(false);
   const navigationState = useMapNavigationState(licensePlate.accountId);
   const { sort, setSort, destination, setDestination, center, setCenter, selected: savedSelected, setSelected, anchor, setAnchor, parkingFilters, setParkingFilters, rememberViewport } = navigationState;
   const selected = catalog.places.some(place => place.id === savedSelected) ? savedSelected : null;
@@ -106,6 +114,7 @@ export default function MapScreen() {
     [searching, setSearching] = useState(false);
   const searchInput = useRef<TextInput>(null);
   const latestSearchFocus = useRef(0);
+  const [searchFocused, setSearchFocused] = useState(false);
   const [remote, setRemote] = useState<Destination[]>([]),
     searchVersion = useRef(0);
   const [selectedPoint, setSelectedPoint] = useState<{
@@ -182,9 +191,13 @@ export default function MapScreen() {
   const notificationPriority = gps.arrivalFromNotification || followupFromNotification;
   const suspendSheets = !focused || licensePlate.offerPlate || notificationPriority || notificationClosing;
   const arrivalVisible = focused && !licensePlate.offerPlate && Boolean(question) && (notificationPriority || (!selected && !detailsId && !legend && !proposal && !picking && !locationHelp));
-  const paymentBlocked = !licensePlate.ready || licensePlate.offerPlate || Boolean(arrivalPlace) || notificationClosing || notificationPriority || sending || Boolean(selected || detailsId || legend || proposal || picking || locationHelp || stopSms || licensePlate.pendingStop || payChooser || manualPayId);
+  // The quick pay card waits for the availability question and never offers while a payment is still running.
+  const paymentBlocked = !licensePlate.ready || licensePlate.offerPlate || Boolean(arrivalPlace) || notificationClosing || notificationPriority || sending || Boolean(selected || detailsId || legend || proposal || picking || locationHelp || stopSms || licensePlate.pendingStop || payChooser || manualPayId || myCar.active);
   const payment = useZonePayment({ places: catalog.places, fix: gps.location, plate: licensePlate.savedPlate, scope: licensePlate.accountId, focused, blocked: paymentBlocked });
-  const mapBlockedBySheet = suspendSheets || arrivalVisible || Boolean(payment.place || payChooser || manualPayId) || stopSms || legend || locationHelp || (!picking && Boolean(detailsId || proposal));
+  // The widget's Pay keeps the one-tap card's gates: while a payment runs, its zone opens in the full sheet, which shows it.
+  const runningPayment = myCar.active?.zoneCode ?? licensePlate.pendingStop?.zoneName ?? null;
+  const sheetPayId = manualPayId ?? (runningPayment !== null ? widgetPayId : null);
+  const mapBlockedBySheet = suspendSheets || arrivalVisible || Boolean(payChooser || sheetPayId) || stopSms || legend || locationHelp || (!picking && Boolean(detailsId || proposal));
   // The driver picks the zone from the sign, so manual payment needs no GPS dwell; the
   // protocol must still be verified and unchanged at send time.
   const latestPlaces = useRef(catalog.places);
@@ -193,11 +206,31 @@ export default function MapScreen() {
   // The context clock ticks slowly; a fix newer than it is still fresh.
   const payOrigin = fix && usableFix(fix, Math.max(now, fix.timestamp)) && fix.accuracy! <= 100 ? fix : center;
   const payNearby = useMemo(() => payableZones(catalog.places, payOrigin, now, 1, 1500).length > 0, [catalog.places, payOrigin, now]);
+  // Both cards sit above the drawer without blocking the map; the car card replaces the offer while open.
+  // The widget's Pay names the zone already, so it goes straight to the one-tap card.
+  const widgetPay = widgetPayId && licensePlate.ready && runningPayment === null ? payablePlace(widgetPayId, catalog.places) : null;
+  const carShown = carCard && Boolean(myCar.session), quickPay = Boolean(widgetPay) || (!paymentBlocked && payment.choices.length > 0);
   const clearSelection = useCallback(() => {
     setSelected(null);
     setAnchor(null);
     setSelectedPoint(null);
   }, [setSelected, setAnchor]);
+  useEffect(() => { if (fix) showWidgetZone(fix, catalog.places, language); }, [fix, catalog.places, language]);
+  // The widget's Pay (`/?pay=<placeId>`) is consumed only here.
+  const { pay } = useLocalSearchParams<{ pay?: string }>();
+  useEffect(() => {
+    if (!pay || !focused) return;
+    const place = payablePlace(pay, catalog.places);
+    // A cold start has only the bundled catalog, without SMS rules, until the saved or server copy loads.
+    if (!place && !connected) return;
+    const timer = setTimeout(() => {
+      router.setParams({ pay: undefined });
+      clearSelection();
+      setCarCard(false);
+      if (place) setWidgetPayId(place.id); else setPayChooser(payOrigin);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [pay, focused, catalog.places, connected, clearSelection, payOrigin]);
   const select = useCallback((place: ParkingPlace, coordinate?: Coordinate) => {
     pendingNearMe.current = false;
     cameraMoved.current = true;
@@ -224,6 +257,17 @@ export default function MapScreen() {
     },
     [],
   );
+  // A tapped destination or spot push (usePlaceNotifications) opens the map on its place.
+  const { placeId: pushedPlaceId } = useLocalSearchParams<{ placeId?: string }>();
+  useEffect(() => {
+    const place = navigationState.ready && pushedPlaceId ? catalog.places.find(item => item.id === pushedPlaceId) : undefined;
+    if (!place) return;
+    const timer = setTimeout(() => {
+      router.setParams({ placeId: undefined });
+      select(place); setCameraZoom(15); setCenter(place.coordinate); setCameraRevision(value => value + 1);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [pushedPlaceId, navigationState.ready, catalog.places, select, setCenter]);
   const centerChanged = useCallback((point: Coordinate) => {
     viewport.current = point;
     if (cameraMoved.current) rememberViewport(point);
@@ -314,6 +358,26 @@ export default function MapScreen() {
       pendingNearMe.current = true;
       retryLocation();
     }
+  }
+  function showCar() {
+    Keyboard.dismiss();
+    clearSelection();
+    setCarCard(true);
+    const car = myCar.session?.car;
+    if (!car) return;
+    pendingNearMe.current = false;
+    cameraMoved.current = true;
+    setCameraZoom(CURRENT_LOCATION_ZOOM);
+    setCameraRevision((value) => value + 1);
+    setCenter(car);
+    viewport.current = car;
+  }
+  function payParking() {
+    Keyboard.dismiss();
+    // One detected zone skips the chooser; the sheet still has the driver compare it with the sign.
+    const detected = smsZoneChoices(gps.location, catalog.places, Date.now());
+    if (detected.length === 1) setManualPayId(detected[0].id);
+    else setPayChooser(payOrigin);
   }
   function addParking() {
     pendingNearMe.current = false;
@@ -544,8 +608,9 @@ export default function MapScreen() {
       await gps.reported(place.id).catch(() => {});
       if (status === "spaces") pocCards.record(place);
       await refresh();
-      const smsZone = status === "spaces" ? eligibleSmsZone(gps.location, catalog.places, licensePlate.savedPlate, Date.now()) : null;
-      const needsPrice = !smsZone && arrivalQuestion(place, true, now) === "price";
+      // The quick pay card follows instead of a price question.
+      const payHere = status === "spaces" && smsZoneChoices(gps.location, catalog.places, Date.now()).length > 0;
+      const needsPrice = !payHere && arrivalQuestion(place, true, now) === "price";
       if (needsPrice) setFollowupFromNotification(gps.arrivalFromNotification);
       else if (gps.arrivalFromNotification && Platform.OS === "ios") setNotificationClosing(true);
       gps.dismiss();
@@ -632,6 +697,7 @@ export default function MapScreen() {
           }
           userLocation={gps.location}
           userAccuracy={gps.accuracy}
+          carLocation={myCar.session?.car ?? null}
           destinationName={destination?.name}
           drawing={picking === "zone"}
           onMoveVertex={moveVertex}
@@ -662,7 +728,9 @@ export default function MapScreen() {
                 <Icon name="search" />
                 <TextInput
                   ref={searchInput}
-                  onFocus={() => { latestSearchFocus.current = Date.now(); }}
+                  onFocus={() => { latestSearchFocus.current = Date.now(); setSearchFocused(true); }}
+                  // Web blurs the field before a chip's press lands; keep the chips for that tap.
+                  onBlur={() => { setTimeout(() => setSearchFocused(false), 250); }}
                   style={s.input}
                   value={query}
                   placeholder={
@@ -682,6 +750,7 @@ export default function MapScreen() {
                     setMessage("");
                   }}
                 />
+                {destination && !query ? <SavePlaceButton destination={destination} /> : null}
                 {query || destination ? (
                   <IconButton
                     name="x"
@@ -698,7 +767,9 @@ export default function MapScreen() {
                   onPress={() => { Keyboard.dismiss(); router.push("/settings"); }}
                 />
               </View>
+              {searchFocused && !query.trim() ? <SavedPlaceChips onChoose={value => choose(value)} /> : null}
               {licensePlate.pendingStop ? <Button title={t("Parking SMS", "Паркинг SMS")} variant="secondary" icon="message-square" onPress={() => setStopSms(true)} /> : null}
+              <LeavingSpotButton session={myCar.active} />
               {locationWarning && locationDismissed !== locationWarningKey ? (
                 <View style={s.locationNotice}>
                   <Pressable
@@ -736,6 +807,7 @@ export default function MapScreen() {
                       <Text numberOfLines={2} style={s.suggestionName}>
                         {value.name}
                       </Text>
+                      <SavePlaceButton destination={value} />
                     </Pressable>
                   ))}
                   <Pressable
@@ -796,8 +868,18 @@ export default function MapScreen() {
                 onPay={payablePlace(selectedPlace.id, catalog.places) ? () => { clearSelection(); setManualPayId(selectedPlace.id); } : undefined}
               />
             ) : null}
-            {drawerHeight <= 100 && payNearby && !selectedPlace && !picking ? <View style={[s.pay, { bottom: drawerHeight + 14 }]}>
-              <Button icon="message-square" title={t("Pay parking", "Плати паркинг")} variant="secondary" onPress={() => { Keyboard.dismiss(); setPayChooser(payOrigin); }} />
+            {drawerHeight <= 100 && !selectedPlace && !picking ? <View style={[s.pay, { bottom: drawerHeight + 14 }, (carShown || quickPay) && s.payCard]}>
+              {carShown ? <MyCarCard session={myCar.session!} paidUntil={myCar.paidUntil} fix={gps.location} onClose={() => setCarCard(false)} />
+                : widgetPay ? <QuickPayCard key={`widget:${widgetPay.id}`} choices={[widgetPay]} validate={manualValidate} fix={gps.location}
+                  onClose={() => setWidgetPayId(null)} onPaid={() => setWidgetPayId(null)} onInvalidated={() => { setWidgetPayId(null); void refresh(); }}
+                  onOtherZone={() => { setWidgetPayId(null); setPayChooser(payOrigin); }} onAddPlate={place => { setWidgetPayId(null); setManualPayId(place.id); }} />
+                : quickPay ? <QuickPayCard key={choiceKey(payment.choices.map(place => place.id))} choices={payment.choices} validate={payment.validate} fix={gps.location}
+                  onClose={() => payment.dismiss()} onPaid={() => payment.dismiss()} onInvalidated={() => { payment.dismiss(false); void refresh(); }}
+                  onOtherZone={() => setPayChooser(payOrigin)} onAddPlate={place => setManualPayId(place.id)} />
+                : <>
+                  {myCar.session ? <Button icon="map-pin" title={t("My car", "Моето возило")} variant="secondary" onPress={showCar} /> : null}
+                  {payNearby ? <Button icon="message-square" title={t("Pay parking", "Плати паркинг")} variant="secondary" onPress={payParking} /> : null}
+                </>}
             </View> : null}
             {drawerHeight <= 100 ? <View style={[s.locate, { bottom: drawerHeight + 14 }]}>
               <IconButton name="info" label={t("Map legend", "Легенда на мапата")} onPress={() => { Keyboard.dismiss(); setLegend(true); }} />
@@ -1053,11 +1135,10 @@ export default function MapScreen() {
           }}
         />
       ) : null}
-      <ZonePaymentSheet key={payment.place?.id ?? "no-payment"} place={!paymentBlocked ? payment.place : null} validate={payment.validate} onClose={payment.dismiss} onInvalidated={() => { payment.dismiss(false); void refresh(); }} />
       <PayParkingChooser visible={Boolean(payChooser) && !suspendSheets} places={catalog.places} origin={payChooser} onClose={() => setPayChooser(null)} onPick={place => { setPayChooser(null); setManualPayId(place.id); }} />
-      <ZonePaymentSheet key={`manual:${manualPayId}`} manual place={!suspendSheets && manualPayId ? catalog.places.find(place => place.id === manualPayId) ?? null : null} validate={manualValidate} onClose={() => setManualPayId(null)}
-        onInvalidated={() => { setManualPayId(null); setMessage(t("Payment details changed. Check the sign and try again.", "Податоците за плаќање се сменети. Проверете го знакот и обидете се повторно.")); void refresh(); }} />
-      {pocCards.zone ? <PocCardSuggestion zone={pocCards.zone} visible={focused && !suspendSheets && !mapBlockedBySheet && !arrivalPlace && !licensePlate.offerPlate && !selected && !payment.place && !stopSms} onClose={pocCards.dismiss} /> : null}
+      <ZonePaymentSheet key={`manual:${sheetPayId}`} fix={gps.location} running={runningPayment} place={!suspendSheets && sheetPayId ? catalog.places.find(place => place.id === sheetPayId) ?? null : null} validate={manualValidate} onClose={() => { setManualPayId(null); setWidgetPayId(null); }}
+        onInvalidated={() => { setManualPayId(null); setWidgetPayId(null); setMessage(t("Payment details changed. Check the sign and try again.", "Податоците за плаќање се сменети. Проверете го знакот и обидете се повторно.")); void refresh(); }} />
+      {pocCards.offer ? <PocCardSuggestion offer={pocCards.offer} visible={focused && !suspendSheets && !mapBlockedBySheet && !arrivalPlace && !licensePlate.offerPlate && !selected && !quickPay && !stopSms} onClose={pocCards.dismiss} /> : null}
       <ParkingSmsStopSheet visible={stopSms && !suspendSheets && !arrivalVisible && !detailsId && !legend && !proposal && !picking && !locationHelp} onClose={() => setStopSms(false)} />
       <Sheet visible={legend && !suspendSheets} title={t("Map legend", "Легенда на мапата")} onClose={() => setLegend(false)}>
         {filterOptions.slice(0, 5).map(renderFilter)}
@@ -1207,7 +1288,8 @@ const styles = (colors: ThemeColors) =>
       fontWeight: "600",
     },
     locate: { position: "absolute", zIndex: 1000, left: 14, gap: 12 },
-    pay: { position: "absolute", zIndex: 1000, right: 14 },
+    pay: { position: "absolute", zIndex: 1000, right: 14, gap: 8, alignItems: "flex-end" },
+    payCard: { left: 70 },
     pickTop: {
       position: "absolute",
       top: 12,

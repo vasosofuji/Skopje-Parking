@@ -1,11 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { addSession, readSessions, type ParkingSession } from "../domain/parking-sessions";
+import { serialQueue } from "./serial";
 
 const KEY = "parking-sessions-v1";
 const listeners = new Set<() => void>();
-let queue: Promise<unknown> = Promise.resolve();
 // Serialized so a payment and a stop recorded together cannot drop each other.
-const serial = <T>(work: () => Promise<T>) => { const next = queue.then(work, work); queue = next.catch(() => {}); return next; };
+const serial = serialQueue();
 const changed = () => listeners.forEach(listener => listener());
 
 export const listParkingSessions = () => AsyncStorage.getItem(KEY).then(raw => readSessions(raw, Date.now()));

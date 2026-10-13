@@ -1,14 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "./api";
 import { listParkingSessions, onParkingSessionsChanged, updateParkingSession } from "./parkingSessions";
+import { serialQueue } from "./serial";
 import { nextSpotShare, type SpotShare } from "../domain/spot-openings";
 import type { ParkingSession } from "../domain/parking-sessions";
 
 const SHARED = "spot-opening-shared-v1", OFF = "spot-sharing-off-v1";
 const listeners = new Set<() => void>();
-let queue: Promise<unknown> = Promise.resolve();
 // One request at a time, so a payment and its stop recorded together cannot race each other.
-const serial = <T>(work: () => Promise<T>) => { const next = queue.then(work, work); queue = next.catch(() => {}); return next; };
+const serial = serialQueue();
 
 async function readShared(): Promise<Omit<SpotShare, "placeId"> | null> {
   try {

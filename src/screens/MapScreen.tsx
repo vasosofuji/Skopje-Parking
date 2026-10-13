@@ -1133,7 +1133,7 @@ export default function MapScreen() {
         />
       ) : null}
       <PayParkingChooser visible={Boolean(payChooser) && !suspendSheets} places={catalog.places} origin={payChooser} onClose={() => setPayChooser(null)} onPick={place => { setPayChooser(null); setManualPayId(place.id); }} />
-      <ZonePaymentSheet key={`manual:${manualPayId}`} manual fix={gps.location} place={!suspendSheets && manualPayId ? catalog.places.find(place => place.id === manualPayId) ?? null : null} validate={manualValidate} onClose={() => setManualPayId(null)}
+      <ZonePaymentSheet key={`manual:${manualPayId}`} fix={gps.location} place={!suspendSheets && manualPayId ? catalog.places.find(place => place.id === manualPayId) ?? null : null} validate={manualValidate} onClose={() => setManualPayId(null)}
         onInvalidated={() => { setManualPayId(null); setMessage(t("Payment details changed. Check the sign and try again.", "Податоците за плаќање се сменети. Проверете го знакот и обидете се повторно.")); void refresh(); }} />
       {pocCards.offer ? <PocCardSuggestion offer={pocCards.offer} visible={focused && !suspendSheets && !mapBlockedBySheet && !arrivalPlace && !licensePlate.offerPlate && !selected && !quickPay && !stopSms} onClose={pocCards.dismiss} /> : null}
       <ParkingSmsStopSheet visible={stopSms && !suspendSheets && !arrivalVisible && !detailsId && !legend && !proposal && !picking && !locationHelp} onClose={() => setStopSms(false)} />

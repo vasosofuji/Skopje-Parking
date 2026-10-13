@@ -24,7 +24,7 @@ const load = (file: string, context: object) => {
   vm.runInNewContext(ts.transpileModule(readFileSync(file, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText, { ...context, module, exports: module.exports });
   return module.exports;
 };
-function harness(stop = false, manual = false, card = false) {
+function harness(stop = false, card = false) {
   const state: any[] = [], effects: (() => void)[] = [], layout: (() => void)[] = [], calls: { recipient: string; body: string; guard: () => boolean }[] = [], stored: unknown[] = [], reminders: unknown[][] = [];
   const sessions: ParkingSession[] = [], updates: [string, (value: ParkingSession) => ParkingSession][] = [];
   let cursor = 0, valid = true, closed = 0, invalidated = 0, result = "opened", place: ParkingPlace | null = paymentZone, fix: Fix | null = { latitude: 42, longitude: 21, accuracy: 8, speed: 0, timestamp: now - 2000 };
@@ -60,7 +60,7 @@ function harness(stop = false, manual = false, card = false) {
   vm.runInNewContext(ts.transpileModule(readFileSync(card ? "src/components/QuickPayCard.tsx" : "src/components/ZonePaymentSheet.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText, context);
   const validate = (id: string) => valid ? (card ? choices.find(value => value.id === id) ?? null : place) : null, onClose = () => { closed++; valid = false; };
   const onInvalidated = () => { invalidated++; valid = false; };
-  const render = () => { cursor = 0; const tree = stop ? context.exports.ParkingSmsStopSheet({ visible: true, onClose }) : card ? context.exports.default({ choices, validate, fix, onClose, onPaid: onClose, onInvalidated, onOtherZone() {}, onAddPlate() {} }) : context.exports.default({ place, validate, onClose, onInvalidated, manual, fix }); layout.splice(0).forEach(fn => fn()); effects.splice(0).forEach(fn => fn()); return tree; };
+  const render = () => { cursor = 0; const tree = stop ? context.exports.ParkingSmsStopSheet({ visible: true, onClose }) : card ? context.exports.default({ choices, validate, fix, onClose, onPaid: onClose, onInvalidated, onOtherZone() {}, onAddPlate() {} }) : context.exports.default({ place, validate, onClose, onInvalidated, fix }); layout.splice(0).forEach(fn => fn()); effects.splice(0).forEach(fn => fn()); return tree; };
   /** The driver ticks "the sign at my car shows zone ..." before Open SMS is enabled. */
   const confirmSign = () => { nodes(render()).find(node => node.type === "Pressable" && node.props.accessibilityRole === "checkbox")!.props.onPress(); return render(); };
   return { render, confirmSign, reminders, calls, stored, requests, sessions, updates, setChoices: (next: ParkingPlace[]) => { choices = next; place = next[0]; }, payFor: (next: ParkingPlace) => { place = next; }, setFix: (next: Fix | null) => { fix = next; }, setPlate: (value: string | null) => { account = { ...account, savedPlate: value as string }; }, closed: () => closed, invalidated: () => invalidated, hide: () => { place = null; }, invalidate: () => { valid = false; }, changePlate: () => { account = { ...account, savedPlate: "SK9999FF" }; }, protocol: (next: typeof verified) => { place = { ...paymentZone, smsPayment: next }; }, respond: async (protocol = place!.smsPayment!) => { requests.shift()!.resolve({ place: place!, protocol }); await flush(); }, fail: async () => { requests.shift()!.reject(new Error("Network unavailable")); await flush(); }, unsupported: () => { result = "unsupported"; } };
@@ -152,8 +152,8 @@ test("official Gradski rules show the operator instead of a photo, need the sign
   assert.equal(view.reminders[0][0], (view.stored[0] as any).openedAt + 105 * 60_000, "reminds 15 minutes before the limit");
 });
 
-test("manual payment without a saved plate asks for one on the device before any SMS", () => {
-  const view = harness(false, true); view.setPlate(null); const tree = view.render();
+test("the payment sheet without a saved plate asks for one on the device before any SMS", () => {
+  const view = harness(); view.setPlate(null); const tree = view.render();
   assert.equal(tree.props.visible, true); assert.equal(tree.props.footer, undefined);
   assert.ok(nodes(tree).some(node => node.type === "LicensePlateEditor"));
   assert.equal(view.calls.length, 0);
@@ -161,7 +161,7 @@ test("manual payment without a saved plate asks for one on the device before any
 
 const payButton = (tree: Element) => nodes(tree).find(node => node.type === "Button" && /^Pay .+ by SMS$/.test(node.props.title));
 test("the quick pay card pays the detected zone in one tap with the same fresh check, then records session, stop and car", async () => {
-  const view = harness(false, false, true); const tree = view.render();
+  const view = harness(false, true); const tree = view.render();
   assert.equal(payButton(tree)!.props.title, "Pay D8 by SMS"); assert.equal(view.requests.length, 0, "no network until the driver taps");
   assert.match(JSON.stringify(tree), /Check that the sign at your car shows D8/);
   payButton(tree)!.props.onPress(); await view.respond();
@@ -172,17 +172,17 @@ test("the quick pay card pays the detected zone in one tap with the same fresh c
 });
 
 test("the quick pay card keeps no car position from an imprecise fix and opens nothing for changed rules", async () => {
-  const view = harness(false, false, true); view.setFix({ latitude: 42, longitude: 21, accuracy: 45, speed: 0, timestamp: now - 2000 });
+  const view = harness(false, true); view.setFix({ latitude: 42, longitude: 21, accuracy: 45, speed: 0, timestamp: now - 2000 });
   payButton(view.render())!.props.onPress(); await view.respond();
   assert.equal(view.sessions[0].car, null);
-  const changed = harness(false, false, true);
+  const changed = harness(false, true);
   payButton(changed.render())!.props.onPress(); await changed.respond({ ...verified, photoId: "new-proof" });
   assert.equal(changed.invalidated(), 1); assert.equal(changed.calls.length, 0); assert.equal(changed.sessions.length, 0);
 });
 
 test("with two similar zones the card asks which is on the sign and never preselects one", async () => {
   const d5: ParkingPlace = { ...paymentZone, id: "gradski:zone:D5", zoneCode: "D5", smsPayment: skopjeRules.officialSmsPayment({ id: "gradski:zone:D5", kind: "zone" })! };
-  const view = harness(false, false, true); view.setChoices([paymentZone, d5]);
+  const view = harness(false, true); view.setChoices([paymentZone, d5]);
   let tree = view.render();
   assert.equal(payButton(tree), undefined); assert.match(JSON.stringify(tree), /Which zone is on the sign\?/);
   nodes(tree).find(node => node.type === "Button" && node.props.title === "D5")!.props.onPress(); tree = view.render();
@@ -193,7 +193,7 @@ test("with two similar zones the card asks which is on the sign and never presel
 
 test("fixed-hours zones show hour chips in the card; no stop SMS is kept", async () => {
   const sector: ParkingPlace = { ...paymentZone, id: "poc:zone:1:9", zoneCode: "POC 1", operator: "poc", smsPayment: skopjeRules.officialSmsPayment({ id: "poc:zone:1:9", kind: "zone" })! };
-  const view = harness(false, false, true); view.setChoices([sector]); let tree = view.render();
+  const view = harness(false, true); view.setChoices([sector]); let tree = view.render();
   assert.equal(payButton(tree)!.props.disabled, true, "hours first");
   nodes(tree).find(node => node.type === "Button" && node.props.title === "2 hours")!.props.onPress(); tree = view.render();
   assert.equal(payButton(tree)!.props.disabled, false);
@@ -203,7 +203,7 @@ test("fixed-hours zones show hour chips in the card; no stop SMS is kept", async
 });
 
 test("without a plate the card asks for one instead of offering SMS", () => {
-  const view = harness(false, false, true); view.setPlate(null); const tree = view.render();
+  const view = harness(false, true); view.setPlate(null); const tree = view.render();
   assert.equal(payButton(tree), undefined);
   assert.ok(nodes(tree).some(node => node.type === "Button" && node.props.title === "Add licence plate"));
 });

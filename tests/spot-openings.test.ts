@@ -11,6 +11,7 @@ import { buildApp } from "../server/app";
 import { distanceMeters } from "../src/domain/parking";
 import * as spotDomain from "../src/domain/spot-openings";
 import * as sessionDomain from "../src/domain/parking-sessions";
+import * as serial from "../src/services/serial";
 import type { ParkingSession } from "../src/domain/parking-sessions";
 import type { Catalog, ParkingPlace } from "../src/domain/types";
 import seed from "../data/catalog.json";
@@ -183,7 +184,7 @@ function phone(sharing: boolean) {
       { module, exports: module.exports, require: (name: string) => modules[name] ?? assert.fail(`unexpected import ${name}`) });
     return module.exports;
   };
-  const shared = { "@react-native-async-storage/async-storage": { __esModule: true, default: AsyncStorage }, "../domain/parking-sessions": sessionDomain };
+  const shared = { "@react-native-async-storage/async-storage": { __esModule: true, default: AsyncStorage }, "../domain/parking-sessions": sessionDomain, "./serial": serial };
   const sessions = load("src/services/parkingSessions.ts", shared);
   const spots = load("src/services/spotOpenings.ts", { ...shared, "./parkingSessions": sessions, "../domain/spot-openings": spotDomain,
     "./api": { api: { spotOpening: async (...args: unknown[]) => { requests.push(args); } } } });

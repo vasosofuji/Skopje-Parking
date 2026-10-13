@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Linking, Platform, Pressable, Text, TextInput, View } from "react-native";
+import { Linking, Platform, Pressable, Switch, Text, TextInput, View } from "react-native";
 import { router, type Href } from "expo-router";
 import { useTheme } from "../state/ThemeContext";
 import { useParking } from "../state/ParkingContext";
@@ -14,6 +14,7 @@ import { LANGUAGES } from "../domain/language";
 import LanguagePicker from "./LanguagePicker";
 import LicensePlateEditor from "./LicensePlateEditor";
 import { useLicensePlate } from "../state/LicensePlateContext";
+import { onSpotSharingChanged, setSpotSharing, spotSharingEnabled } from "../services/spotOpenings";
 import { guessProvider, SIGN_READER_KEY_PAGES, signReaderState, testSignReader, useSignReader, validSignReader, type SignReaderProvider } from "../services/signReader";
 
 type Section = "appearance" | "language" | "navigation" | "location" | "vehicle" | "reader";
@@ -40,6 +41,28 @@ function SettingsRow({ title, value, icon, onPress, last = false, selected, disa
     </View> : <Icon name="chevron-right" size={16} color={colors.muted} />}
     {!last ? <View pointerEvents="none" style={{ position: "absolute", left: 54, right: 18, bottom: 0, height: 1, backgroundColor: colors.line }} /> : null}
   </Pressable>;
+}
+function SpotSharingRow() {
+  const { colors } = useTheme(), { t } = useParking();
+  const [enabled, setEnabled] = useState<boolean | null>(null), [error, setError] = useState("");
+  useEffect(() => {
+    let active = true;
+    const refresh = () => { void spotSharingEnabled().then(value => { if (active) setEnabled(value); }, () => {}); };
+    refresh();
+    const remove = onSpotSharingChanged(refresh);
+    return () => { active = false; remove(); };
+  }, []);
+  const title = t("Share when my parking time ends", "Сподели кога ми истекува паркирањето");
+  return <View style={{ paddingVertical: 14, paddingHorizontal: 18, gap: 6 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+      <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: 24, alignItems: "center" }}><Icon name="share-2" size={19} color={colors.accentText} /></View>
+      <Text style={{ flex: 1, color: colors.ink, fontSize: 15, fontWeight: "500" }}>{title}</Text>
+      <Switch accessibilityLabel={title} value={enabled ?? true} disabled={enabled === null}
+        onValueChange={value => { setEnabled(value); setError(""); void setSpotSharing(value).catch(() => setError(t("Could not withdraw your parking end time. Try again online.", "Не може да се повлече времето на паркирање. Обидете се повторно со интернет."))); }} />
+    </View>
+    <Text style={{ paddingLeft: 36, color: colors.muted, fontSize: 12, lineHeight: 18 }}>{t("When you pay in the app, drivers heading nearby are told 5 minutes before your paid time ends. Only the parking place and the time are shared, never your plate or position.", "Кога плаќате преку апликацијата, возачите што доаѓаат во близина дознаваат 5 минути пред да ви истече платеното време. Се споделуваат само паркингот и времето, никогаш таблицата или вашата позиција.")}</Text>
+    {error ? <Text accessibilityLiveRegion="polite" style={{ paddingLeft: 36, color: colors.red, fontSize: 12 }}>{error}</Text> : null}
+  </View>;
 }
 const PROVIDER_NAMES: Record<SignReaderProvider, string> = { gemini: "Google Gemini", groq: "Groq" };
 /** Bring-your-own-key sign reading: the key is checked with the provider, then kept only in this phone's keystore. */
@@ -183,7 +206,8 @@ export default function SettingsSheet({ visible, onClose, locationStatus, onRefr
         <Text accessibilityLiveRegion="polite" style={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 4, color: colors.muted, fontSize: 13, lineHeight: 20 }}>{locationStatus}</Text>
         <SettingsRow icon="refresh-cw" title={t("Refresh GPS", "Обнови GPS")} onPress={onRefreshLocation} />
         <SettingsRow icon="settings" title={t("Location permissions", "Дозволи за локација")} onPress={onPermissions} />
-        <SettingsRow icon="bell" title={t("Notification permissions", "Дозволи за известувања")} value={Platform.OS === "web" ? t("Phone app", "Мобилна апликација") : undefined} disabled={Platform.OS === "web"} last onPress={onPermissions} />
+        <SettingsRow icon="bell" title={t("Notification permissions", "Дозволи за известувања")} value={Platform.OS === "web" ? t("Phone app", "Мобилна апликација") : undefined} disabled={Platform.OS === "web"} last={Platform.OS === "web"} onPress={onPermissions} />
+        {Platform.OS !== "web" ? <SpotSharingRow /> : null}
       </SettingsCard>
       {backgroundLocationBuild ? <SettingsCard><View style={{ padding: 18 }}><BackgroundArrivalSettings /></View></SettingsCard> : null}
     </View> : null}

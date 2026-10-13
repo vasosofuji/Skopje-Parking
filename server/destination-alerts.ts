@@ -5,6 +5,7 @@ import webpush from "web-push";
 import { ParkingStore } from "./store";
 import type { PostgresParkingStore } from "./postgres/store";
 import { bearerToken } from "./account-security";
+import { fcmSender } from "./fcm";
 
 export const WATCH_DURATION_MS = 90 * 60 * 1000;
 const subscription = z.object({ endpoint: z.string().url().max(2048), keys: z.object({ p256dh: z.string().regex(/^[A-Za-z0-9_-]{87}$/), auth: z.string().regex(/^[A-Za-z0-9_-]{22}$/) }) });
@@ -13,11 +14,13 @@ export const destinationWatchSchema = z.object({
   target: z.discriminatedUnion("type", [
     z.object({ type: z.literal("expo"), token: z.string().regex(/^(Expo|Exponent)PushToken\[[A-Za-z0-9_-]+\]$/).max(200) }),
     z.object({ type: z.literal("web"), subscription }),
+    // The Android device registration token, sent straight to Firebase Cloud Messaging.
+    z.object({ type: z.literal("fcm"), token: z.string().min(32).max(4096).regex(/^[A-Za-z0-9_:-]+$/) }),
   ]),
 });
 type Target = z.infer<typeof destinationWatchSchema>["target"];
 type Watch = { session_id: string; place_id: string; target: string; language: "en" | "mk"; expires: number; pending: number; attempts: number };
-export type PushMessage = { title: string; body: string; data: { kind: string; placeId: string; reportedAt: number } };
+export type PushMessage = { title: string; body: string; channelId: string; data: { kind: string; placeId: string } & Record<string, string | number> };
 export type PushSender = (target: Target, message: PushMessage) => Promise<void>;
 
 // Only push providers, never arbitrary subscriber URLs (SSRF protection).
@@ -38,10 +41,17 @@ export const sendDestinationPush: PushSender = async (target, message) => {
     });
     return;
   }
+  if (target.type === "fcm") {
+    const send = fcmSender();
+    if (!send) throw Object.assign(new Error("Android notifications are not configured."), { statusCode: 503 });
+    // FCM data values must be strings; a later alert of the same kind for the same place replaces the earlier one.
+    return send(target.token, { title: message.title, body: message.body, channelId: message.channelId, tag: `${message.data.kind}:${message.data.placeId}`,
+      data: Object.fromEntries(Object.entries(message.data).map(([key, value]) => [key, String(value)])) });
+  }
   const response = await fetch("https://exp.host/--/api/v2/push/send", {
     method: "POST", signal: AbortSignal.timeout(10000),
     headers: { "Content-Type": "application/json", ...(process.env.EXPO_ACCESS_TOKEN ? { Authorization: `Bearer ${process.env.EXPO_ACCESS_TOKEN}` } : {}) },
-    body: JSON.stringify({ to: target.token, ...message, channelId: "parking-destination", sound: "default", ttl: 300 }),
+    body: JSON.stringify({ to: target.token, ...message, sound: "default", ttl: 300 }),
   });
   if (!response.ok) throw new Error("Push provider unavailable.");
   const result = await response.json() as { data?: { status?: string; details?: { error?: string } } };
@@ -98,7 +108,7 @@ export class DestinationAlerts {
         await this.send(JSON.parse(row.target), {
           title: row.language === "en" ? "Your destination was reported full" : "Пријавено е дека вашиот паркинг е полн",
           body: `${row.language === "en" ? place.nameEn ?? place.name : place.name} · ${row.language === "en" ? "Another driver reported no spaces. Check alternatives before arriving." : "Друг возач пријави дека нема места. Проверете други паркинзи."}`,
-          data: { kind: "parking-destination-full", placeId: row.place_id, reportedAt: row.pending },
+          channelId: "parking-destination", data: { kind: "parking-destination-full", placeId: row.place_id, reportedAt: row.pending },
         });
         await this.store.db.prepare("UPDATE destination_watches SET alerted=1 WHERE session_id=? AND pending=?").run(row.session_id, row.pending);
       } catch (error) {

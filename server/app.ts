@@ -19,6 +19,7 @@ import { PostgresCommunityStore } from "./postgres/community";
 import { PostgresAccountStore } from "./postgres/accounts";
 import { SharedRequestBudget, sharedRateLimitStore } from "./postgres/rate-limits";
 import { DestinationAlerts, registerDestinationAlertRoutes, type PushSender } from "./destination-alerts";
+import { SpotOpenings, registerSpotOpeningRoutes } from "./spot-openings";
 import { registerParkingDeletion } from "./parking-deletion";
 import { registerTesterApplications, type TelegramTarget } from "./tester-applications";
 const coordinate = z.object({
@@ -75,6 +76,8 @@ export async function buildApp(
       ? new PostgresAccountStore(store)
       : new AccountStore(store);
   const destinationAlerts = new DestinationAlerts(store, options.destinationPushSender);
+  const spotOpenings = new SpotOpenings(store, options.destinationPushSender);
+  const flushAlerts = async () => { await Promise.all([destinationAlerts.flush(), spotOpenings.flush()]); };
   await app.register(cors, {
     origin: options.origins ?? [
       "http://localhost:8081",
@@ -194,6 +197,7 @@ export async function buildApp(
   });
   const token = bearerToken;
   registerDestinationAlertRoutes(app, destinationAlerts);
+  registerSpotOpeningRoutes(app, spotOpenings);
   registerParkingDeletion(app, store, catalog);
   registerTesterApplications(app, options.telegram);
   app.get("/health", { config: { rateLimit: false } }, async (_request, reply) => {
@@ -542,18 +546,19 @@ export async function buildApp(
     // A function can suspend immediately after responding. Register the job
     // promise with its request lifecycle instead of relying on resident timers.
     app.addHook("onResponse", async () => {
-      options.backgroundTask!(destinationAlerts.flush());
+      options.backgroundTask!(flushAlerts());
     });
-    // Called by a scheduled job (pg_cron) to expire rate-limit rows and deliver destination alerts.
+    // Called every minute by pg_cron (supabase/migrations/*_maintenance_cron.sql) to expire rate-limit rows
+    // and deliver destination and spot alerts while nobody else is using the API.
     app.get("/internal/maintenance", async (request, reply) => {
       if (!secretMatches(token(request.headers.authorization), options.cronSecret))
         return reply.code(401).send({ error: "Maintenance credentials required." });
       await sharedBudget?.prune();
-      await destinationAlerts.flush();
+      await flushAlerts();
       return { status: "ok" };
     });
   }
-  const destinationTimer = options.backgroundTask ? null : setInterval(() => { void destinationAlerts.flush().catch(() => {}); }, 30000);
+  const destinationTimer = options.backgroundTask ? null : setInterval(() => { void flushAlerts().catch(() => {}); }, 30000);
   app.addHook("onClose", async () => {
     if (destinationTimer) clearInterval(destinationTimer);
     await store.close();

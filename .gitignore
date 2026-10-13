@@ -43,6 +43,8 @@ __pycache__/
 /android
 
 .env
+# Firebase config for Android push (EAS builds get it from the GOOGLE_SERVICES_JSON file variable)
+google-services.json
 data/runtime/
 data/raw/
 preview/

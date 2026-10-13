@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AppState, Linking, Platform, Text, View } from "react-native";
+import { Alert, AppState, Linking, Platform, Text, View } from "react-native";
 import { useParking } from "../state/ParkingContext";
 import { useTheme } from "../state/ThemeContext";
 import { Button } from "./ui";
@@ -29,6 +29,17 @@ export default function BackgroundArrivalSettings() {
     const app = AppState.addEventListener("change", (value) => { if (value === "active") refresh(); });
     return () => { active = false; remove(); app.remove(); };
   }, []);
+  // Google Play's prominent disclosure: shown in the app right before Android's "Allow all the time".
+  const explain = () => new Promise<boolean>(resolve => Alert.alert(
+    t("Allow location all the time?", "Да се дозволи локација цело време?"),
+    [
+      t("Skopje Parking collects location data to notice when you stop in a parking area, ask if it has free spaces, and keep the home screen widget on your current zone, even when the app is closed or not in use.", "Skopje Parking собира податоци за локација за да забележи кога ќе застанете на паркинг, да праша дали има слободни места и да ја прикаже вашата зона во виџетот на почетниот екран, дури и кога апликацијата е затворена или не се користи."),
+      t("Your location stays on this device. Only your answers are shared.", "Вашата локација останува на овој уред. Се споделуваат само вашите одговори."),
+      t("On the next screen, choose Allow all the time.", "На следниот екран изберете Дозволи цело време."),
+    ].join("\n\n"),
+    [{ text: t("Cancel", "Откажи"), style: "cancel", onPress: () => resolve(false) }, { text: t("Continue", "Продолжи"), onPress: () => resolve(true) }],
+    { cancelable: true, onDismiss: () => resolve(false) },
+  ));
   const toggle = async () => {
     if (busy || loading) return;
     setBusy(true);
@@ -37,7 +48,7 @@ export default function BackgroundArrivalSettings() {
       if (status.enabled) await Promise.all([disableBackgroundArrival(), stopDestinationAlerts()]);
       else {
         // Start permission request in the press gesture; Safari rejects it after storage awaits.
-        await Promise.all([enableBackgroundArrival(), saveArrivalCatalog(catalog.places)]);
+        await Promise.all([enableBackgroundArrival(explain), saveArrivalCatalog(catalog.places)]);
       }
       setStatus(await getBackgroundArrivalStatus());
     } catch (failure) {

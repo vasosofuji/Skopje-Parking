@@ -500,6 +500,78 @@
     "tr": "Devam et",
     "sq": "Vazhdo"
   },
+  "Pay": {
+    "tr": "Öde",
+    "sq": "Paguaj"
+  },
+  "Open": {
+    "tr": "Aç",
+    "sq": "Hap"
+  },
+  "No paid zone nearby": {
+    "tr": "Yakında ücretli bölge yok",
+    "sq": "Nuk ka zonë me pagesë afër"
+  },
+  "{price} MKD/h": {
+    "tr": "{price} MKD/sa",
+    "sq": "{price} MKD/orë"
+  },
+  "Parking reminders are on": {
+    "tr": "Otopark hatırlatıcıları açık",
+    "sq": "Kujtesat e parkimit janë aktive"
+  },
+  "Skopje Parking notices when you stop in a parking area. Turn this off anytime in Settings.": {
+    "tr": "Skopje Parking bir otopark alanında durduğunuzu fark eder. Bunu istediğiniz zaman Ayarlar'dan kapatabilirsiniz.",
+    "sq": "Skopje Parking e vëren kur ndaloni në një zonë parkimi. Mund ta çaktivizoni në çdo kohë te Cilësimet."
+  },
+  "Install the updated Skopje Parking app to enable background reminders.": {
+    "tr": "Arka plan hatırlatıcılarını açmak için güncel Skopje Parking uygulamasını yükleyin.",
+    "sq": "Instaloni versionin e përditësuar të Skopje Parking për të aktivizuar kujtesat në sfond."
+  },
+  "Turn on your phone's location services first.": {
+    "tr": "Önce telefonunuzun konum hizmetlerini açın.",
+    "sq": "Së pari aktivizoni shërbimet e vendndodhjes në telefon."
+  },
+  "Allow location access to use parking reminders.": {
+    "tr": "Otopark hatırlatıcıları için konum erişimine izin verin.",
+    "sq": "Lejoni qasjen në vendndodhje për kujtesat e parkimit."
+  },
+  "Turn on Precise location for Skopje Parking. Reminders cannot tell parking areas apart without it.": {
+    "tr": "Skopje Parking için Hassas konum'u açın. Hatırlatıcılar bu olmadan otoparkları ayırt edemez.",
+    "sq": "Aktivizoni Vendndodhjen e saktë për Skopje Parking. Pa të, kujtesat nuk mund t'i dallojnë parkingjet."
+  },
+  "Choose Allow all the time in the location settings for Skopje Parking.": {
+    "tr": "Skopje Parking konum ayarlarında Her zaman izin ver'i seçin.",
+    "sq": "Zgjidhni Lejo gjatë gjithë kohës te cilësimet e vendndodhjes për Skopje Parking."
+  },
+  "Parking arrival reminders": {
+    "tr": "Otoparka varış hatırlatıcıları",
+    "sq": "Kujtesa për mbërritjen në parking"
+  },
+  "Allow notifications to receive a reminder when the app is in the background.": {
+    "tr": "Uygulama arka plandayken hatırlatma almak için bildirimlere izin verin.",
+    "sq": "Lejoni njoftimet për të marrë një kujtesë kur aplikacioni është në sfond."
+  },
+  "Parking reminders could not start. Check location permissions and try again.": {
+    "tr": "Otopark hatırlatıcıları başlatılamadı. Konum izinlerini kontrol edip tekrar deneyin.",
+    "sq": "Kujtesat e parkimit nuk u nisën. Kontrolloni lejet e vendndodhjes dhe provoni përsëri."
+  },
+  "Allow location all the time?": {
+    "tr": "Konuma her zaman izin verilsin mi?",
+    "sq": "Të lejohet vendndodhja gjatë gjithë kohës?"
+  },
+  "Skopje Parking collects location data to notice when you stop in a parking area, ask if it has free spaces, and keep the home screen widget on your current zone, even when the app is closed or not in use.": {
+    "tr": "Skopje Parking, bir otopark alanında durduğunuzu fark etmek, boş yer olup olmadığını sormak ve ana ekran widget'ında bulunduğunuz bölgeyi göstermek için uygulama kapalıyken veya kullanılmıyorken bile konum verilerini toplar.",
+    "sq": "Skopje Parking mbledh të dhëna vendndodhjeje për të vënë re kur ndaloni në një zonë parkimi, për të pyetur nëse ka vende të lira dhe për të mbajtur widget-in e ekranit kryesor te zona juaj aktuale, edhe kur aplikacioni është i mbyllur ose nuk përdoret."
+  },
+  "Your location stays on this device. Only your answers are shared.": {
+    "tr": "Konumunuz bu cihazda kalır. Yalnızca yanıtlarınız paylaşılır.",
+    "sq": "Vendndodhja juaj mbetet në këtë pajisje. Ndahen vetëm përgjigjet tuaja."
+  },
+  "On the next screen, choose Allow all the time.": {
+    "tr": "Sonraki ekranda Her zaman izin ver'i seçin.",
+    "sq": "Në ekranin tjetër zgjidhni Lejo gjatë gjithë kohës."
+  },
   "Use phone setting": {
     "tr": "Telefon ayarını kullan",
     "sq": "Përdor cilësimin e telefonit"

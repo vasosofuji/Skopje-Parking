@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 3x1 by default; resizes from 2 to the full row width and up to 2 rows. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+  android:description="@string/skopje_parking_widget_description"
+  android:initialLayout="@layout/skopje_parking_widget"
+  android:maxResizeHeight="110dp"
+  android:minHeight="40dp"
+  android:minResizeHeight="40dp"
+  android:minResizeWidth="110dp"
+  android:minWidth="180dp"
+  android:previewLayout="@layout/skopje_parking_widget"
+  android:resizeMode="horizontal|vertical"
+  android:targetCellHeight="1"
+  android:targetCellWidth="3"
+  android:updatePeriodMillis="1800000"
+  android:widgetCategory="home_screen" />

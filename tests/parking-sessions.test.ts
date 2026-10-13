@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { activeSession, addSession, readSessions, sessionCost, sessionEffectiveEnd, sessionEndsAt, type ParkingSession } from "../src/domain/parking-sessions";
+import { activeSession, addSession, latestSessionEnd, readSessions, sessionCost, sessionEffectiveEnd, sessionEndsAt, type ParkingSession } from "../src/domain/parking-sessions";
 
 const now = Date.parse("2026-10-13T10:00:00Z");
 const base: ParkingSession = { id: "a", placeId: "gradski:zone:D42", zoneCode: "D42", zoneName: "MIDA", operator: "gradski", startedAt: now - 30 * 60000, stoppedAt: null, paidHours: 2, maxStayMinutes: 120, firstHour: 40, nextHour: 40, car: { latitude: 42, longitude: 21.4 } };
@@ -22,6 +22,16 @@ test("end time, active session and cost follow hours bought, stop SMS or maximum
   assert.equal(sessionCost({ ...startStop, stoppedAt: startStop.startedAt + 20 * 60000 }, now), 60);
   assert.equal(activeSession([{ ...startStop, stoppedAt: now - 1 }], now), null);
   assert.equal(sessionCost({ ...base, firstHour: null }, now), null);
+});
+
+test("paying again at the same place never moves the end earlier", () => {
+  const long = { ...base, paidHours: 3 }, extra = { ...base, id: "b", startedAt: base.startedAt + 3600000, paidHours: 1 };
+  assert.equal(latestSessionEnd([long, extra]), long.startedAt + 3 * 3600000, "the 3 hours bought first still run");
+  assert.equal(activeSession([long, extra], extra.startedAt + 1.5 * 3600000)?.id, "b", "running after the newest payment's own end");
+  assert.equal(latestSessionEnd([long, { ...extra, paidHours: 4 }]), extra.startedAt + 4 * 3600000);
+  assert.equal(latestSessionEnd([long, { ...extra, placeId: "gradski:zone:D43" }]), extra.startedAt + 3600000, "another place is a new stay");
+  assert.equal(latestSessionEnd([long, { ...extra, stoppedAt: extra.startedAt + 60000 }]), extra.startedAt + 60000, "leaving ends it");
+  assert.equal(latestSessionEnd([]), null);
 });
 
 test("a start-stop session never stopped stops counting 12 hours after it started", () => {

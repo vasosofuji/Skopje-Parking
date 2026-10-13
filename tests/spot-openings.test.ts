@@ -163,4 +163,7 @@ test("the phone shares a bought end time once, a stop SMS as leaving now, and no
   assert.deepEqual(nextSpotShare([{ ...startStop, stoppedAt: now - 60000 }], now, null), { session: "a", placeId: paid.placeId, endsAt: "left" });
   assert.equal(nextSpotShare([{ ...startStop, stoppedAt: now - 60000 }], now, { session: "a", endsAt: "left" }), null);
   assert.equal(nextSpotShare([{ ...startStop, stoppedAt: now - 20 * 60000 }], now, null), null, "an old stop is not news");
+  const extra: ParkingSession = { ...paid, id: "b", startedAt: now, paidHours: 1 };
+  assert.deepEqual(nextSpotShare([paid, extra], now, { session: "a", endsAt }), { session: "b", placeId: paid.placeId, endsAt }, "one more hour bought sooner keeps the later end");
+  assert.equal(nextSpotShare([paid, extra], now, { session: "b", endsAt }), null);
 });

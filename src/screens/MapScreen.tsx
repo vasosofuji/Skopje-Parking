@@ -866,7 +866,7 @@ export default function MapScreen() {
               />
             ) : null}
             {drawerHeight <= 100 && !selectedPlace && !picking ? <View style={[s.pay, { bottom: drawerHeight + 14 }, (carShown || quickPay) && s.payCard]}>
-              {carShown ? <MyCarCard session={myCar.session!} fix={gps.location} onClose={() => setCarCard(false)} />
+              {carShown ? <MyCarCard session={myCar.session!} paidUntil={myCar.paidUntil} fix={gps.location} onClose={() => setCarCard(false)} />
                 : widgetPay ? <QuickPayCard key={`widget:${widgetPay.id}`} choices={[widgetPay]} validate={manualValidate} fix={gps.location}
                   onClose={() => setWidgetPayId(null)} onPaid={() => setWidgetPayId(null)} onInvalidated={() => { setWidgetPayId(null); void refresh(); }}
                   onOtherZone={() => { setWidgetPayId(null); setPayChooser(payOrigin); }} onAddPlate={place => { setWidgetPayId(null); setManualPayId(place.id); }} />

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Text, View } from "react-native";
 import type { Fix } from "../domain/arrival";
 import type { Coordinate } from "../domain/types";
-import { sessionEndsAt, type ParkingSession } from "../domain/parking-sessions";
+import type { ParkingSession } from "../domain/parking-sessions";
 import { carPosition, skopjeClock } from "../domain/my-car";
 import { openParkingDirections } from "../services/navigation";
 import { updateParkingSession } from "../services/parkingSessions";
@@ -11,7 +11,7 @@ import { useTheme } from "../state/ThemeContext";
 import { Button, IconButton, Note } from "./ui";
 
 /** Where the car was left when paying, with walking directions and a manual fix. Stored on this device only. */
-export default function MyCarCard({ session, fix, onClose }: { session: ParkingSession; fix: Fix | null; onClose: () => void }) {
+export default function MyCarCard({ session, paidUntil, fix, onClose }: { session: ParkingSession; paidUntil: number | null; fix: Fix | null; onClose: () => void }) {
   const { t, now } = useParking(), { colors } = useTheme();
   const [error, setError] = useState("");
   // The context clock ticks slowly; a fix newer than it is still fresh.
@@ -24,8 +24,7 @@ export default function MyCarCard({ session, fix, onClose }: { session: ParkingS
     const car = carPosition(fix, Date.now());
     if (car) save(car); else setError(t("Waiting for a precise location.", "Се чека прецизна локација."));
   };
-  const end = sessionEndsAt(session);
-  const when = session.paidHours !== null && end !== null ? t("Paid until {time}", "Платено до {time}").replace("{time}", skopjeClock(end))
+  const when = paidUntil !== null ? t("Paid until {time}", "Платено до {time}").replace("{time}", skopjeClock(paidUntil))
     : t("Parked since {time}", "Паркирано од {time}").replace("{time}", skopjeClock(session.startedAt));
   return <View accessibilityLiveRegion="polite" style={{ width: "100%", maxWidth: 380, gap: 8, padding: 12, paddingTop: 8, borderRadius: 16, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.paper, elevation: 5, boxShadow: "0 3px 14px #153d3a30" }}>
     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { eligibleSmsZone, smsZoneChoices, ZonePaymentDwell } from "../src/domain/zone-payment";
 import { officialSmsPayment } from "../src/domain/skopje-rules";
-import { carPosition, carSession, paymentSession, sessionId } from "../src/domain/my-car";
+import { carPaidUntil, carPosition, carSession, paymentSession, sessionId } from "../src/domain/my-car";
 import { readSessions, validSession, type ParkingSession } from "../src/domain/parking-sessions";
 import { paymentFix, paymentNow, paymentZone } from "./fixtures/zone-payment";
 import type { ParkingPlace } from "../src/domain/types";
@@ -95,4 +95,8 @@ test("My car shows while a session runs and for 12 hours after it ends, not afte
   assert.equal(carSession([base], paymentNow + 11 * hour)?.id, base.id, "unknown end");
   assert.equal(carSession([base], paymentNow + 13 * hour), null);
   assert.equal(carSession([{ ...base, stoppedAt: paymentNow + hour }], paymentNow + 2 * hour), null);
+  const extra = { ...fixed, id: "extra", startedAt: paymentNow + hour, paidHours: 0.5 };
+  assert.equal(carPaidUntil([fixed, extra], extra), paymentNow + 2 * hour, "Paid until keeps the later end bought before");
+  assert.equal(carSession([fixed, extra], paymentNow + 13.5 * hour)?.id, "extra", "recalled 12 hours after that end");
+  assert.equal(carPaidUntil([base], base), null, "start-stop has no paid end");
 });

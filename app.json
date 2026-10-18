@@ -8,7 +8,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "mk.parkskopje.app"
+      "bundleIdentifier": "com.vasojevich.parking"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "mk.parkskopje.app"
+      "package": "com.vasojevich.parking"
     },
     "web": {
       "favicon": "./assets/favicon.png",

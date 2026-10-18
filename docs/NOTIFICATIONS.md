@@ -14,7 +14,7 @@ The service worker shows destination and spot pushes; tapping one opens the map 
 
 The server sends straight to Firebase Cloud Messaging (HTTP v1, `server/fcm.ts`); Expo's push service is not used on Android. Firebase is only the delivery pipe. Builds without `google-services.json` (or the EAS file variable `GOOGLE_SERVICES_JSON`) set `extra.androidPush=false` and skip remote alerts silently: no permission prompt, no error.
 
-1. Firebase console: create a project, add Android apps `mk.parkskopje.app` and `mk.parkskopje.app.dev`, download `google-services.json` (it covers both) to the repository root. It is gitignored; for EAS builds upload it as the file variable `GOOGLE_SERVICES_JSON`.
+1. Firebase console: create a project, add Android apps `com.vasojevich.parking` and `com.vasojevich.parking.dev`, download `google-services.json` (it covers both) to the repository root. It is gitignored; for EAS builds upload it as the file variable `GOOGLE_SERVICES_JSON`.
 2. Project settings > Service accounts > Generate new private key. Store the whole JSON as the Edge Function secret `FIREBASE_SERVICE_ACCOUNT`.
 
 Phones register their FCM device token (`{ "type": "fcm", "token": ... }`) when the driver taps Go and re-register when Firebase rotates it. Unregistered or invalid tokens drop their watch. Tapping a destination or spot push opens the map on that place.

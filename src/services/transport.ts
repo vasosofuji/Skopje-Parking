@@ -67,19 +67,25 @@ export function createTransport(base: string, options: {
     await ready();
     return timed(15000, async signal => {
       let response: Response;
-      try {
-        response = await fetcher(base + path, {
-          ...init,
-          signal,
-          credentials: 'omit', redirect: 'error',
-          headers: {
-            ...(init?.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-            ...init?.headers,
-          },
-        });
-      } catch {
-        readyUntil = 0;
-        throw new Error('Connection interrupted. Refresh to check whether your change was saved before trying again.');
+      // The Supabase gateway refuses bursts with an empty 503 before the API runs, so even a
+      // write is safe to send again. The API's own errors always carry a JSON body.
+      for (let attempt = 0; ; attempt++) {
+        try {
+          response = await fetcher(base + path, {
+            ...init,
+            signal,
+            credentials: 'omit', redirect: 'error',
+            headers: {
+              ...(init?.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+              ...init?.headers,
+            },
+          });
+        } catch {
+          readyUntil = 0;
+          throw new Error('Connection interrupted. Refresh to check whether your change was saved before trying again.');
+        }
+        if (response.status !== 503 || attempt >= 3 || (await response.clone().text().catch(() => 'x')).trim()) break;
+        await pause(500 + Math.random() * 1500 * (attempt + 1));
       }
       if (!response.ok) {
         if (response.status >= 500) readyUntil = 0;

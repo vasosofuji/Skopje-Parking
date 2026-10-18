@@ -62,7 +62,7 @@ See [RESEARCH.md](docs/RESEARCH.md) for competitors, sources and coverage findin
 
 ## Build Android and iOS
 
-`eas.json` includes preview APK and production profiles. Configure your Expo/EAS project and developer accounts, set a deployed HTTPS API URL, and configure `GOOGLE_MAPS_ANDROID_KEY` as an EAS environment variable. Restrict the key to `mk.parkskopje.app` and its signing certificate. iOS uses Apple Maps by default. Android uses a bundled Leaflet/OpenStreetMap fallback when no Google Maps key is configured; it reuses the existing parking clustering and availability logic. Read the current [Expo map setup](https://docs.expo.dev/versions/v57.0.0/sdk/map-view/) before building.
+`eas.json` includes preview APK and production profiles. Configure your Expo/EAS project and developer accounts, set a deployed HTTPS API URL, and configure `GOOGLE_MAPS_ANDROID_KEY` as an EAS environment variable. Restrict the key to `com.vasojevich.parking` and its signing certificate. iOS uses Apple Maps by default. Android uses a bundled Leaflet/OpenStreetMap fallback when no Google Maps key is configured; it reuses the existing parking clustering and availability logic. Read the current [Expo map setup](https://docs.expo.dev/versions/v57.0.0/sdk/map-view/) before building.
 
 ```powershell
 npx eas-cli@latest build --platform android --profile preview
@@ -142,7 +142,7 @@ adb reverse tcp:3002 tcp:3002
 adb install -r preview/SkopjeParking-device-test.apk
 ```
 
-The isolated test server uses SQLite under `data/runtime/device-test.sqlite`, never the shared database. That explicit `-DeviceTest` build needs USB forwarding. For the normal **Parking Test** app (`mk.parkskopje.app.dev`) use `scripts/build-apk.ps1 -TestPackage -ApiUrl https://vkqxtqcuoobiijbnpxod.supabase.co/functions/v1/api`, producing `preview/SkopjeParking-test-connected.apk`. It works over Wi-Fi/mobile data without USB. Preserve its signing identity when updating an existing installation.
+The isolated test server uses SQLite under `data/runtime/device-test.sqlite`, never the shared database. That explicit `-DeviceTest` build needs USB forwarding. For the normal **Parking Test** app (`com.vasojevich.parking.dev`) use `scripts/build-apk.ps1 -TestPackage -ApiUrl https://vkqxtqcuoobiijbnpxod.supabase.co/functions/v1/api`, producing `preview/SkopjeParking-test-connected.apk`. It works over Wi-Fi/mobile data without USB. Preserve its signing identity when updating an existing installation.
 
 Local builds use a single-use Gradle process and compile Kotlin in that process. The script also requests Gradle shutdown on success or failure, so builders do not stay resident after compilation. Generated projects and caches remain on disk for inspection.
 

@@ -1,6 +1,6 @@
 # Google Play release checklist
 
-Checked against Play policy as of October 2026. Package `mk.parkskopje.app`, `targetSdkVersion` 36
+Checked against Play policy as of October 2026. Package `com.vasojevich.parking`, `targetSdkVersion` 36
 (required for new apps and updates since 31 August 2026), `minSdkVersion` 24.
 
 ## Build

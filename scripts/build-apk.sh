@@ -3,7 +3,7 @@
 # Gradle runs in a short path because CMake breaks on "All my AI stuff". Signing uses
 # SKOPJE_PARKING_KEYSTORE, SKOPJE_PARKING_KEY_ALIAS and SKOPJE_PARKING_KEYSTORE_PASSWORD from .env.
 # Output: dist/skopje-parking-<version>.apk
-# SKOPJE_PARKING_DEVICE_TEST=1 builds the emulator test app instead (package mk.parkskopje.app.dev, x86_64,
+# SKOPJE_PARKING_DEVICE_TEST=1 builds the emulator test app instead (package com.vasojevich.parking.dev, x86_64,
 # the isolated QA API on 127.0.0.1:3002 through adb reverse): dist/skopje-parking-device-test.apk
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

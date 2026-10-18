@@ -1,5 +1,5 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 export default ({ config }: ConfigContext): ExpoConfig => {
   const testPackage = process.env.SKOPJE_PARKING_TEST_PACKAGE === "1" || process.env.SKOPJE_PARKING_DEVICE_TEST === "1";
   // Background location needs Google Play's declaration, a video and review, so store builds
@@ -7,7 +7,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   const backgroundLocation = process.env.SKOPJE_PARKING_BACKGROUND_LOCATION === "1";
   // Android push tokens need Firebase. Without google-services.json (or an EAS file secret)
   // the app skips remote destination alerts instead of failing on every navigation.
-  const googleServices = process.env.GOOGLE_SERVICES_JSON ?? (existsSync("google-services.json") ? "./google-services.json" : undefined);
+  const androidPackage = testPackage ? "com.vasojevich.parking.dev" : config.android?.package;
+  // The Google Services plugin fails the build when the file has no client for this package
+  // (the test package may not be registered in Firebase), so such builds skip push instead.
+  const servicesFile = process.env.GOOGLE_SERVICES_JSON ?? (existsSync("google-services.json") ? "./google-services.json" : undefined);
+  const googleServices = servicesFile && (JSON.parse(readFileSync(servicesFile, "utf8")) as { client?: { client_info?: { android_client_info?: { package_name?: string } } }[] })
+    .client?.some(client => client.client_info?.android_client_info?.package_name === androidPackage) ? servicesFile : undefined;
   const plugins = (config.plugins ?? []).map(plugin => Array.isArray(plugin) && plugin[0] === "expo-location"
     ? ["expo-location", { ...plugin[1], isIosBackgroundLocationEnabled: backgroundLocation, isAndroidBackgroundLocationEnabled: backgroundLocation, isAndroidForegroundServiceEnabled: backgroundLocation }] as [string, Record<string, unknown>]
     : plugin);
@@ -24,7 +29,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   slug: "parkskopje",
   android: {
     ...config.android,
-    ...(testPackage ? { package: "mk.parkskopje.app.dev" } : {}),
+    ...(testPackage ? { package: androidPackage } : {}),
     ...(googleServices ? { googleServicesFile: googleServices } : {}),
     // Template and library permissions the app never uses; keeping them out of the store
     // manifest avoids sensitive-permission declarations.
@@ -35,7 +40,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ],
   },
   ...(testPackage ? {
-    ios: { ...config.ios, bundleIdentifier: "mk.parkskopje.app.dev" },
+    ios: { ...config.ios, bundleIdentifier: "com.vasojevich.parking.dev" },
     scheme: "parkskopje-test",
   } : {}),
   extra: {

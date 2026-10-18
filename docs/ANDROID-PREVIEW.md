@@ -16,13 +16,13 @@ This produces `preview/SkopjeParking-connected.apk` with live contributions enab
 
 ## Launch and field verification
 
-Connect a phone with USB debugging enabled and approve its debugging prompt. Check `adb devices`, install the connected APK with `adb install -r preview/SkopjeParking-connected.apk`, then launch `mk.parkskopje.app/.MainActivity`. Use `adb logcat -b crash -d` if it exits. Do not uninstall an existing installation just to bypass a signing mismatch: that deletes its device identity.
+Connect a phone with USB debugging enabled and approve its debugging prompt. Check `adb devices`, install the connected APK with `adb install -r preview/SkopjeParking-connected.apk`, then launch `com.vasojevich.parking/.MainActivity`. Use `adb logcat -b crash -d` if it exits. Do not uninstall an existing installation just to bypass a signing mismatch: that deletes its device identity.
 
 Before sharing broadly, verify username/terms onboarding, denied and precise GPS permissions, GPS off/on recovery, returning from the background, center-pin destination selection, draggable vertices, camera/gallery uploads and edits shared between two phones on mobile data. Stay stationary inside a parking perimeter for at least 10 seconds with a fresh fix accurate to 25 m or better. Foreground detection is always available. Opt into background reminders in Settings and allow background location and notifications; delivery timing depends on the OS. Force-stopping the app stops monitoring.
 
 ## Connected Parking Test update
 
-Use `scripts/build-apk.ps1 -TestPackage -ApiUrl https://parkino-api-vaso.vercel.app` to build `preview/SkopjeParking-test-connected.apk`. It retains the separate **Parking Test** package (`mk.parkskopje.app.dev`) while using the hosted database over HTTPS. USB forwarding is unnecessary. When updating the existing test installation, retain the original test signing key; do not uninstall to bypass a mismatch. A previous isolated-test account belongs to the isolated database and must be replaced by a hosted guest/account at first connection.
+Use `scripts/build-apk.ps1 -TestPackage -ApiUrl https://parkino-api-vaso.vercel.app` to build `preview/SkopjeParking-test-connected.apk`. It retains the separate **Parking Test** package (`com.vasojevich.parking.dev`) while using the hosted database over HTTPS. USB forwarding is unnecessary. When updating the existing test installation, retain the original test signing key; do not uninstall to bypass a mismatch. A previous isolated-test account belongs to the isolated database and must be replaced by a hosted guest/account at first connection.
 
 ## Optional isolated contribution test build
 

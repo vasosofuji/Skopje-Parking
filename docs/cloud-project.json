@@ -1,5 +1,5 @@
 {
-  "repository": "https://github.com/vasosofuji/Parkino",
+  "repository": "https://github.com/vasosofuji/Skopje-Parking",
   "apiUrl": "https://parkino-api-vaso.vercel.app",
   "appUrl": "https://parking.vasojevich.com/",
   "hosting": "vercel",

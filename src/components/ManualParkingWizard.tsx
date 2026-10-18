@@ -42,6 +42,8 @@ function WizardBody({ place, existingPlaceId, coordinate, geometry, returnedGeom
   const [expanded, setExpanded] = useState<EntryStep | null>(null);
   const [finishingDetails, setFinishingDetails] = useState(false);
   const [code, setCode] = useState(restored?.code ?? initialZone ?? place?.zoneCode ?? "");
+  // The API accepts letters, digits, spaces and hyphens in zone labels.
+  const setZoneCode = (value: string) => setCode(value.replace(/[^\p{L}\p{N} -]/gu, ""));
   const [first, setFirst] = useState(restored?.first ?? initialPrice?.firstHour.toString() ?? ""), [next, setNext] = useState(restored?.next ?? initialPrice?.nextHour.toString() ?? "");
   const [capacity, setCapacity] = useState(restored?.capacity ?? place?.capacity?.toString() ?? "");
   const [schedule, setSchedule] = useState<PaymentSchedule>({ chargingHours: restored?.chargingHours !== undefined ? restored.chargingHours : place?.paymentSchedule ? place.paymentSchedule.chargingHours : place?.signInfo?.chargingHours ?? null, freeWeekends: restored?.freeWeekends !== undefined ? restored.freeWeekends : place?.paymentSchedule ? place.paymentSchedule.freeWeekends : place?.signInfo?.freeWeekends ?? null });
@@ -203,7 +205,7 @@ function WizardBody({ place, existingPlaceId, coordinate, geometry, returnedGeom
         <View pointerEvents="none" style={s.choiceContent}><Icon name={value ? "map" : "zap"} color={colors.accentText} /><View style={s.flex}><Text style={s.title}>{value ? t("Detailed entry", "Детален внес") : t("Simple entry", "Брз внес")}</Text><Note>{value ? kind === "zone" ? t("Zone, price, paying hours and perimeter", "Зона, цена, часови на наплата и периметар") : t("Zone, price, paying hours, spaces and perimeter", "Зона, цена, часови на наплата, места и периметар") : t("Just the zone and price", "Само зона и цена")}</Note></View><Icon name="chevron-right" size={18} /></View>
       </Pressable>)}
     </> : step === "details" ? <>
-      {section("zone", t("Zone label", "Ознака на зона"), code, field(t("Zone label", "Ознака на зона"), code, setCode, false, "B2, A0…", false))}
+      {section("zone", t("Zone label", "Ознака на зона"), code, field(t("Zone label", "Ознака на зона"), code, setZoneCode, false, "B2, A0…", false))}
       {section("price", t("Price", "Цена"), first ? `${first} / ${next || first} ${t("MKD", "ден.")}` : "", <>
         <Button title={t("It's free", "Бесплатно е")} variant="secondary" disabled={busy} onPress={() => { setFirst("0"); setNext("0"); }} />
         <View style={s.row}><View style={s.flex}>{field(t("MKD / first hour", "ден. / прв час"), first, setFirst, true)}</View><View style={s.flex}>{field(t("Following hour", "Следен час"), next, setNext, true, first || t("Same as first hour", "Како првиот час"))}</View></View>
@@ -216,7 +218,7 @@ function WizardBody({ place, existingPlaceId, coordinate, geometry, returnedGeom
       <Text style={s.title}>{busy ? t("Saving…", "Се зачувува…") : failed ? t("One detail still needs saving", "Уште еден детал треба да се зачува") : t("Details saved", "Деталите се зачувани")}</Text>
     </> : <>
       <Text style={s.progress}>{t("Step", "Чекор")} {index} / {ordered.length}</Text>
-      {step === "zone" ? <><Text style={s.title}>{t("What is the zone label?", "Која е ознаката на зоната?")}</Text>{field(t("Zone label", "Ознака на зона"), code, setCode, false, "B2, A0…")}</> : null}
+      {step === "zone" ? <><Text style={s.title}>{t("What is the zone label?", "Која е ознаката на зоната?")}</Text>{field(t("Zone label", "Ознака на зона"), code, setZoneCode, false, "B2, A0…")}</> : null}
       {step === "price" ? <><Text style={s.title}>{t("How much does it cost?", "Колку чини?")}</Text><Button title={t("It's free", "Бесплатно е")} variant="secondary" disabled={busy || Boolean(failed)} onPress={() => { setFirst("0"); setNext("0"); void save({ type: "price", first: 0, next: 0 }, detailed ? "schedule" : "done"); }} /><View style={s.row}><View style={s.flex}>{field(t("MKD / first hour", "ден. / прв час"), first, setFirst, true, t("Required", "Задолжително"))}</View><View style={s.flex}>{field(t("Following hour", "Следен час"), next, setNext, true, first || t("Same as first hour", "Како првиот час"))}</View></View></> : null}
       {step === "schedule" ? <PaymentScheduleFields value={schedule} onChange={setSchedule} disabled={busy || Boolean(failed)} /> : null}
       {step === "spaces" ? <><Text style={s.title}>{t("How many parking spaces?", "Колку паркинг места има?")}</Text><Note>{t("An estimate is fine.", "Може и процена.")}</Note>{field(t("Total parking spaces", "Вкупно паркинг места"), capacity, setCapacity, true, t("Required", "Задолжително"))}</> : null}

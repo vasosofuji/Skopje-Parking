@@ -128,3 +128,18 @@ test('no network gives up after a few probes instead of the 75-second wake-up bu
   assert.equal(probes, 3);
   assert.ok(now <= 6000);
 });
+
+test('an empty gateway 503 is sent again, but an API 503 with a message is not', async () => {
+  const calls: string[] = [];
+  let reports = 0;
+  const request = createTransport('https://test.example', { pause: async () => {}, fetcher: (async (url: string | URL | Request) => {
+    const path = String(url); calls.push(path);
+    if (path.endsWith('/health')) return Response.json({ status: 'ok' });
+    if (path.endsWith('/report')) return ++reports < 3 ? new Response('', { status: 503 }) : Response.json({ saved: true });
+    return Response.json({ error: 'Address search is unavailable.' }, { status: 503 });
+  }) as typeof fetch });
+  assert.deepEqual(await request('/report', { method: 'POST' }), { saved: true });
+  assert.equal(reports, 3, "the gateway refused twice before the API ran, so the write went through once");
+  await assert.rejects(request('/search'), /Address search is unavailable/);
+  assert.equal(calls.filter(call => call.endsWith('/search')).length, 1);
+});

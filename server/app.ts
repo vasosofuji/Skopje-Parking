@@ -282,11 +282,21 @@ export async function buildApp(
   });
   // Phones keep the map and ask only for places changed since their cursor (a few hundred bytes
   // when nothing changed); since=0 returns everything once, for a fresh install.
+  // A fresh install downloads every place. Concurrent full builds overran the Edge worker's CPU limit
+  // (gateway 503s on launch-day bursts), so one build serves every since=0 request for a few seconds.
+  // Its cursor already lags the clock (CHANGE_SETTLE_MS), so the next delta still sends later writes.
+  let fullDownload: { at: number; value: Promise<unknown> } | undefined;
   app.get("/v1/changes", { config: { rateLimit: { max: 120, timeWindow: "1 minute" } } }, async (request, reply) => {
     const { since } = z.object({ since: z.coerce.number().int().min(0).max(8.64e15).default(0) }).parse(request.query);
     reply.header("Cache-Control", "no-store");
     await store.publishReadyProposals();
-    return { ...await community.changes(catalog, since), trustInputs: store.trustInputs };
+    if (since) return { ...await community.changes(catalog, since), trustInputs: store.trustInputs };
+    if (!fullDownload || Date.now() - fullDownload.at > 10_000) {
+      const value = community.changes(catalog, 0).then(changes => ({ ...changes, trustInputs: store.trustInputs }));
+      fullDownload = { at: Date.now(), value };
+      value.catch(() => { if (fullDownload?.value === value) fullDownload = undefined; });
+    }
+    return fullDownload.value;
   });
   const geometry = z
     .object({
@@ -317,7 +327,8 @@ export async function buildApp(
           coordinate,
           kind: z.enum(["surface", "garage", "underground", "street", "zone"]),
           geometry: geometry.optional(),
-          zoneCode: z.string().trim().max(16).nullable(),
+          // Same characters as a later label edit (/v1/places/:id/labels).
+          zoneCode: z.string().trim().max(16).regex(/^[\p{L}\p{N} -]*$/u).nullable(),
           firstHour: z.number().min(0).max(10000).nullable(),
           nextHour: z.number().min(0).max(10000).nullable(),
           capacity: z.number().int().min(0).max(100000).nullable().optional(),

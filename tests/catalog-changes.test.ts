@@ -72,7 +72,8 @@ for (const backend of ["sqlite", "postgres"] as const) test(`${backend}: phones 
     // Applying the deltas to the bundled catalog matches a fresh download.
     let phone = applyCatalogChanges(catalog, full);
     for (const delta of [report, await changes(priced), gone]) phone = applyCatalogChanges(phone, delta);
-    const fresh = new Map(((await changes(0)).places as ParkingPlace[]).map(place => [place.id, place]));
+    // A full download within 10 s reuses the earlier build, so compare against the uncached catalog.
+    const fresh = new Map(((await app.inject("/v1/catalog")).json().places as ParkingPlace[]).map(place => [place.id, place]));
     assert.equal(phone.places.length, fresh.size);
     for (const place of phone.places) assert.deepEqual(stable(place), stable(fresh.get(place.id)!), place.id);
   } finally { await app.close(); }
@@ -93,4 +94,21 @@ test("the phone keeps the cursor with the cached map and replaces only changed p
   const restored = decodeCatalogCache(encodeCatalogCache(changed, [], now, 5), catalog.generatedAt, now)!;
   assert.equal(restored.cursor, 5);
   assert.equal(decodeCatalogCache(JSON.stringify({ version: 1, savedAt: now, catalog, proposals: [] }), catalog.generatedAt, now), null, "an old cache without a cursor resyncs once");
+});
+
+test("a burst of fresh installs shares one full download, and the next delta still has later writes", async () => {
+  const store = await backendStore("sqlite");
+  const app = await buildApp(catalog, store);
+  try {
+    const headers = { authorization: `Bearer ${(await app.inject({ method: "POST", url: "/v1/sessions" })).json().token}` };
+    const changes = async (since: number) => (await app.inject({ url: `/v1/changes?since=${since}`, headers })).json();
+    const burst = await Promise.all([changes(0), changes(0), changes(0)]);
+    assert.equal(new Set(burst.map(full => full.cursor)).size, 1, "concurrent installs reuse one build");
+    const parking = catalog.places.find(place => place.kind !== "zone" && place.access !== "restricted")!;
+    assert.equal((await app.inject({ method: "POST", url: `/v1/places/${encodeURIComponent(parking.id)}/reports`, headers, payload: { status: "full" } })).statusCode, 200);
+    const cached = await changes(0);
+    assert.equal(cached.cursor, burst[0].cursor, "a full download a moment later is served from the shared build");
+    const delta = await changes(cached.cursor);
+    assert.equal(delta.places.find((place: ParkingPlace) => place.id === parking.id)?.availability?.status, "full", "the write after the build arrives in the next delta");
+  } finally { await app.close(); }
 });

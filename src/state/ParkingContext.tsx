@@ -38,7 +38,7 @@ export function ParkingProvider({ children }: { children: React.ReactNode }) {
   // Phones keep the whole map and ask only for places changed since their cursor; an empty
   // answer is a few hundred bytes. Proposals are small but change rarely, so they poll slower.
   const [sync] = useState(() => {
-    const state = { cursor: 0, catalog: seed as Catalog, proposals: [] as Proposal[], proposalsAt: 0, savedAt: 0, syncedAt: 0, dirty: false };
+    const state = { cursor: 0, catalog: seed as Catalog, proposals: [] as Proposal[], proposalsAt: 0, savedAt: 0, syncedAt: 0, dirty: false, quickRetries: 0 };
     const requestRefresh = createRefreshCoordinator(async (afterWrite: boolean) => {
       try {
         const wantProposals = afterWrite || !state.cursor || Date.now() - state.proposalsAt >= 5 * 60_000;
@@ -70,6 +70,8 @@ export function ParkingProvider({ children }: { children: React.ReactNode }) {
       } catch {
         setConnected(false);
         setNow(Date.now());
+        // A first download refused in a launch-day burst retries soon, spread out, instead of in a minute.
+        if (!state.cursor && state.quickRetries++ < 3) setTimeout(() => void requestRefresh(true), 4000 + Math.random() * 8000);
       }
     }, 25_000);
     return {

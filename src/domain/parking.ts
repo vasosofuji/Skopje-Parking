@@ -13,6 +13,9 @@ export const UNKNOWN_AVAILABILITY: Availability = {
 };
 // Match the server's report lifetime, including cached/offline catalogs.
 export const PRICE_REPORT_TTL_MS = 90 * 86400000;
+/** Server times (a report's observedAt, a sign's confirmedAt) may be ahead of a phone whose clock runs
+ * slow. Without this margin a driver's own just-saved price looked missing until the clock caught up. */
+export const SERVER_CLOCK_TOLERANCE_MS = 5 * 60_000;
 function validRates(price: { firstHour: number; nextHour: number }) {
   return [price.firstHour, price.nextHour].every(
     value => Number.isFinite(value) && value >= 0 && value <= 10000,
@@ -22,7 +25,7 @@ export function parkingPrice(place: ParkingPlace, now = Date.now()) {
   const report = place.communityPrice;
   const age = report ? now - Date.parse(report.observedAt) : NaN;
   if (report && validRates(report) && Number.isInteger(report.reports) &&
-      report.reports > 0 && age >= 0 && age < PRICE_REPORT_TTL_MS)
+      report.reports > 0 && age >= -SERVER_CLOCK_TOLERANCE_MS && age < PRICE_REPORT_TTL_MS)
     return { ...report, evidence: "community" as const };
   if (place.tariff && validRates(place.tariff)) return place.tariff;
   const sign = place.signInfo;

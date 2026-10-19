@@ -35,7 +35,7 @@ test("availability shows exact original local clock time and hides expired or mi
     assert.equal(availabilityReportTime(report, language, now), expected);
     assert.equal(availabilityReportTime(report, language, now + 20000), expected, "refreshing never resets report time");
   }
-  for (const value of [{ ...report, observedAt: null }, { ...report, observedAt: "invalid" }, { ...report, observedAt: new Date(now + 1).toISOString() }, { ...report, expiresAt: new Date(now).toISOString() }, { ...report, expiresAt: "invalid" }, { ...report, status: "unknown" as const }]) assert.equal(availabilityReportTime(value, "en", now), null);
+  for (const value of [{ ...report, observedAt: null }, { ...report, observedAt: "invalid" }, { ...report, observedAt: new Date(now + 3600_000).toISOString() }, { ...report, expiresAt: new Date(now).toISOString() }, { ...report, expiresAt: "invalid" }, { ...report, status: "unknown" as const }]) assert.equal(availabilityReportTime(value, "en", now), null);
   assert.equal(availabilityReportTime(undefined, "en", now), null);
 });
 

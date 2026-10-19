@@ -1,5 +1,5 @@
 import type { Availability, ParkingPlace, SignInfo } from "./types";
-import { currentAvailability, parkingPrice } from "./parking";
+import { currentAvailability, parkingPrice, SERVER_CLOCK_TOLERANCE_MS } from "./parking";
 import type { Language } from "./language";
 import { isPocSector } from "./zone-interaction";
 
@@ -16,7 +16,7 @@ export function availabilityReportTime(value: Availability | undefined, language
   const availability = currentAvailability(value, now);
   const observed = availability.observedAt ? Date.parse(availability.observedAt) : NaN;
   const expires = availability.expiresAt ? Date.parse(availability.expiresAt) : NaN;
-  if (availability.status === "unknown" || !Number.isFinite(observed) || observed > now || !Number.isFinite(expires) || expires <= now) return null;
+  if (availability.status === "unknown" || !Number.isFinite(observed) || observed > now + SERVER_CLOCK_TOLERANCE_MS || !Number.isFinite(expires) || expires <= now) return null;
   const locale = { en: "en-GB", mk: "mk-MK", tr: "tr-TR", sq: "sq-AL" }[language];
   const date = new Date(observed), today = new Date(now);
   const sameDay = date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate();

@@ -1,5 +1,5 @@
 import { accentColor } from "./cosmetics";
-import { currentAvailability, parkingPrice } from "./parking";
+import { currentAvailability, parkingPrice, SERVER_CLOCK_TOLERANCE_MS } from "./parking";
 import type { ParkingKind, ParkingPlace } from "./types";
 
 export const PARKING_TYPE_MARKS: Record<ParkingKind, string> = {
@@ -16,7 +16,7 @@ export const MARKER_COLORS = {
 
 export function parkingReviewEvidence(place: ParkingPlace, now = Date.now()) {
   if (place.verification === "official") return "official";
-  if (place.signInfo?.confirmedAt && Date.parse(place.signInfo.confirmedAt) <= now) return "sign";
+  if (place.signInfo?.confirmedAt && Date.parse(place.signInfo.confirmedAt) <= now + SERVER_CLOCK_TOLERANCE_MS) return "sign";
   const price = parkingPrice(place, now);
   if (price?.evidence === "official" || price?.evidence === "community" && "observedAt" in price) return "price";
   if (place.zoneCode?.trim() && place.zoneCodeEvidence === "community") return "zone";

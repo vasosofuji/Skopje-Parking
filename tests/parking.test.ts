@@ -1,4 +1,5 @@
 import { groupParking } from "../src/domain/clusters";
+import { parkingMarker } from "../src/domain/marker-appearance";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -387,7 +388,7 @@ test("invalid or expired cached reports fall back to published rates", () => {
   const report = { firstHour: 0, nextHour: 0, reports: 1, observedAt: new Date(now).toISOString() };
   for (const invalid of [
     { observedAt: new Date(now - PRICE_REPORT_TTL_MS).toISOString() },
-    { observedAt: new Date(now + 1).toISOString() }, { observedAt: "invalid" },
+    { observedAt: new Date(now + 3600_000).toISOString() }, { observedAt: "invalid" },
     { reports: 0 }, { reports: 1.5 }, { firstHour: -1 }, { nextHour: Infinity },
     { firstHour: NaN }, { nextHour: 10001 },
   ]) {
@@ -422,4 +423,14 @@ test("search matches Macedonian names across Cyrillic, Latin, diacritics and dig
   assert.ok(finds("Чаир", "Çair"));
   assert.ok(finds("Џон Кенеди", "dzon kenedi"));
   assert.ok(!finds("Чаир", "centar"));
+});
+
+test("a phone clock a little behind the server still shows the price the driver just saved", () => {
+  const now = Date.parse("2026-10-19T16:45:00Z");
+  const place = { ...(seed as Catalog).places.find(p => p.kind === "surface" && !p.tariff)!, communityPrice: { firstHour: 0, nextHour: 0, observedAt: new Date(now + 2000).toISOString(), reports: 1 } };
+  assert.deepEqual(parkingPrice(place, now), { ...place.communityPrice, evidence: "community" });
+  const marker = parkingMarker(place, 1, now);
+  assert.equal(marker.freeOfCharge, true);
+  assert.equal(marker.hollow, false, "the just-reviewed parking keeps its solid pin");
+  assert.equal(parkingPrice({ ...place, communityPrice: { ...place.communityPrice, observedAt: new Date(now + 3600_000).toISOString() } }, now), null, "a timestamp an hour ahead is still rejected");
 });

@@ -108,3 +108,14 @@ test("My car shows while a session runs and for 12 hours after it ends, not afte
   assert.equal(carSession([fixed, extra], paymentNow + 13.5 * hour)?.id, "extra", "recalled 12 hours after that end");
   assert.equal(carPaidUntil([base], base), null, "start-stop has no paid end");
 });
+
+test("a Gradski zone with a derived kerb outline is still offered, by distance to the outline", () => {
+  // A 16 m wide strip along a street whose middle is 300 m north: beyond a point's 150 m reach.
+  const strip = (north: number) => { const lat = (m: number) => 42 + m / 111195, lon = (m: number) => 21 + m / (111195 * Math.cos(42 * Math.PI / 180));
+    return { type: "Polygon" as const, coordinates: [[[lon(-60), lat(north - 8)], [lon(300), lat(north - 8)], [lon(300), lat(north + 8)], [lon(-60), lat(north + 8)], [lon(-60), lat(north - 8)]]] }; };
+  const outlined = (north: number) => ({ ...street("D42", 300), geometry: strip(north), boundaryEvidence: "derived" as const });
+  assert.deepEqual(ids(smsZoneChoices(fix(), [outlined(0)], paymentNow)), ["gradski:zone:D42"], "parked on the outlined kerb");
+  assert.deepEqual(ids(smsZoneChoices(fix(), [outlined(35)], paymentNow)), ["gradski:zone:D42"], "beside it, within the kerb reach");
+  assert.deepEqual(ids(smsZoneChoices(fix(), [outlined(120)], paymentNow)), [], "a block away from the outline");
+  assert.equal(eligibleSmsZone(fix(), [outlined(0)], "SK1234FF", paymentNow), null, "derived outlines never pass the exact outline check");
+});

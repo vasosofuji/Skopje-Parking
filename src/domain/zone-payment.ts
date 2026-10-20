@@ -12,8 +12,16 @@ export const PAYMENT_DWELL_MS = 15_000;
 export const PAYMENT_COOLDOWN_MS = 60 * 60 * 1000;
 const polygonUsable = (place: ParkingPlace) => Boolean(place.geometry?.coordinates.length && place.geometry.coordinates.every(ring => ring.length >= 4 && ring.every(point => point.length === 2 && point.every(Number.isFinite)) && ring[0][0] === ring.at(-1)![0] && ring[0][1] === ring.at(-1)![1]));
 const paymentRule = (place: ParkingPlace) => place.smsPayment ? smsRuleKey(place.smsPayment) : null;
-/** A Gradski street zone is only a point, so it may run through a POC sector unseen. */
+/** A Gradski street zone is a point (or a derived outline), so it may run through a POC sector unseen. */
 export const GRADSKI_STREET_RADIUS_M = 300;
+/** A derived outline (locationPrecision "area") shows where a street zone runs, but is not exact enough
+ * for the outline checks: it is matched like a street point, by distance to the outline. */
+const exactOutline = (place: ParkingPlace) => polygonUsable(place) && place.locationPrecision !== "area";
+/** A car parked in a street zone is near its kerb outline; a bare point is the middle of its street. */
+export const STREET_OUTLINE_REACH_M = 40;
+const streetDistance = (fix: Fix, place: ParkingPlace) => polygonUsable(place)
+  ? insidePolygon(fix, place.geometry!) ? 0 : distanceToParkingBoundary(fix, place.geometry!) : distanceMeters(fix, place.coordinate);
+const streetReach = (place: ParkingPlace, pointReach: number, accuracy: number) => polygonUsable(place) ? STREET_OUTLINE_REACH_M + accuracy : pointReach;
 export function knownFreeTime(place: ParkingPlace, now: number) {
   const price = parkingPrice(place, now);
   if (price?.firstHour === 0 && price.nextHour === 0) return true;
@@ -61,7 +69,7 @@ const steadyFix = (fix: Fix | null, now: number): fix is Fix => Boolean(fix && u
   (fix.speed === null || (Number.isFinite(fix.speed) && fix.speed >= 0 && fix.speed <= 0.8)));
 const verifiedPayment = (place: ParkingPlace, now: number) => Boolean(place.smsPayment && isVerifiedSmsPayment(place.smsPayment, now) && smsZoneMatches(place.zoneCode, place.smsPayment.zoneCode));
 const nearGradskiStreet = (fix: Fix, places: ParkingPlace[], zone: ParkingPlace) =>
-  places.some(other => other.id !== zone.id && officialZoneRules(other)?.operator === "gradski" && !polygonUsable(other) && distanceMeters(fix, other.coordinate) <= GRADSKI_STREET_RADIUS_M);
+  places.some(other => other.id !== zone.id && officialZoneRules(other)?.operator === "gradski" && !exactOutline(other) && streetDistance(fix, other) <= streetReach(other, GRADSKI_STREET_RADIUS_M, fix.accuracy ?? 0));
 export function eligibleSmsZone(fix: Fix | null, places: ParkingPlace[], plate: string | null, now: number) {
   if (!isCompactLicensePlate(plate) || !steadyFix(fix, now)) return null;
   const zone = outlineSmsZone(fix, places, now);
@@ -71,7 +79,7 @@ export function eligibleSmsZone(fix: Fix | null, places: ParkingPlace[], plate: 
 /** The one payable outline a steady fix is clearly inside. */
 function outlineSmsZone(fix: Fix, places: ParkingPlace[], now: number) {
   // A photographed payment rule can belong to a drawn parking area, not just a tariff zone.
-  const overlapping = places.filter(place => polygonUsable(place) && containsParkingFix(fix, place.access === "restricted" ? { ...place, access: "public" } : place));
+  const overlapping = places.filter(place => exactOutline(place) && containsParkingFix(fix, place.access === "restricted" ? { ...place, access: "public" } : place));
   const exact = overlapping.filter(place => insidePolygon(fix, place.geometry!));
   const verified = (place: ParkingPlace) => verifiedPayment(place, now);
   const physicalPaymentAreas = overlapping.filter(place => !isPocSector(place) && verified(place));
@@ -95,8 +103,8 @@ const MAX_CHOICES = 3;
 const offerable = (place: ParkingPlace, now: number) => place.access !== "restricted" && place.capacity !== 0 && verifiedPayment(place, now) &&
   !knownFreeTime(place, now) && !(officiallyCharging(place, now) === null && quietHours(now));
 const streetZonesNear = (fix: Fix, places: ParkingPlace[], now: number, radius: number) => places
-  .flatMap(place => place.kind === "zone" && !polygonUsable(place) && offerable(place, now) ? [{ place, distance: distanceMeters(fix, place.coordinate) }] : [])
-  .filter(row => row.distance <= radius).sort((a, b) => a.distance - b.distance);
+  .flatMap(place => place.kind === "zone" && !exactOutline(place) && offerable(place, now) ? [{ place, distance: streetDistance(fix, place) }] : [])
+  .filter(row => row.distance <= streetReach(row.place, radius, fix.accuracy ?? 0)).sort((a, b) => a.distance - b.distance);
 /**
  * Zones a stopped driver may be parked in, for a one-tap payment offer. An outline the fix is
  * clearly inside keeps the exact checks above; street zones are matched by distance. Several
@@ -112,7 +120,7 @@ export function smsZoneChoices(fix: Fix | null, places: ParkingPlace[], now: num
     return streets.length ? [zone, ...streets.map(row => row.place)].slice(0, MAX_CHOICES) : [];
   }
   // Inside a parking lot, or an outline the exact checks could not settle: no guess.
-  if (places.some(place => containsParkingFix(fix, { ...place, access: "public" }) && (place.kind === "surface" || place.kind === "garage" || place.kind === "underground" || (polygonUsable(place) && verifiedPayment(place, now))))) return [];
+  if (places.some(place => containsParkingFix(fix, { ...place, access: "public" }) && (place.kind === "surface" || place.kind === "garage" || place.kind === "underground" || (exactOutline(place) && verifiedPayment(place, now))))) return [];
   const streets = streetZonesNear(fix, places, now, STREET_ZONE_REACH_M + fix.accuracy!);
   // GPS error moves both distances, and the catalog points are approximate.
   const margin = 30 + 2 * fix.accuracy!;

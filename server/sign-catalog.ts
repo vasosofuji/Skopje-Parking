@@ -55,7 +55,8 @@ export function enrichSigns(
       paymentSchedule: place.paymentSchedule ?? (info ? { chargingHours: info.chargingHours, freeWeekends: info.freeWeekends ?? null } : undefined),
     };
   });
-  const zones = enriched.filter(p => p.kind === "zone" && p.geometry && p.signInfo);
+  // A derived outline only approximates a street zone and can brush past a separate lot: it passes on no sign.
+  const zones = enriched.filter(p => p.kind === "zone" && p.geometry && p.signInfo && p.boundaryEvidence !== "derived");
   return enriched.map(place => {
     if (place.signInfo || place.kind === "zone") return place;
     const candidates = zones.filter(zone => insidePolygon(place.coordinate, zone.geometry!) &&

@@ -40,7 +40,9 @@ export type ParkingPlace = {
   nameEn?: string;
   coordinate: Coordinate;
   geometry?: Geometry;
-  boundaryEvidence?: "community";
+  /** "derived": drawn from operator street lists and OpenStreetMap, not surveyed (see boundarySource). */
+  boundaryEvidence?: "community" | "derived";
+  boundarySource?: Provenance;
   kind: ParkingKind;
   operator: string | null;
   zoneCode: string | null;

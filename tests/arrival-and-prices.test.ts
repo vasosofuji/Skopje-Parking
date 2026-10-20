@@ -252,7 +252,8 @@ test("named zones are searchable with honest approximate anchors and POC sectors
     assert.ok(p);
     assert.equal(p.kind, "zone");
     assert.equal(p.locationPrecision, "area");
-    assert.equal(p.geometry, undefined);
+    // An outline is only ever a labelled approximation, never a surveyed boundary.
+    if (p.geometry) assert.deepEqual([p.boundaryEvidence, p.boundarySource?.license], ["derived", "ODbL 1.0"]);
     assert.ok(p.tariff);
   }
   assert.equal(

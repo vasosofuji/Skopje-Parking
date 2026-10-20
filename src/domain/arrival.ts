@@ -37,7 +37,7 @@ export type ArrivalSnapshot = {
 };
 /** Only user-created outlines receive tolerance; imported/official geometry stays exact. */
 export function parkingBoundaryBleedMeters(place: ParkingPlace) {
-  return place.boundaryEvidence === "community" || place.id.startsWith("community:") && place.verification === "community" ? 20 : 0;
+  return place.boundaryEvidence === "community" || place.boundaryEvidence === "derived" || place.id.startsWith("community:") && place.verification === "community" ? 20 : 0;
 }
 function insideRing(point: Coordinate, ring: number[][]) {
   return insidePolygon(point, { type: "Polygon", coordinates: [ring] });

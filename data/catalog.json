@@ -91,6 +91,40 @@
         "url": "https://www.openstreetmap.org/node/480473248",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
         "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.5076772,
+              42.0058782
+            ],
+            [
+              21.508022,
+              42.0060984
+            ],
+            [
+              21.5080024,
+              42.0061155
+            ],
+            [
+              21.5076576,
+              42.0058953
+            ],
+            [
+              21.5076772,
+              42.0058782
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -113,6 +147,40 @@
         "label": "OpenStreetMap contributors",
         "url": "https://www.openstreetmap.org/node/483351867",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4366885,
+              42.0131479
+            ],
+            [
+              21.4363771,
+              42.0131181
+            ],
+            [
+              21.4363848,
+              42.0130734
+            ],
+            [
+              21.4366962,
+              42.0131033
+            ],
+            [
+              21.4366885,
+              42.0131479
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -137,6 +205,40 @@
         "url": "https://www.openstreetmap.org/node/577538732",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
         "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4347607,
+              42.0198012
+            ],
+            [
+              21.4348767,
+              42.019544
+            ],
+            [
+              21.434934,
+              42.0195583
+            ],
+            [
+              21.434818,
+              42.0198155
+            ],
+            [
+              21.4347607,
+              42.0198012
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -159,6 +261,96 @@
         "label": "OpenStreetMap contributors",
         "url": "https://www.openstreetmap.org/node/892589214",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.442536,
+              41.9929094
+            ],
+            [
+              21.4424283,
+              41.9928073
+            ],
+            [
+              21.4423631,
+              41.9928525
+            ],
+            [
+              21.4418967,
+              41.9924227
+            ],
+            [
+              21.4417894,
+              41.9924713
+            ],
+            [
+              21.441676,
+              41.9925381
+            ],
+            [
+              21.4416111,
+              41.9924838
+            ],
+            [
+              21.4415949,
+              41.9924942
+            ],
+            [
+              21.4415694,
+              41.9924728
+            ],
+            [
+              21.4405942,
+              41.9930725
+            ],
+            [
+              21.4407873,
+              41.9932519
+            ],
+            [
+              21.4409268,
+              41.9933396
+            ],
+            [
+              21.4410877,
+              41.9934194
+            ],
+            [
+              21.4412137,
+              41.9934692
+            ],
+            [
+              21.4413291,
+              41.9934851
+            ],
+            [
+              21.4414927,
+              41.9934732
+            ],
+            [
+              21.4416322,
+              41.9934572
+            ],
+            [
+              21.441777,
+              41.9934054
+            ],
+            [
+              21.442536,
+              41.9929094
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -229,6 +421,40 @@
         "url": "https://www.openstreetmap.org/node/1691667375",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
         "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.434503,
+              42.020487
+            ],
+            [
+              21.4345837,
+              42.0202608
+            ],
+            [
+              21.434642,
+              42.0202724
+            ],
+            [
+              21.4345614,
+              42.0204985
+            ],
+            [
+              21.434503,
+              42.020487
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -274,6 +500,40 @@
         "label": "OpenStreetMap contributors",
         "url": "https://www.openstreetmap.org/node/1860283426",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4625424,
+              42.0022057
+            ],
+            [
+              21.4631886,
+              42.00232
+            ],
+            [
+              21.4631816,
+              42.0023419
+            ],
+            [
+              21.4625354,
+              42.0022276
+            ],
+            [
+              21.4625424,
+              42.0022057
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -321,6 +581,40 @@
         "url": "https://www.openstreetmap.org/node/2324290159",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
         "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.3316672,
+              42.0030361
+            ],
+            [
+              21.3315253,
+              42.0028272
+            ],
+            [
+              21.3315792,
+              42.0028068
+            ],
+            [
+              21.331721,
+              42.0030157
+            ],
+            [
+              21.3316672,
+              42.0030361
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -343,6 +637,152 @@
         "label": "OpenStreetMap contributors",
         "url": "https://www.openstreetmap.org/node/2394046205",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4369052,
+              41.9968295
+            ],
+            [
+              21.4369619,
+              41.9967152
+            ],
+            [
+              21.4368077,
+              41.9966831
+            ],
+            [
+              21.4364676,
+              41.9960159
+            ],
+            [
+              21.4359547,
+              41.9961497
+            ],
+            [
+              21.4353274,
+              41.9963357
+            ],
+            [
+              21.4354152,
+              41.9964999
+            ],
+            [
+              21.4353523,
+              41.9965185
+            ],
+            [
+              21.435012,
+              41.9965169
+            ],
+            [
+              21.4350413,
+              41.9966611
+            ],
+            [
+              21.4353453,
+              41.9966694
+            ],
+            [
+              21.4352835,
+              41.9972664
+            ],
+            [
+              21.4349634,
+              41.9974822
+            ],
+            [
+              21.4348924,
+              41.9974872
+            ],
+            [
+              21.4349045,
+              41.9975671
+            ],
+            [
+              21.4352651,
+              41.9974983
+            ],
+            [
+              21.4353718,
+              41.9974601
+            ],
+            [
+              21.4354818,
+              41.9972941
+            ],
+            [
+              21.4359606,
+              41.9972147
+            ],
+            [
+              21.4360683,
+              41.9973358
+            ],
+            [
+              21.4361885,
+              41.997299
+            ],
+            [
+              21.4362287,
+              41.9972493
+            ],
+            [
+              21.4361084,
+              41.9971179
+            ],
+            [
+              21.4361323,
+              41.9970486
+            ],
+            [
+              21.4361071,
+              41.9970227
+            ],
+            [
+              21.4361509,
+              41.9969489
+            ],
+            [
+              21.4360402,
+              41.996834
+            ],
+            [
+              21.4363167,
+              41.9966993
+            ],
+            [
+              21.4363029,
+              41.9969001
+            ],
+            [
+              21.4364515,
+              41.997076
+            ],
+            [
+              21.436703,
+              41.9971248
+            ],
+            [
+              21.43689,
+              41.9970257
+            ],
+            [
+              21.4369052,
+              41.9968295
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -367,6 +807,40 @@
         "url": "https://www.openstreetmap.org/node/2426726558",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
         "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.5669504,
+              41.9588042
+            ],
+            [
+              21.5663785,
+              41.9590555
+            ],
+            [
+              21.5663632,
+              41.9590361
+            ],
+            [
+              21.5669351,
+              41.9587848
+            ],
+            [
+              21.5669504,
+              41.9588042
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -389,6 +863,40 @@
         "label": "OpenStreetMap contributors",
         "url": "https://www.openstreetmap.org/node/3208478528",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4032821,
+              41.9954197
+            ],
+            [
+              21.4032393,
+              41.995232
+            ],
+            [
+              21.4031798,
+              41.9952395
+            ],
+            [
+              21.4032226,
+              41.9954272
+            ],
+            [
+              21.4032821,
+              41.9954197
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -528,6 +1036,40 @@
         "url": "https://www.openstreetmap.org/node/6111410917",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
         "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4151445,
+              41.9855076
+            ],
+            [
+              21.4152721,
+              41.9857194
+            ],
+            [
+              21.4152171,
+              41.9857379
+            ],
+            [
+              21.4150894,
+              41.9855261
+            ],
+            [
+              21.4151445,
+              41.9855076
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -550,6 +1092,40 @@
         "label": "OpenStreetMap contributors",
         "url": "https://www.openstreetmap.org/node/7878409528",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4392416,
+              41.9852589
+            ],
+            [
+              21.4395128,
+              41.985141
+            ],
+            [
+              21.4394824,
+              41.9851021
+            ],
+            [
+              21.4392112,
+              41.98522
+            ],
+            [
+              21.4392416,
+              41.9852589
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -596,6 +1172,40 @@
         "label": "OpenStreetMap contributors",
         "url": "https://www.openstreetmap.org/node/11532164010",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.5027277,
+              42.008173
+            ],
+            [
+              21.5029884,
+              42.0083245
+            ],
+            [
+              21.5030069,
+              42.0083067
+            ],
+            [
+              21.5027462,
+              42.0081552
+            ],
+            [
+              21.5027277,
+              42.008173
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -712,6 +1322,40 @@
         "url": "https://www.openstreetmap.org/node/11561027626",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
         "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.5011742,
+              42.0072234
+            ],
+            [
+              21.5015599,
+              42.0074247
+            ],
+            [
+              21.5015772,
+              42.0074062
+            ],
+            [
+              21.5011915,
+              42.0072049
+            ],
+            [
+              21.5011742,
+              42.0072234
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -827,6 +1471,40 @@
         "url": "https://www.openstreetmap.org/node/11849609183",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
         "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.5011439,
+              42.0057816
+            ],
+            [
+              21.5015907,
+              42.0051663
+            ],
+            [
+              21.5016438,
+              42.0051878
+            ],
+            [
+              21.501197,
+              42.005803
+            ],
+            [
+              21.5011439,
+              42.0057816
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -872,6 +1550,80 @@
         "label": "OpenStreetMap contributors",
         "url": "https://www.openstreetmap.org/node/14013371727",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4935013,
+              42.0023243
+            ],
+            [
+              21.4939042,
+              42.0023304
+            ],
+            [
+              21.4939122,
+              42.0020329
+            ],
+            [
+              21.4939957,
+              42.0020342
+            ],
+            [
+              21.4940026,
+              42.0017793
+            ],
+            [
+              21.4939516,
+              42.0017785
+            ],
+            [
+              21.493951,
+              42.0018007
+            ],
+            [
+              21.4938416,
+              42.0017991
+            ],
+            [
+              21.4938411,
+              42.001816
+            ],
+            [
+              21.4937597,
+              42.0018148
+            ],
+            [
+              21.4937589,
+              42.0018425
+            ],
+            [
+              21.4936203,
+              42.0018404
+            ],
+            [
+              21.4936196,
+              42.0018676
+            ],
+            [
+              21.4935138,
+              42.001866
+            ],
+            [
+              21.4935013,
+              42.0023243
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -54573,7 +55325,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 154,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -54586,6 +55338,140 @@
         "label": "Approximate landmark reference · OpenStreetMap",
         "url": "https://www.openstreetmap.org/node/13655181221",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4084967,
+              41.9757746
+            ],
+            [
+              21.4086087,
+              41.9758098
+            ],
+            [
+              21.4086813,
+              41.9758497
+            ],
+            [
+              21.4087477,
+              41.9759242
+            ],
+            [
+              21.4087688,
+              41.9759896
+            ],
+            [
+              21.4087553,
+              41.9760785
+            ],
+            [
+              21.4086756,
+              41.9761727
+            ],
+            [
+              21.4082839,
+              41.9763302
+            ],
+            [
+              21.4083763,
+              41.9764807
+            ],
+            [
+              21.4093374,
+              41.9761347
+            ],
+            [
+              21.4092485,
+              41.9759849
+            ],
+            [
+              21.4091301,
+              41.9759483
+            ],
+            [
+              21.40903,
+              41.9758693
+            ],
+            [
+              21.4089984,
+              41.9758081
+            ],
+            [
+              21.4089954,
+              41.9757208
+            ],
+            [
+              21.409037,
+              41.9756393
+            ],
+            [
+              21.409094,
+              41.9755893
+            ],
+            [
+              21.4093063,
+              41.9754926
+            ],
+            [
+              21.4094223,
+              41.9754074
+            ],
+            [
+              21.4095909,
+              41.9753262
+            ],
+            [
+              21.4095,
+              41.9751955
+            ],
+            [
+              21.4091677,
+              41.9751553
+            ],
+            [
+              21.4090693,
+              41.975177
+            ],
+            [
+              21.4089779,
+              41.9751759
+            ],
+            [
+              21.4088399,
+              41.9751296
+            ],
+            [
+              21.4087425,
+              41.975045
+            ],
+            [
+              21.4085238,
+              41.9750602
+            ],
+            [
+              21.4081244,
+              41.9752462
+            ],
+            [
+              21.4082983,
+              41.9754647
+            ],
+            [
+              21.4084967,
+              41.9757746
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -54611,7 +55497,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 39,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -54624,6 +55510,68 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4287228,
+              41.9980685
+            ],
+            [
+              21.4287545,
+              41.9981757
+            ],
+            [
+              21.428945,
+              41.9981533
+            ],
+            [
+              21.4289386,
+              41.9980788
+            ],
+            [
+              21.4289687,
+              41.9980227
+            ],
+            [
+              21.4296031,
+              41.9974843
+            ],
+            [
+              21.4294592,
+              41.9973885
+            ],
+            [
+              21.4288981,
+              41.9978624
+            ],
+            [
+              21.4288209,
+              41.9978903
+            ],
+            [
+              21.4287368,
+              41.9978809
+            ],
+            [
+              21.4286131,
+              41.9979914
+            ],
+            [
+              21.4287228,
+              41.9980685
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -54648,7 +55596,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 24,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -54661,6 +55609,56 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4280646,
+              41.9963045
+            ],
+            [
+              21.42832,
+              41.996261
+            ],
+            [
+              21.4284032,
+              41.9962327
+            ],
+            [
+              21.4283618,
+              41.9960922
+            ],
+            [
+              21.4282651,
+              41.9960912
+            ],
+            [
+              21.4279415,
+              41.9961535
+            ],
+            [
+              21.4278738,
+              41.9961545
+            ],
+            [
+              21.4278697,
+              41.9962983
+            ],
+            [
+              21.4280646,
+              41.9963045
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -54685,7 +55683,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 53,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -54698,6 +55696,76 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4278579,
+              41.9945572
+            ],
+            [
+              21.4279172,
+              41.994605
+            ],
+            [
+              21.4279377,
+              41.9946449
+            ],
+            [
+              21.4279699,
+              41.9949968
+            ],
+            [
+              21.427963,
+              41.9950722
+            ],
+            [
+              21.4281553,
+              41.9950829
+            ],
+            [
+              21.4281637,
+              41.9949938
+            ],
+            [
+              21.4280981,
+              41.9939964
+            ],
+            [
+              21.4280252,
+              41.9939672
+            ],
+            [
+              21.4279858,
+              41.9939135
+            ],
+            [
+              21.4279998,
+              41.9936187
+            ],
+            [
+              21.427865,
+              41.9935984
+            ],
+            [
+              21.427846,
+              41.9936539
+            ],
+            [
+              21.4278579,
+              41.9945572
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -54722,7 +55790,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 85,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -54735,6 +55803,80 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4297337,
+              41.992527
+            ],
+            [
+              21.4313898,
+              41.9921075
+            ],
+            [
+              21.4315649,
+              41.9920877
+            ],
+            [
+              21.4316673,
+              41.99209
+            ],
+            [
+              21.4318814,
+              41.9921272
+            ],
+            [
+              21.4323499,
+              41.9923042
+            ],
+            [
+              21.4324434,
+              41.9921784
+            ],
+            [
+              21.4322129,
+              41.9920833
+            ],
+            [
+              21.4319375,
+              41.9919889
+            ],
+            [
+              21.4316864,
+              41.9919462
+            ],
+            [
+              21.4315616,
+              41.9919427
+            ],
+            [
+              21.4313474,
+              41.9919661
+            ],
+            [
+              21.4297082,
+              41.9923816
+            ],
+            [
+              21.4297025,
+              41.9924586
+            ],
+            [
+              21.4297337,
+              41.992527
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -54759,7 +55901,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 151,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -54772,6 +55914,220 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4340068,
+              41.9980143
+            ],
+            [
+              21.4341013,
+              41.9979829
+            ],
+            [
+              21.4341588,
+              41.9979808
+            ],
+            [
+              21.4342247,
+              41.9980016
+            ],
+            [
+              21.4342805,
+              41.9980457
+            ],
+            [
+              21.4347532,
+              41.9985932
+            ],
+            [
+              21.4348867,
+              41.9986578
+            ],
+            [
+              21.4350785,
+              41.9986747
+            ],
+            [
+              21.4350895,
+              41.9985311
+            ],
+            [
+              21.4349556,
+              41.9985187
+            ],
+            [
+              21.4348803,
+              41.9984781
+            ],
+            [
+              21.4344106,
+              41.9979348
+            ],
+            [
+              21.4343924,
+              41.9978952
+            ],
+            [
+              21.4343998,
+              41.9978434
+            ],
+            [
+              21.4346188,
+              41.9976297
+            ],
+            [
+              21.4349286,
+              41.9975778
+            ],
+            [
+              21.4352124,
+              41.9974929
+            ],
+            [
+              21.4353379,
+              41.9974203
+            ],
+            [
+              21.4355166,
+              41.9972658
+            ],
+            [
+              21.4355931,
+              41.997224
+            ],
+            [
+              21.436039,
+              41.9970866
+            ],
+            [
+              21.4359665,
+              41.9969533
+            ],
+            [
+              21.4355045,
+              41.9970948
+            ],
+            [
+              21.4353991,
+              41.9971489
+            ],
+            [
+              21.4352044,
+              41.997315
+            ],
+            [
+              21.4351149,
+              41.9973665
+            ],
+            [
+              21.4348708,
+              41.9974395
+            ],
+            [
+              21.4345349,
+              41.9974876
+            ],
+            [
+              21.4344425,
+              41.9975302
+            ],
+            [
+              21.4343717,
+              41.9975378
+            ],
+            [
+              21.4342828,
+              41.9975051
+            ],
+            [
+              21.4342279,
+              41.9974313
+            ],
+            [
+              21.4342328,
+              41.9973701
+            ],
+            [
+              21.434305,
+              41.997276
+            ],
+            [
+              21.4341111,
+              41.9971886
+            ],
+            [
+              21.4340609,
+              41.997128
+            ],
+            [
+              21.4340844,
+              41.9970025
+            ],
+            [
+              21.4341408,
+              41.9968884
+            ],
+            [
+              21.4339606,
+              41.9968372
+            ],
+            [
+              21.4339004,
+              41.9969565
+            ],
+            [
+              21.4338606,
+              41.9971004
+            ],
+            [
+              21.4338783,
+              41.9973669
+            ],
+            [
+              21.4338989,
+              41.9973994
+            ],
+            [
+              21.4340923,
+              41.9975551
+            ],
+            [
+              21.4341682,
+              41.9976677
+            ],
+            [
+              21.4341786,
+              41.9977231
+            ],
+            [
+              21.4341692,
+              41.9977633
+            ],
+            [
+              21.4341307,
+              41.9978052
+            ],
+            [
+              21.4339231,
+              41.9978848
+            ],
+            [
+              21.4340068,
+              41.9980143
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -54796,7 +56152,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 57,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -54809,6 +56165,48 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4282553,
+              41.9918157
+            ],
+            [
+              21.4298017,
+              41.9911042
+            ],
+            [
+              21.4298081,
+              41.9910169
+            ],
+            [
+              21.4297568,
+              41.9909558
+            ],
+            [
+              21.4281837,
+              41.9916796
+            ],
+            [
+              21.4282044,
+              41.9917542
+            ],
+            [
+              21.4282553,
+              41.9918157
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -54833,7 +56231,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 49,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -54846,6 +56244,44 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4267876,
+              41.9924794
+            ],
+            [
+              21.4282252,
+              41.9918293
+            ],
+            [
+              21.4282046,
+              41.9917549
+            ],
+            [
+              21.4281537,
+              41.9916934
+            ],
+            [
+              21.4266883,
+              41.9923561
+            ],
+            [
+              21.4267876,
+              41.9924794
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -54870,7 +56306,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 26,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -54883,6 +56319,56 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.425964,
+              41.9954618
+            ],
+            [
+              21.4262727,
+              41.9954504
+            ],
+            [
+              21.4265996,
+              41.9954124
+            ],
+            [
+              21.426566,
+              41.9952707
+            ],
+            [
+              21.4262552,
+              41.9953068
+            ],
+            [
+              21.4259611,
+              41.9953177
+            ],
+            [
+              21.425626,
+              41.9953127
+            ],
+            [
+              21.4256162,
+              41.9954563
+            ],
+            [
+              21.425964,
+              41.9954618
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -54907,7 +56393,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 77,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -54920,6 +56406,56 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4380107,
+              41.9976349
+            ],
+            [
+              21.4381235,
+              41.9986739
+            ],
+            [
+              21.4381241,
+              41.9988107
+            ],
+            [
+              21.4383169,
+              41.9988108
+            ],
+            [
+              21.4383168,
+              41.9986686
+            ],
+            [
+              21.4382027,
+              41.9976184
+            ],
+            [
+              21.438055,
+              41.9968321
+            ],
+            [
+              21.4378634,
+              41.9968497
+            ],
+            [
+              21.4380107,
+              41.9976349
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -54944,7 +56480,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 24,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -54957,6 +56493,40 @@
         "label": "Approximate street reference · OpenStreetMap",
         "url": "https://www.openstreetmap.org/way/1361199036",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4266218,
+              42.0091663
+            ],
+            [
+              21.4273395,
+              42.0086857
+            ],
+            [
+              21.4272107,
+              42.0085786
+            ],
+            [
+              21.4264929,
+              42.0090593
+            ],
+            [
+              21.4266218,
+              42.0091663
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -54982,7 +56552,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 7,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -54995,6 +56565,40 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4229293,
+              41.9961507
+            ],
+            [
+              21.4230926,
+              41.9960185
+            ],
+            [
+              21.4229508,
+              41.995921
+            ],
+            [
+              21.4227875,
+              41.9960532
+            ],
+            [
+              21.4229293,
+              41.9961507
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55019,7 +56623,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 22,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55032,6 +56636,48 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4237454,
+              41.9967117
+            ],
+            [
+              21.4240361,
+              41.9964635
+            ],
+            [
+              21.4243086,
+              41.996267
+            ],
+            [
+              21.4241748,
+              41.9961634
+            ],
+            [
+              21.4238992,
+              41.9963616
+            ],
+            [
+              21.4236,
+              41.9966172
+            ],
+            [
+              21.4237454,
+              41.9967117
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55056,7 +56702,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 73,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55069,6 +56715,48 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4218251,
+              42.0011584
+            ],
+            [
+              21.4220264,
+              42.0006396
+            ],
+            [
+              21.4226776,
+              41.9992879
+            ],
+            [
+              21.4224962,
+              41.9992392
+            ],
+            [
+              21.4218415,
+              42.0005974
+            ],
+            [
+              21.4216409,
+              42.0011159
+            ],
+            [
+              21.4218251,
+              42.0011584
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55093,7 +56781,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 22,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55106,6 +56794,60 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4244319,
+              42.0004173
+            ],
+            [
+              21.4246229,
+              42.0006067
+            ],
+            [
+              21.4247159,
+              42.0006304
+            ],
+            [
+              21.4247647,
+              42.0006163
+            ],
+            [
+              21.4247808,
+              42.0005791
+            ],
+            [
+              21.4247756,
+              42.0005188
+            ],
+            [
+              21.4245815,
+              42.0003261
+            ],
+            [
+              21.4243183,
+              42.000108
+            ],
+            [
+              21.42417,
+              42.0001999
+            ],
+            [
+              21.4244319,
+              42.0004173
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55130,7 +56872,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 26,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55143,6 +56885,60 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4171125,
+              41.9997548
+            ],
+            [
+              21.4171905,
+              41.9997722
+            ],
+            [
+              21.4172604,
+              41.9996409
+            ],
+            [
+              21.4172026,
+              41.9995992
+            ],
+            [
+              21.4171806,
+              41.9995502
+            ],
+            [
+              21.4171886,
+              41.9991884
+            ],
+            [
+              21.4169958,
+              41.9991853
+            ],
+            [
+              21.4169844,
+              41.9996104
+            ],
+            [
+              21.4169396,
+              41.9996909
+            ],
+            [
+              21.4171125,
+              41.9997548
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55204,7 +57000,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 53,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55217,6 +57013,80 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4432458,
+              41.9908097
+            ],
+            [
+              21.443266,
+              41.9908143
+            ],
+            [
+              21.4438115,
+              41.9904934
+            ],
+            [
+              21.4438128,
+              41.9904785
+            ],
+            [
+              21.4437491,
+              41.9904109
+            ],
+            [
+              21.4437387,
+              41.9903698
+            ],
+            [
+              21.4437563,
+              41.9903193
+            ],
+            [
+              21.4438111,
+              41.9902753
+            ],
+            [
+              21.4436892,
+              41.9901638
+            ],
+            [
+              21.4431381,
+              41.9904997
+            ],
+            [
+              21.4431444,
+              41.9905403
+            ],
+            [
+              21.4431259,
+              41.9905899
+            ],
+            [
+              21.4431393,
+              41.9906384
+            ],
+            [
+              21.4431237,
+              41.9906879
+            ],
+            [
+              21.4432458,
+              41.9908097
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55241,7 +57111,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 380,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55254,6 +57124,132 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4435143,
+              41.9962536
+            ],
+            [
+              21.4436507,
+              41.9963201
+            ],
+            [
+              21.4437242,
+              41.99638
+            ],
+            [
+              21.4438008,
+              41.9964873
+            ],
+            [
+              21.4438315,
+              41.9966067
+            ],
+            [
+              21.443794,
+              41.996832
+            ],
+            [
+              21.4437727,
+              41.9971554
+            ],
+            [
+              21.4437872,
+              41.9971734
+            ],
+            [
+              21.4442283,
+              41.9971829
+            ],
+            [
+              21.4442679,
+              41.9968693
+            ],
+            [
+              21.4442977,
+              41.9967912
+            ],
+            [
+              21.4443476,
+              41.996719
+            ],
+            [
+              21.4444159,
+              41.9966558
+            ],
+            [
+              21.4444997,
+              41.9966039
+            ],
+            [
+              21.4445956,
+              41.9965656
+            ],
+            [
+              21.4446999,
+              41.9965423
+            ],
+            [
+              21.4448083,
+              41.996535
+            ],
+            [
+              21.4454331,
+              41.9965914
+            ],
+            [
+              21.4458767,
+              41.9966026
+            ],
+            [
+              21.4458809,
+              41.9964595
+            ],
+            [
+              21.445427,
+              41.996446
+            ],
+            [
+              21.4450437,
+              41.9964147
+            ],
+            [
+              21.4447572,
+              41.9963711
+            ],
+            [
+              21.4437932,
+              41.9961698
+            ],
+            [
+              21.4427401,
+              41.9959115
+            ],
+            [
+              21.4426774,
+              41.9959702
+            ],
+            [
+              21.4426484,
+              41.9960397
+            ],
+            [
+              21.4435143,
+              41.9962536
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55278,7 +57274,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 193,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55291,6 +57287,120 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.438227,
+              41.9956413
+            ],
+            [
+              21.4389296,
+              41.9955467
+            ],
+            [
+              21.4391926,
+              41.9955262
+            ],
+            [
+              21.4403897,
+              41.9956161
+            ],
+            [
+              21.440531,
+              41.9956512
+            ],
+            [
+              21.4406604,
+              41.9957099
+            ],
+            [
+              21.4407653,
+              41.995733
+            ],
+            [
+              21.4408738,
+              41.9957767
+            ],
+            [
+              21.4410311,
+              41.9957304
+            ],
+            [
+              21.4411382,
+              41.9957207
+            ],
+            [
+              21.4412459,
+              41.995727
+            ],
+            [
+              21.4426118,
+              41.9960315
+            ],
+            [
+              21.4426752,
+              41.9959722
+            ],
+            [
+              21.4427042,
+              41.9959027
+            ],
+            [
+              21.4411212,
+              41.9955463
+            ],
+            [
+              21.4410204,
+              41.9955065
+            ],
+            [
+              21.4408914,
+              41.9954293
+            ],
+            [
+              21.4407867,
+              41.9954318
+            ],
+            [
+              21.4406794,
+              41.9954184
+            ],
+            [
+              21.4405639,
+              41.9954536
+            ],
+            [
+              21.4404136,
+              41.9954696
+            ],
+            [
+              21.4391886,
+              41.9953799
+            ],
+            [
+              21.4389193,
+              41.9954018
+            ],
+            [
+              21.438192,
+              41.9955006
+            ],
+            [
+              21.438227,
+              41.9956413
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55315,7 +57425,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 99,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55328,6 +57438,64 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4155281,
+              42.0062316
+            ],
+            [
+              21.4161772,
+              42.0059585
+            ],
+            [
+              21.4165262,
+              42.0057903
+            ],
+            [
+              21.4180159,
+              42.005008
+            ],
+            [
+              21.4179197,
+              42.0048826
+            ],
+            [
+              21.4164199,
+              42.00567
+            ],
+            [
+              21.4160782,
+              42.0058348
+            ],
+            [
+              21.4157123,
+              42.0059934
+            ],
+            [
+              21.4154365,
+              42.006091
+            ],
+            [
+              21.4155131,
+              42.0062282
+            ],
+            [
+              21.4155281,
+              42.0062316
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55352,7 +57520,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 131,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55365,6 +57533,44 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4180336,
+              42.0049989
+            ],
+            [
+              21.4216096,
+              42.0031255
+            ],
+            [
+              21.4214978,
+              42.0030112
+            ],
+            [
+              21.4179345,
+              42.0048749
+            ],
+            [
+              21.4179714,
+              42.0049351
+            ],
+            [
+              21.4180336,
+              42.0049989
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55389,7 +57595,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 31,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55402,6 +57608,56 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4649953,
+              41.9925161
+            ],
+            [
+              21.4655299,
+              41.9924719
+            ],
+            [
+              21.4660773,
+              41.9923906
+            ],
+            [
+              21.4660523,
+              41.9923065
+            ],
+            [
+              21.4660599,
+              41.9922565
+            ],
+            [
+              21.4660151,
+              41.9921164
+            ],
+            [
+              21.4655789,
+              41.9921879
+            ],
+            [
+              21.4649361,
+              41.9922633
+            ],
+            [
+              21.4649953,
+              41.9925161
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55426,7 +57682,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 780,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55439,6 +57695,368 @@
         "label": "Approximate landmark reference · OpenStreetMap",
         "url": "https://www.openstreetmap.org/way/38002609",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4571215,
+              41.9892029
+            ],
+            [
+              21.4576072,
+              41.989284
+            ],
+            [
+              21.4581246,
+              41.9893266
+            ],
+            [
+              21.458743,
+              41.9893208
+            ],
+            [
+              21.4588939,
+              41.9893325
+            ],
+            [
+              21.4590345,
+              41.9893749
+            ],
+            [
+              21.4591768,
+              41.9894633
+            ],
+            [
+              21.459525,
+              41.9893938
+            ],
+            [
+              21.4595879,
+              41.9892912
+            ],
+            [
+              21.4596538,
+              41.9892288
+            ],
+            [
+              21.4598276,
+              41.9891382
+            ],
+            [
+              21.4605264,
+              41.9889034
+            ],
+            [
+              21.4606833,
+              41.9888841
+            ],
+            [
+              21.4607892,
+              41.9888906
+            ],
+            [
+              21.4609859,
+              41.9889484
+            ],
+            [
+              21.4611057,
+              41.9890265
+            ],
+            [
+              21.4612201,
+              41.9891808
+            ],
+            [
+              21.4617095,
+              41.9896489
+            ],
+            [
+              21.4618505,
+              41.98972
+            ],
+            [
+              21.4619634,
+              41.9897315
+            ],
+            [
+              21.4621295,
+              41.9896991
+            ],
+            [
+              21.4630104,
+              41.9892713
+            ],
+            [
+              21.4632057,
+              41.9891586
+            ],
+            [
+              21.4630859,
+              41.9890468
+            ],
+            [
+              21.4628972,
+              41.9891543
+            ],
+            [
+              21.4623066,
+              41.9894415
+            ],
+            [
+              21.4621529,
+              41.9894821
+            ],
+            [
+              21.46199,
+              41.9894869
+            ],
+            [
+              21.4618325,
+              41.9894554
+            ],
+            [
+              21.4616947,
+              41.9893905
+            ],
+            [
+              21.4612645,
+              41.989003
+            ],
+            [
+              21.4611934,
+              41.9888931
+            ],
+            [
+              21.4611694,
+              41.9887724
+            ],
+            [
+              21.4611947,
+              41.9886518
+            ],
+            [
+              21.461267,
+              41.9885423
+            ],
+            [
+              21.4613796,
+              41.9884538
+            ],
+            [
+              21.4621667,
+              41.9879847
+            ],
+            [
+              21.4619276,
+              41.987724
+            ],
+            [
+              21.4612279,
+              41.9881121
+            ],
+            [
+              21.4610848,
+              41.988169
+            ],
+            [
+              21.4609256,
+              41.988192
+            ],
+            [
+              21.4607128,
+              41.9881665
+            ],
+            [
+              21.4605711,
+              41.9881076
+            ],
+            [
+              21.4604201,
+              41.9879975
+            ],
+            [
+              21.4601613,
+              41.9881081
+            ],
+            [
+              21.4599972,
+              41.9882052
+            ],
+            [
+              21.4598463,
+              41.9882471
+            ],
+            [
+              21.4595929,
+              41.9883513
+            ],
+            [
+              21.4594413,
+              41.9883827
+            ],
+            [
+              21.4592326,
+              41.988372
+            ],
+            [
+              21.4590447,
+              41.9883033
+            ],
+            [
+              21.4589346,
+              41.9882195
+            ],
+            [
+              21.4587779,
+              41.9880253
+            ],
+            [
+              21.4587526,
+              41.9880161
+            ],
+            [
+              21.4583894,
+              41.9881721
+            ],
+            [
+              21.4582421,
+              41.9882049
+            ],
+            [
+              21.4583593,
+              41.9882921
+            ],
+            [
+              21.4584433,
+              41.9884098
+            ],
+            [
+              21.4584734,
+              41.9885269
+            ],
+            [
+              21.4584564,
+              41.9886455
+            ],
+            [
+              21.4583939,
+              41.9887552
+            ],
+            [
+              21.4582913,
+              41.9888467
+            ],
+            [
+              21.4581575,
+              41.9889119
+            ],
+            [
+              21.4579507,
+              41.9889486
+            ],
+            [
+              21.457761,
+              41.9889315
+            ],
+            [
+              21.4575723,
+              41.9888622
+            ],
+            [
+              21.4574329,
+              41.9887445
+            ],
+            [
+              21.4573739,
+              41.988635
+            ],
+            [
+              21.4573596,
+              41.9885174
+            ],
+            [
+              21.4573758,
+              41.9884395
+            ],
+            [
+              21.4574665,
+              41.9882979
+            ],
+            [
+              21.4575376,
+              41.9882395
+            ],
+            [
+              21.4576415,
+              41.988184
+            ],
+            [
+              21.45784,
+              41.9881309
+            ],
+            [
+              21.4577596,
+              41.988077
+            ],
+            [
+              21.4576027,
+              41.987918
+            ],
+            [
+              21.4570327,
+              41.9881734
+            ],
+            [
+              21.457034,
+              41.9883361
+            ],
+            [
+              21.4569837,
+              41.9884517
+            ],
+            [
+              21.4568898,
+              41.988551
+            ],
+            [
+              21.4567606,
+              41.9886251
+            ],
+            [
+              21.4566078,
+              41.9886673
+            ],
+            [
+              21.4564451,
+              41.9886737
+            ],
+            [
+              21.4560895,
+              41.9886013
+            ],
+            [
+              21.4560601,
+              41.9886726
+            ],
+            [
+              21.4560054,
+              41.9889506
+            ],
+            [
+              21.4571215,
+              41.9892029
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -55501,7 +58119,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 727,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55514,6 +58132,212 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4668136,
+              41.9853403
+            ],
+            [
+              21.4669192,
+              41.9853626
+            ],
+            [
+              21.467013,
+              41.9853984
+            ],
+            [
+              21.4670957,
+              41.985447
+            ],
+            [
+              21.4671643,
+              41.9855067
+            ],
+            [
+              21.4672161,
+              41.9855751
+            ],
+            [
+              21.4672493,
+              41.9856497
+            ],
+            [
+              21.4672626,
+              41.9857276
+            ],
+            [
+              21.4672575,
+              41.985827
+            ],
+            [
+              21.4682996,
+              41.9869531
+            ],
+            [
+              21.4685016,
+              41.9871528
+            ],
+            [
+              21.4687124,
+              41.9870424
+            ],
+            [
+              21.4685765,
+              41.9869749
+            ],
+            [
+              21.4685035,
+              41.9869144
+            ],
+            [
+              21.4677166,
+              41.9861374
+            ],
+            [
+              21.4676378,
+              41.9860298
+            ],
+            [
+              21.4676109,
+              41.9859504
+            ],
+            [
+              21.4676119,
+              41.9858278
+            ],
+            [
+              21.4676619,
+              41.9857111
+            ],
+            [
+              21.4677564,
+              41.9856108
+            ],
+            [
+              21.4680825,
+              41.9854014
+            ],
+            [
+              21.4688389,
+              41.9849575
+            ],
+            [
+              21.4701596,
+              41.98425
+            ],
+            [
+              21.4705041,
+              41.9840749
+            ],
+            [
+              21.47065,
+              41.9840226
+            ],
+            [
+              21.470756,
+              41.9840066
+            ],
+            [
+              21.4708642,
+              41.9840067
+            ],
+            [
+              21.4709702,
+              41.9840227
+            ],
+            [
+              21.471116,
+              41.9840751
+            ],
+            [
+              21.4711988,
+              41.984127
+            ],
+            [
+              21.4712722,
+              41.984197
+            ],
+            [
+              21.4716642,
+              41.9847093
+            ],
+            [
+              21.471831,
+              41.9846386
+            ],
+            [
+              21.4714456,
+              41.9841319
+            ],
+            [
+              21.4711653,
+              41.9838077
+            ],
+            [
+              21.4710992,
+              41.9837616
+            ],
+            [
+              21.4709442,
+              41.9837113
+            ],
+            [
+              21.4708548,
+              41.9836682
+            ],
+            [
+              21.4707461,
+              41.9835814
+            ],
+            [
+              21.4706757,
+              41.9834747
+            ],
+            [
+              21.4706533,
+              41.9833971
+            ],
+            [
+              21.4706586,
+              41.9832783
+            ],
+            [
+              21.4707043,
+              41.9831739
+            ],
+            [
+              21.4705871,
+              41.9830599
+            ],
+            [
+              21.4704464,
+              41.9829978
+            ],
+            [
+              21.4703651,
+              41.9829364
+            ],
+            [
+              21.4665788,
+              41.9850843
+            ],
+            [
+              21.4668136,
+              41.9853403
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55575,7 +58399,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 154,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55588,6 +58412,156 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4518933,
+              41.9903106
+            ],
+            [
+              21.4519754,
+              41.9903523
+            ],
+            [
+              21.4531934,
+              41.9895824
+            ],
+            [
+              21.4533877,
+              41.989495
+            ],
+            [
+              21.4534591,
+              41.9894941
+            ],
+            [
+              21.4535326,
+              41.9895263
+            ],
+            [
+              21.4535743,
+              41.9896131
+            ],
+            [
+              21.4537833,
+              41.9898248
+            ],
+            [
+              21.4538093,
+              41.9898278
+            ],
+            [
+              21.4544056,
+              41.9894996
+            ],
+            [
+              21.4542249,
+              41.989307
+            ],
+            [
+              21.4541626,
+              41.9892836
+            ],
+            [
+              21.4541185,
+              41.989244
+            ],
+            [
+              21.4541072,
+              41.9891732
+            ],
+            [
+              21.4541472,
+              41.9891194
+            ],
+            [
+              21.4548688,
+              41.988781
+            ],
+            [
+              21.455486,
+              41.9885293
+            ],
+            [
+              21.4555423,
+              41.9885245
+            ],
+            [
+              21.455609,
+              41.9885416
+            ],
+            [
+              21.4556892,
+              41.9886185
+            ],
+            [
+              21.45579,
+              41.9886778
+            ],
+            [
+              21.4559084,
+              41.9885643
+            ],
+            [
+              21.4558149,
+              41.9884875
+            ],
+            [
+              21.4558073,
+              41.9884464
+            ],
+            [
+              21.4558277,
+              41.9883969
+            ],
+            [
+              21.455906,
+              41.9883244
+            ],
+            [
+              21.4561509,
+              41.9882109
+            ],
+            [
+              21.4561684,
+              41.988122
+            ],
+            [
+              21.4561173,
+              41.9880601
+            ],
+            [
+              21.4554888,
+              41.988361
+            ],
+            [
+              21.4545527,
+              41.9887547
+            ],
+            [
+              21.4530949,
+              41.9894572
+            ],
+            [
+              21.4518279,
+              41.9902571
+            ],
+            [
+              21.4518933,
+              41.9903106
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55612,7 +58586,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 660,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55625,6 +58599,204 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4629369,
+              41.9872639
+            ],
+            [
+              21.4629589,
+              41.987348
+            ],
+            [
+              21.4631846,
+              41.9875517
+            ],
+            [
+              21.463214,
+              41.9876166
+            ],
+            [
+              21.4632152,
+              41.9876882
+            ],
+            [
+              21.4633454,
+              41.9877939
+            ],
+            [
+              21.4646327,
+              41.9870225
+            ],
+            [
+              21.4652281,
+              41.9867323
+            ],
+            [
+              21.4658415,
+              41.9863966
+            ],
+            [
+              21.4659789,
+              41.9863584
+            ],
+            [
+              21.4661243,
+              41.9863729
+            ],
+            [
+              21.4662433,
+              41.9864369
+            ],
+            [
+              21.4674679,
+              41.9876105
+            ],
+            [
+              21.4675202,
+              41.987687
+            ],
+            [
+              21.4675319,
+              41.987751
+            ],
+            [
+              21.4675188,
+              41.9878148
+            ],
+            [
+              21.4674457,
+              41.9879068
+            ],
+            [
+              21.4667399,
+              41.9883036
+            ],
+            [
+              21.4668571,
+              41.9884175
+            ],
+            [
+              21.4675724,
+              41.9880213
+            ],
+            [
+              21.4675687,
+              41.9879454
+            ],
+            [
+              21.4676058,
+              41.987863
+            ],
+            [
+              21.4676598,
+              41.9878115
+            ],
+            [
+              21.4678222,
+              41.987715
+            ],
+            [
+              21.4675505,
+              41.9874392
+            ],
+            [
+              21.4675309,
+              41.9873511
+            ],
+            [
+              21.4675587,
+              41.9872643
+            ],
+            [
+              21.4676527,
+              41.9871781
+            ],
+            [
+              21.4682214,
+              41.9868686
+            ],
+            [
+              21.4681098,
+              41.9867516
+            ],
+            [
+              21.4674718,
+              41.9870935
+            ],
+            [
+              21.4673595,
+              41.987115
+            ],
+            [
+              21.4672175,
+              41.9870953
+            ],
+            [
+              21.467104,
+              41.9870287
+            ],
+            [
+              21.4665302,
+              41.9864835
+            ],
+            [
+              21.4662449,
+              41.9861841
+            ],
+            [
+              21.4660958,
+              41.9861187
+            ],
+            [
+              21.4660126,
+              41.9860547
+            ],
+            [
+              21.4659758,
+              41.9859934
+            ],
+            [
+              21.4659649,
+              41.9859268
+            ],
+            [
+              21.4659919,
+              41.9858398
+            ],
+            [
+              21.466041,
+              41.9857836
+            ],
+            [
+              21.4668093,
+              41.9853427
+            ],
+            [
+              21.4665785,
+              41.9850993
+            ],
+            [
+              21.4628862,
+              41.9872061
+            ],
+            [
+              21.4629369,
+              41.9872639
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55649,7 +58821,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 63,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55662,6 +58834,64 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4495493,
+              41.9911729
+            ],
+            [
+              21.449807,
+              41.9910273
+            ],
+            [
+              21.4498611,
+              41.991012
+            ],
+            [
+              21.4499154,
+              41.991013
+            ],
+            [
+              21.4500639,
+              41.9909211
+            ],
+            [
+              21.4496013,
+              41.9905058
+            ],
+            [
+              21.4494526,
+              41.9905975
+            ],
+            [
+              21.4494633,
+              41.9906541
+            ],
+            [
+              21.4494304,
+              41.99071
+            ],
+            [
+              21.4492028,
+              41.9908544
+            ],
+            [
+              21.4495493,
+              41.9911729
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55686,7 +58916,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 410,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55699,6 +58929,304 @@
         "label": "Approximate street reference · OpenStreetMap",
         "url": "https://www.openstreetmap.org/way/197366559",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4528591,
+              41.9935007
+            ],
+            [
+              21.4529389,
+              41.9935041
+            ],
+            [
+              21.4530058,
+              41.9934059
+            ],
+            [
+              21.4532503,
+              41.993225
+            ],
+            [
+              21.4533807,
+              41.9931023
+            ],
+            [
+              21.453423,
+              41.9930066
+            ],
+            [
+              21.4534467,
+              41.99281
+            ],
+            [
+              21.4534336,
+              41.9926892
+            ],
+            [
+              21.4534644,
+              41.9926319
+            ],
+            [
+              21.4535067,
+              41.9926049
+            ],
+            [
+              21.4536091,
+              41.9925774
+            ],
+            [
+              21.453706,
+              41.992579
+            ],
+            [
+              21.4537864,
+              41.9926351
+            ],
+            [
+              21.4539638,
+              41.9929842
+            ],
+            [
+              21.4542005,
+              41.9929074
+            ],
+            [
+              21.4542828,
+              41.9929197
+            ],
+            [
+              21.4543421,
+              41.9929639
+            ],
+            [
+              21.4545136,
+              41.9935404
+            ],
+            [
+              21.4546173,
+              41.9941154
+            ],
+            [
+              21.4548084,
+              41.9940962
+            ],
+            [
+              21.4547033,
+              41.9935119
+            ],
+            [
+              21.4545371,
+              41.9929299
+            ],
+            [
+              21.4545436,
+              41.9928861
+            ],
+            [
+              21.4546216,
+              41.9927556
+            ],
+            [
+              21.4544824,
+              41.9922359
+            ],
+            [
+              21.4543674,
+              41.9919911
+            ],
+            [
+              21.454199,
+              41.9918627
+            ],
+            [
+              21.4540637,
+              41.9919652
+            ],
+            [
+              21.4541913,
+              41.9920617
+            ],
+            [
+              21.4542577,
+              41.992191
+            ],
+            [
+              21.4542617,
+              41.9922526
+            ],
+            [
+              21.4542092,
+              41.9923125
+            ],
+            [
+              21.4541459,
+              41.9923332
+            ],
+            [
+              21.4537958,
+              41.9923794
+            ],
+            [
+              21.4530184,
+              41.9925723
+            ],
+            [
+              21.4527688,
+              41.9927187
+            ],
+            [
+              21.4524219,
+              41.9929851
+            ],
+            [
+              21.4523255,
+              41.993119
+            ],
+            [
+              21.4523454,
+              41.993229
+            ],
+            [
+              21.45242,
+              41.9932971
+            ],
+            [
+              21.4527936,
+              41.9935261
+            ],
+            [
+              21.4528591,
+              41.9935007
+            ]
+          ],
+          [
+            [
+              21.4542951,
+              41.9928886
+            ],
+            [
+              21.454227,
+              41.9929045
+            ],
+            [
+              21.4541443,
+              41.9928892
+            ],
+            [
+              21.4540942,
+              41.9928513
+            ],
+            [
+              21.4539813,
+              41.9926069
+            ],
+            [
+              21.4539935,
+              41.9925462
+            ],
+            [
+              21.4540482,
+              41.9925002
+            ],
+            [
+              21.4542405,
+              41.9924716
+            ],
+            [
+              21.4543048,
+              41.9924892
+            ],
+            [
+              21.4543438,
+              41.9925181
+            ],
+            [
+              21.4544141,
+              41.9927278
+            ],
+            [
+              21.4544011,
+              41.9927763
+            ],
+            [
+              21.4542951,
+              41.9928886
+            ]
+          ],
+          [
+            [
+              21.452551,
+              41.9931589
+            ],
+            [
+              21.4525721,
+              41.9930797
+            ],
+            [
+              21.4528946,
+              41.9928287
+            ],
+            [
+              21.4530639,
+              41.9927374
+            ],
+            [
+              21.4531332,
+              41.9927352
+            ],
+            [
+              21.4532063,
+              41.9927641
+            ],
+            [
+              21.4532486,
+              41.9928286
+            ],
+            [
+              21.4532314,
+              41.9929836
+            ],
+            [
+              21.4532025,
+              41.9930384
+            ],
+            [
+              21.4531027,
+              41.9931314
+            ],
+            [
+              21.452898,
+              41.9932825
+            ],
+            [
+              21.4528372,
+              41.9933087
+            ],
+            [
+              21.4527401,
+              41.993304
+            ],
+            [
+              21.4526001,
+              41.993222
+            ],
+            [
+              21.452551,
+              41.9931589
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -55724,7 +59252,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 65,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55737,6 +59265,96 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4003303,
+              42.0028248
+            ],
+            [
+              21.4003436,
+              42.0028356
+            ],
+            [
+              21.4005069,
+              42.0028241
+            ],
+            [
+              21.4006068,
+              42.0028719
+            ],
+            [
+              21.401051,
+              42.0028126
+            ],
+            [
+              21.4011452,
+              42.0028314
+            ],
+            [
+              21.401202,
+              42.0028905
+            ],
+            [
+              21.4012974,
+              42.0032689
+            ],
+            [
+              21.4014072,
+              42.0032702
+            ],
+            [
+              21.4014804,
+              42.0033002
+            ],
+            [
+              21.4015158,
+              42.0033451
+            ],
+            [
+              21.4015418,
+              42.0034415
+            ],
+            [
+              21.4017311,
+              42.0034142
+            ],
+            [
+              21.4015122,
+              42.002529
+            ],
+            [
+              21.4013004,
+              42.002558
+            ],
+            [
+              21.4011962,
+              42.0025403
+            ],
+            [
+              21.4011054,
+              42.0025408
+            ],
+            [
+              21.4002919,
+              42.0026571
+            ],
+            [
+              21.4003303,
+              42.0028248
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55761,7 +59379,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 79,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55774,6 +59392,52 @@
         "label": "Approximate street reference · OpenStreetMap",
         "url": "https://www.openstreetmap.org/way/549535257",
         "retrievedAt": "2026-10-01T08:14:03.363962Z",
+        "license": "ODbL 1.0"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4117056,
+              42.0051477
+            ],
+            [
+              21.4133671,
+              42.0049247
+            ],
+            [
+              21.4133311,
+              42.0047834
+            ],
+            [
+              21.413264,
+              42.00476
+            ],
+            [
+              21.4121108,
+              42.0049148
+            ],
+            [
+              21.4120313,
+              42.0049527
+            ],
+            [
+              21.4116684,
+              42.0050066
+            ],
+            [
+              21.4117056,
+              42.0051477
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
         "license": "ODbL 1.0"
       }
     },
@@ -55799,7 +59463,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 28,
       "openingHours": null,
       "verification": "official",
       "locationPrecision": "area",
@@ -55812,6 +59476,96 @@
         "label": "JP Gradski Parking official map · area reference",
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4134037,
+              42.0069007
+            ],
+            [
+              21.4134234,
+              42.0069112
+            ],
+            [
+              21.4136396,
+              42.0068965
+            ],
+            [
+              21.4141708,
+              42.0068276
+            ],
+            [
+              21.4144037,
+              42.0067787
+            ],
+            [
+              21.4144363,
+              42.0067615
+            ],
+            [
+              21.4144442,
+              42.0067413
+            ],
+            [
+              21.4143347,
+              42.0066323
+            ],
+            [
+              21.4142218,
+              42.0066392
+            ],
+            [
+              21.4141371,
+              42.0066047
+            ],
+            [
+              21.4141085,
+              42.0065688
+            ],
+            [
+              21.4140496,
+              42.006424
+            ],
+            [
+              21.4136567,
+              42.0064779
+            ],
+            [
+              21.4133941,
+              42.0064974
+            ],
+            [
+              21.4133998,
+              42.0065647
+            ],
+            [
+              21.4133852,
+              42.0066024
+            ],
+            [
+              21.4134008,
+              42.0067037
+            ],
+            [
+              21.4133767,
+              42.0067566
+            ],
+            [
+              21.4134037,
+              42.0069007
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
       }
     },
     {
@@ -55832,7 +59586,7 @@
           "retrievedAt": "2026-10-01T08:14:03.363962Z"
         }
       },
-      "capacity": null,
+      "capacity": 42,
       "openingHours": null,
       "verification": "official",
       "source": {
@@ -55849,7 +59603,65 @@
         "url": "https://www.gradskiparking.com.mk/mapa-lokacii-nova.nspx",
         "retrievedAt": "2026-10-01T11:03:53.982941Z"
       },
-      "locationPrecision": "area"
+      "locationPrecision": "area",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.4288479,
+              41.9985885
+            ],
+            [
+              21.4289323,
+              41.9988753
+            ],
+            [
+              21.4289279,
+              41.9989758
+            ],
+            [
+              21.4289094,
+              41.9990188
+            ],
+            [
+              21.4290891,
+              41.999071
+            ],
+            [
+              21.4291427,
+              41.9988926
+            ],
+            [
+              21.4293126,
+              41.9987801
+            ],
+            [
+              21.4290142,
+              41.9985043
+            ],
+            [
+              21.4288683,
+              41.9983186
+            ],
+            [
+              21.4287017,
+              41.9983911
+            ],
+            [
+              21.4288479,
+              41.9985885
+            ]
+          ]
+        ]
+      },
+      "boundaryEvidence": "derived",
+      "boundarySource": {
+        "label": "Derived outline · JP Gradski Parking zone streets and OpenStreetMap",
+        "url": "https://www.gradskiparking.com.mk/zonsko-parking-zoni.nspx",
+        "retrievedAt": "2026-10-20T12:27:51+00:00",
+        "license": "ODbL 1.0"
+      }
     }
   ],
   "zones": [

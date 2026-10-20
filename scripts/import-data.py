@@ -130,5 +130,9 @@ for place in places:
         place['name']+=' · до '+near['tags']['name']
         place['nameEn']='Parking near '+near['tags'].get('name:en',near['tags']['name'])
 catalog={'generatedAt':now,'places':places,'zones':zones,'destinations':destinations,'coverage':{'complete':False,'bounds':BOUNDS,'notes':['OSM amenity=parking features within the city-area bounding box, not a complete municipal register.','OSM points may be feature centres, not verified vehicle entrances.','POC polygons show tariff sectors; they do not establish that every street or space inside is legal parking.','Gradski labels use operator map coordinates where available, otherwise street/landmark references. They are not legal boundaries or vehicle entrances. A02 still has no map anchor.','The operator lists D42 (MIDA); A42 is not verified.','Baseline prices exclude schedule, holiday, pollution surcharges and permit exemptions. Check the sign.','POC/municipal geometry reuse permissions must be confirmed before commercial publication.']}}
+# Approximate outlines for Gradski zones and point-only lots (scripts/apply-derived-perimeters.py).
+import importlib.util
+spec=importlib.util.spec_from_file_location('derived',ROOT/'scripts'/'apply-derived-perimeters.py'); derived=importlib.util.module_from_spec(spec); spec.loader.exec_module(derived)
+if (ROOT/'data'/'derived-perimeters.json').exists(): derived.apply(catalog,json.loads((ROOT/'data'/'derived-perimeters.json').read_text(encoding='utf-8')))
 (ROOT/'data'/'catalog.json').write_text(json.dumps(catalog,ensure_ascii=False,indent=2),encoding='utf-8')
 print(f'Built {len(places)} map features, {len(zones)} sign-code inventory records.')

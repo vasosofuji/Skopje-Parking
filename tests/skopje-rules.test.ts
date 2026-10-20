@@ -78,4 +78,8 @@ test("catalog enrichment publishes official protocols only, and not for a relabe
   assert.equal(signed.signInfo?.readingId, "r1"); assert.equal(signed.smsPayment?.destination, "144144");
   const community: ParkingPlace = { ...paymentZone, id: "community:x", smsPayment: undefined };
   assert.equal(enrichSigns([community], [], [], [{ ...reading, place_id: "community:x" }])[0].smsPayment, undefined);
+  // A lot inside a zone outline takes the zone's sign, unless the outline is only derived.
+  const lot: ParkingPlace = { ...paymentZone, id: "osm:way:1", kind: "surface", zoneCode: null, operator: null, smsPayment: undefined, geometry: undefined };
+  assert.equal(enrichSigns([base, lot], [], [], [reading])[1].signInfo?.readingId, "r1");
+  assert.equal(enrichSigns([{ ...base, boundaryEvidence: "derived" }, lot], [], [], [reading])[1].signInfo, undefined);
 });
